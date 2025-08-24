@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.Features.ShovelModes;
 
 internal class ShovelPathModeHandler : IModeHandler
 {
-    private static readonly string[] replaceablePathBlockPatterns = new string[]
-    {
-        "soil-*",
-        "forestfloor-*",
-        "sand-*",
-        "gravel-*",
-    };
+    private static readonly string[] replaceablePathBlockPatterns = new string[] { "soil-*", "forestfloor-*", "sand-*", "gravel-*" };
     private readonly int[] replaceablePathBlockIds;
     private readonly int stonePathId;
     private readonly int stonePathSlabId;
@@ -62,10 +58,18 @@ internal class ShovelPathModeHandler : IModeHandler
         }
 
         Block block = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
-        byEntity.Api.Logger.Debug("Shovel interacted with {0}", block.Code);
+        byEntity.Api.Logger.Debug("[ImmersiveBuilding] Shovel interacted with {0}", block.Code);
         if (replaceablePathBlockIds.Contains(block.Id))
         {
-            ReplaceSoilWithPath(blockSel, byEntity, slot, byPlayer);
+            (bool isSuccessful, bool shouldDrop) = TryTakeMaterialsForPath(byPlayer);
+            if (isSuccessful)
+            {
+                ReplaceSoilWithPath(blockSel, byEntity, slot, byPlayer, shouldDrop);
+            }
+            else if (byEntity is EntityPlayer { Player: IServerPlayer player })
+            {
+                player.SendIngameError("nomatsforpath", "You don't have enough materials");
+            }
         }
         else if (byEntity.Controls.ShiftKey && block.Id == stonePathId)
         {
@@ -77,7 +81,7 @@ internal class ShovelPathModeHandler : IModeHandler
         }
     }
 
-    private void ReplaceSoilWithPath(BlockSelection blockSel, EntityAgent byEntity, ItemSlot slot, IPlayer byPlayer)
+    private void ReplaceSoilWithPath(BlockSelection blockSel, EntityAgent byEntity, ItemSlot slot, IPlayer byPlayer, bool shouldDrop)
     {
         byEntity.World.PlaySoundAt(
             AssetLocation.Create("sounds/block/dirt"),
@@ -88,22 +92,22 @@ internal class ShovelPathModeHandler : IModeHandler
         );
 
         slot.Itemstack.Item?.DamageItem(byEntity.World, byEntity, slot);
-        byEntity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
+        byEntity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
         byEntity.World.BlockAccessor.SetBlock(stonePathId, blockSel.Position);
     }
 
     private void ReplacePathWithStairs(ICoreAPI api, BlockSelection blockSel, IPlayer byPlayer)
     {
         api.World.PlaySoundAt(
-           AssetLocation.Create("sounds/block/gravel"),
-           blockSel.Position.X,
-           blockSel.Position.Y,
-           blockSel.Position.Z,
-           byPlayer
-       );
+            AssetLocation.Create("sounds/block/gravel"),
+            blockSel.Position.X,
+            blockSel.Position.Y,
+            blockSel.Position.Z,
+            byPlayer
+        );
 
         float yaw = byPlayer.Entity.Pos.Yaw * GameMath.RAD2DEG;
-        int compasDirection = GameMath.Mod((int)Math.Round(yaw / 90f), 4);
+        int compasDirection = GameMath.Mod((int)Math.Round(yaw / 90f), 4); // S E N W
         api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
         api.World.BlockAccessor.SetBlock(stonePathStairIds[compasDirection], blockSel.Position);
     }
@@ -111,14 +115,104 @@ internal class ShovelPathModeHandler : IModeHandler
     private void ReplaceStairsWithSlab(ICoreAPI api, BlockSelection blockSel, IPlayer byPlayer)
     {
         api.World.PlaySoundAt(
-           AssetLocation.Create("sounds/block/gravel"),
-           blockSel.Position.X,
-           blockSel.Position.Y,
-           blockSel.Position.Z,
-           byPlayer
-       );
+            AssetLocation.Create("sounds/block/gravel"),
+            blockSel.Position.X,
+            blockSel.Position.Y,
+            blockSel.Position.Z,
+            byPlayer
+        );
 
-        api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
+        // Workaround because I couldn't remove drop from stairs
         api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
+        api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 1);
+        api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
+    }
+
+    private (bool isSuccessful, bool shouldDrop) TryTakeMaterialsForPath(IPlayer player)
+    {
+        if (player.WorldData.CurrentGameMode == EnumGameMode.Creative)
+        {
+            return (true, false);
+        }
+
+        return TryTakeMaterialsFromInventories(
+            new IInventory?[] { player.InventoryManager.GetHotbarInventory(), player.InventoryManager.GetOwnInventory("backpack") }
+        );
+    }
+
+    // Priority:
+    // 1. Path blocks
+    // 2. Path stairs
+    // 3. Path slabs
+    // 4. Stones
+    private (bool isSuccessful, bool shouldDrop) TryTakeMaterialsFromInventories(IInventory?[] inventories)
+    {
+        ItemSlot? bestSlot = null;
+        int bestPriority = int.MaxValue;
+        int takeOutSize = 0;
+        bool shouldDrop = false;
+        foreach (var inventory in inventories)
+        {
+            if (inventory is null)
+            {
+                continue;
+            }
+
+            foreach (ItemSlot slot in inventory)
+            {
+                if (!slot.CanTake())
+                {
+                    continue;
+                }
+
+                // Stone path block (highest priority)
+                if (slot.Itemstack.Block?.Id == stonePathId)
+                {
+                    slot.TakeOut(1);
+                    return (true, true);
+                }
+
+                // Stone path stair (priority 2)
+                if (bestPriority > 2 && slot.Itemstack.Block?.Id is not null && stonePathStairIds.Contains(slot.Itemstack.Block.Id))
+                {
+                    bestSlot = slot;
+                    bestPriority = 2;
+                    takeOutSize = 1;
+                    shouldDrop = true;
+                    continue;
+                }
+
+                // Stone path slab (priority 3)
+                if (bestPriority > 3 && slot.Itemstack.Block?.Id == stonePathSlabId && slot.Itemstack.StackSize >= 2)
+                {
+                    bestSlot = slot;
+                    bestPriority = 3;
+                    takeOutSize = 2;
+                    shouldDrop = true;
+                    continue;
+                }
+
+                // Any suitable stone (least priority)
+                if (
+                    bestPriority > 4
+                    && slot.Itemstack.Item?.Code is not null
+                    && Regex.IsMatch(slot.Itemstack.Item?.Code, "\\w+:stone-")
+                    && slot.Itemstack.StackSize >= 4
+                )
+                {
+                    bestSlot = slot;
+                    bestPriority = 4;
+                    takeOutSize = 4;
+                    continue;
+                }
+            }
+        }
+
+        if (bestSlot is not null)
+        {
+            bestSlot.TakeOut(takeOutSize);
+            return (true, shouldDrop);
+        }
+        return (false, false);
     }
 }
