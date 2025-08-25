@@ -10,7 +10,7 @@ namespace ImmersiveBuilding.Features.ShovelModes;
 
 internal class ShovelPathModeHandler : IModeHandler
 {
-    private static readonly string[] replaceablePathBlockPatterns = new string[] { "soil-*", "forestfloor-*", "sand-*", "gravel-*" };
+    private static readonly string[] replaceablePathBlockPatterns = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
     private readonly int[] replaceablePathBlockIds;
     private readonly int stonePathId;
     private readonly int stonePathSlabId;
@@ -18,7 +18,7 @@ internal class ShovelPathModeHandler : IModeHandler
 
     public ShovelPathModeHandler(ICoreAPI api)
     {
-        List<int> blockIdsFound = new();
+        List<int> blockIdsFound = [];
         foreach (string replaceableBlock in replaceablePathBlockPatterns)
         {
             foreach (Block searchBlock in api.World.SearchBlocks(new AssetLocation(replaceableBlock)))
@@ -30,13 +30,13 @@ internal class ShovelPathModeHandler : IModeHandler
 
         stonePathId = api.World.GetBlock(new AssetLocation("stonepath-free"))?.BlockId ?? -1;
         stonePathSlabId = api.World.GetBlock(new AssetLocation("game:stonepathslab-free"))?.BlockId ?? -1;
-        stonePathStairIds = new int[]
-        {
+        stonePathStairIds =
+        [
             api.World.GetBlock(new AssetLocation("stonepathstairs-up-south-free"))?.BlockId ?? -1,
             api.World.GetBlock(new AssetLocation("stonepathstairs-up-east-free"))?.BlockId ?? -1,
             api.World.GetBlock(new AssetLocation("stonepathstairs-up-north-free"))?.BlockId ?? -1,
             api.World.GetBlock(new AssetLocation("stonepathstairs-up-west-free"))?.BlockId ?? -1,
-        };
+        ];
     }
 
     public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
@@ -136,7 +136,7 @@ internal class ShovelPathModeHandler : IModeHandler
         }
 
         return TryTakeMaterialsFromInventories(
-            new IInventory?[] { player.InventoryManager.GetHotbarInventory(), player.InventoryManager.GetOwnInventory("backpack") }
+            [player.InventoryManager.GetHotbarInventory(), player.InventoryManager.GetOwnInventory("backpack")]
         );
     }
 

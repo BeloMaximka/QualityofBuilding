@@ -6,21 +6,21 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Features.ShovelModes;
+namespace ImmersiveBuilding.Features.StoneItemModes;
 
-public class ShovelBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
+public class StoneItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
-    private static readonly int lastModeIndex = Enum.GetValues(typeof(ShovelToolModes)).Cast<int>().Max();
+    private static readonly int lastModeIndex = Enum.GetValues(typeof(StoneItemBuildModes)).Cast<int>().Max();
 
-    private SkillItem[] modes = Array.Empty<SkillItem>();
-    private IModeHandler?[] modeHandlers = Array.Empty<IModeHandler>();
+    private SkillItem[] modes = [];
+    private IModeHandler?[] modeHandlers = [];
 
     public override void OnLoaded(ICoreAPI api)
     {
         base.OnLoaded(api);
 
         // Init mode handlers
-        modeHandlers = new IModeHandler?[] { null, new ShovelPathModeHandler(api) };
+        modeHandlers = [null, new StoneItemModeHandler(api), null, null];
 
         if (api is not ICoreClientAPI capi)
         {
@@ -30,11 +30,11 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CollectibleBe
         // Init modes for client
         modes = ObjectCacheUtil.GetOrCreate(
             api,
-            "immersiveBuildingShovelModes",
+            "immersiveBuildingStoneItemModes",
             () =>
-                new SkillItem[2]
+                new SkillItem[]
                 {
-                    new SkillItem() { Code = new AssetLocation("dig"), Name = Lang.Get("Dig mode") }.WithIcon(
+                    new SkillItem() { Code = new AssetLocation("default"), Name = Lang.Get("Default") }.WithIcon(
                         capi,
                         capi.Gui.LoadSvgWithPadding(
                             loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-dig.svg"),
@@ -44,7 +44,27 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CollectibleBe
                             color: -1
                         )
                     ),
-                    new SkillItem() { Code = new AssetLocation("path"), Name = Lang.Get("Path mode") }.WithIcon(
+                    new SkillItem() { Code = new AssetLocation("cobblestone"), Name = Lang.Get("Cobblestone") }.WithIcon(
+                        capi,
+                        capi.Gui.LoadSvgWithPadding(
+                            loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-dig.svg"),
+                            textureWidth: 48,
+                            textureHeight: 48,
+                            padding: 8,
+                            color: -1
+                        )
+                    ),
+                    new SkillItem() { Code = new AssetLocation("cobblestoneslab"), Name = Lang.Get("Cobblestone slab") }.WithIcon(
+                        capi,
+                        capi.Gui.LoadSvgWithPadding(
+                            loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-path.svg"),
+                            textureWidth: 48,
+                            textureHeight: 48,
+                            padding: 8,
+                            color: -1
+                        )
+                    ),
+                    new SkillItem() { Code = new AssetLocation("cobblestonestairs"), Name = Lang.Get("Cobblestone stairs") }.WithIcon(
                         capi,
                         capi.Gui.LoadSvgWithPadding(
                             loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-path.svg"),
