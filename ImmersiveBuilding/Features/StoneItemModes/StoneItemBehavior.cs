@@ -4,12 +4,13 @@ using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.API.Util;
+using Vintagestory.API.MathTools;
 
 namespace ImmersiveBuilding.Features.StoneItemModes;
 
 public class StoneItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
+    private readonly CollectibleObject collectibleObject = collectibleObject;
     private static readonly int lastModeIndex = Enum.GetValues(typeof(StoneItemBuildModes)).Cast<int>().Max();
 
     private SkillItem[] modes = [];
@@ -28,54 +29,70 @@ public class StoneItemBehavior(CollectibleObject collectibleObject) : Collectibl
         {
             return;
         }
-        modes = ObjectCacheUtil.GetOrCreate(
-            api,
-            "immersiveBuildingStoneItemModes",
-            () =>
-                new SkillItem[]
-                {
-                    new SkillItem() { Code = new AssetLocation("default"), Name = Lang.Get("Default") }.WithIcon(
-                        capi,
-                        capi.Gui.LoadSvgWithPadding(
-                            loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-dig.svg"),
-                            textureWidth: 48,
-                            textureHeight: 48,
-                            padding: 8,
-                            color: -1
-                        )
-                    ),
-                    new SkillItem() { Code = new AssetLocation("cobblestone"), Name = Lang.Get("Cobblestone") }.WithIcon(
-                        capi,
-                        capi.Gui.LoadSvgWithPadding(
-                            loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-dig.svg"),
-                            textureWidth: 48,
-                            textureHeight: 48,
-                            padding: 8,
-                            color: -1
-                        )
-                    ),
-                    new SkillItem() { Code = new AssetLocation("cobblestoneslab"), Name = Lang.Get("Cobblestone slab") }.WithIcon(
-                        capi,
-                        capi.Gui.LoadSvgWithPadding(
-                            loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-path.svg"),
-                            textureWidth: 48,
-                            textureHeight: 48,
-                            padding: 8,
-                            color: -1
-                        )
-                    ),
-                    new SkillItem() { Code = new AssetLocation("cobblestonestairs"), Name = Lang.Get("Cobblestone stairs") }.WithIcon(
-                        capi,
-                        capi.Gui.LoadSvgWithPadding(
-                            loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-path.svg"),
-                            textureWidth: 48,
-                            textureHeight: 48,
-                            padding: 8,
-                            color: -1
-                        )
-                    ),
-                }
-        );
+
+        modes =
+        [
+            new()
+            {
+                Code = new AssetLocation("default"),
+                Name = Lang.Get("Default"),
+                RenderHandler = GetItemRenderDelegate(capi, new DummySlot(new ItemStack(collectibleObject))),
+            },
+            new SkillItem()
+            {
+                Code = new AssetLocation("cobblestone"),
+                Name = Lang.Get("Cobblestone"),
+                RenderHandler = GetBlockRenderDelegate(capi, collectibleObject.Code.Path.Replace("stone-", "cobblestone-")),
+            },
+            new SkillItem()
+            {
+                Code = new AssetLocation("cobblestoneslab"),
+                Name = Lang.Get("Cobblestone slab"),
+                RenderHandler = GetBlockRenderDelegate(
+                    capi,
+                    collectibleObject.Code.Path.Replace("stone-", "cobblestoneslab-") + "-down-free"
+                ),
+            },
+            new SkillItem()
+            {
+                Code = new AssetLocation("cobblestonestairs"),
+                Name = Lang.Get("Cobblestone stairs"),
+                RenderHandler = GetBlockRenderDelegate(
+                    capi,
+                    collectibleObject.Code.Path.Replace("stone-", "cobblestonestairs-") + "-up-north-free"
+                ),
+            },
+        ];
+    }
+
+    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, string code)
+    {
+        Block block = capi.World.GetBlock(new AssetLocation(code));
+        if (block == null)
+        {
+            return (code, dt, posX, posY) => { };
+        }
+
+        DummySlot dummySlot = new(new ItemStack(block));
+        return GetItemRenderDelegate(capi, dummySlot);
+    }
+
+    private static RenderSkillItemDelegate GetItemRenderDelegate(ICoreClientAPI capi, ItemSlot slot)
+    {
+        return (code, dt, posX, posY) =>
+        {
+            double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGrid.unscaledSlotPadding;
+            double scsize = GuiElement.scaled(size - 5);
+
+            capi.Render.RenderItemstackToGui(
+                slot,
+                posX + scsize / 2,
+                posY + scsize / 2,
+                100,
+                (float)GuiElement.scaled(GuiElementPassiveItemSlot.unscaledItemSize),
+                ColorUtil.WhiteArgb
+            );
+        };
     }
 
     // These handling overrides are ugly but I haven't come up with a better solution yet
