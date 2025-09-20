@@ -19,15 +19,15 @@ public class StoneItemBehavior(CollectibleObject collectibleObject) : Collectibl
     {
         base.OnLoaded(api);
 
+        string stoneName = collectibleObject.Code.Path.Split('-')[1]; // game:stone-chalk => chalk
         // Init mode handlers
-        modeHandlers = [null, new StoneItemModeHandler(api), null, null];
+        modeHandlers = [null, new StoneItemCobbleBlockModeHandler(api, stoneName), null, null];
 
+        // Init modes for client
         if (api is not ICoreClientAPI capi)
         {
             return;
         }
-
-        // Init modes for client
         modes = ObjectCacheUtil.GetOrCreate(
             api,
             "immersiveBuildingStoneItemModes",
@@ -78,6 +78,7 @@ public class StoneItemBehavior(CollectibleObject collectibleObject) : Collectibl
         );
     }
 
+    // These handling overrides are ugly but I haven't come up with a better solution yet
     public override void OnHeldInteractStart(
         ItemSlot slot,
         EntityAgent byEntity,
@@ -88,17 +89,77 @@ public class StoneItemBehavior(CollectibleObject collectibleObject) : Collectibl
         ref EnumHandling handling
     )
     {
-        if (!CanHandleMode(slot, byEntity, blockSel))
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        if (selectedMode <= 0 || selectedMode > lastModeIndex)
         {
-            base.OnHeldInteractStart(slot, byEntity, blockSel, entitySel, firstEvent, ref handHandling, ref handling);
-            return;
+            return; // Not our mode
         }
 
         handHandling = EnumHandHandling.PreventDefault;
-        handling = EnumHandling.PreventDefault;
+        handling = EnumHandling.PreventSubsequent;
 
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
+        if (
+            blockSel == null
+            || byPlayer == null
+            || !byEntity.World.Claims.TryAccess(byPlayer, blockSel.Position, EnumBlockAccessFlags.BuildOrBreak)
+        )
+        {
+            return;
+        }
+
         modeHandlers[selectedMode]?.HandleStart(slot, byEntity, blockSel, entitySel);
+    }
+
+    public override bool OnHeldInteractStep(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel,
+        ref EnumHandling handling
+    )
+    {
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        if (selectedMode > 0 && selectedMode < lastModeIndex)
+        {
+            handling = EnumHandling.PreventSubsequent;
+        }
+        return true;
+    }
+
+    public override void OnHeldInteractStop(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel,
+        ref EnumHandling handling
+    )
+    {
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        if (selectedMode > 0 && selectedMode < lastModeIndex)
+        {
+            handling = EnumHandling.PreventSubsequent;
+        }
+    }
+
+    public override bool OnHeldInteractCancel(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel,
+        EnumItemUseCancelReason cancelReason,
+        ref EnumHandling handled
+    )
+    {
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        if (selectedMode > 0 && selectedMode < lastModeIndex)
+        {
+            handled = EnumHandling.PreventSubsequent;
+        }
+        return true;
     }
 
     public override SkillItem[] GetToolModes(ItemSlot slot, IClientPlayer forPlayer, BlockSelection blockSel) => modes;
@@ -119,32 +180,5 @@ public class StoneItemBehavior(CollectibleObject collectibleObject) : Collectibl
         {
             modes[i].Dispose();
         }
-    }
-
-    private static bool CanHandleMode(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel)
-    {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
-        if (selectedMode <= 0 || selectedMode > lastModeIndex)
-        {
-            return false; // Not our mode
-        }
-
-        if (blockSel == null)
-        {
-            return false;
-        }
-
-        IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
-        if (byPlayer == null)
-        {
-            return false;
-        }
-
-        if (!byEntity.World.Claims.TryAccess(byPlayer, blockSel.Position, EnumBlockAccessFlags.BuildOrBreak))
-        {
-            return false;
-        }
-
-        return true;
     }
 }
