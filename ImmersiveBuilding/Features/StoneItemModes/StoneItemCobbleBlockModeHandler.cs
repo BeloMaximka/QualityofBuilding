@@ -26,7 +26,7 @@ internal class StoneItemCobbleBlockModeHandler(ICoreAPI api, string stoneName) :
         if (failureCode == "no-failure")
         {
             api.World.PlaySoundAt(
-                AssetLocation.Create("sounds/player/build"),
+                cobbleBlock.Sounds.Place,
                 blockSel.Position.X,
                 blockSel.Position.Y,
                 blockSel.Position.Z,
