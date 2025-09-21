@@ -1,0 +1,22 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stone-*"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stone-*",
+			"quantity": 4
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:cobblestone-*"
+	}
+}

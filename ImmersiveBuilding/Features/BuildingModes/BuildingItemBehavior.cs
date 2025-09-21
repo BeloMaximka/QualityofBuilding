@@ -1,17 +1,19 @@
-﻿using ImmersiveBuilding.Shared;
-using System;
+﻿using ImmersiveBuilding.Features.Recipes;
+using ImmersiveBuilding.Shared;
+using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Features.StoneItemModes;
+namespace ImmersiveBuilding.Features.BuildingModes;
 
-public class StoneItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
+internal class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
     private readonly CollectibleObject collectibleObject = collectibleObject;
-    private static readonly int lastModeIndex = Enum.GetValues(typeof(StoneItemBuildModes)).Cast<int>().Max();
+    private int lastModeIndex = 0;
 
     private SkillItem[] modes = [];
     private IModeHandler?[] modeHandlers = [];
@@ -20,9 +22,23 @@ public class StoneItemBehavior(CollectibleObject collectibleObject) : Collectibl
     {
         base.OnLoaded(api);
 
-        string stoneName = collectibleObject.Code.Path.Split('-')[1]; // game:stone-chalk => chalk
         // Init mode handlers
-        modeHandlers = [null, new StoneItemCobbleBlockModeHandler(api, stoneName), null, null];
+        IEnumerable<SkillModeBuildingRecipe> recipes = api
+            .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
+            .BuildingRecipes.Where(recipe => WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)); // TODO: optimize this
+
+        modeHandlers =
+        [
+            null, // handler for default mode (vanilla behavior)
+            .. recipes.Select(
+                (recipe) =>
+                {
+                    string wildcardValue = WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code);
+                    return new BuildingModeHandler(api, recipe.Output.Code.Path.Replace("*", wildcardValue));
+                }
+            ),
+        ];
+        lastModeIndex = modeHandlers.Length - 1;
 
         // Init modes for client
         if (api is not ICoreClientAPI capi)
@@ -38,30 +54,19 @@ public class StoneItemBehavior(CollectibleObject collectibleObject) : Collectibl
                 Name = Lang.Get("Default"),
                 RenderHandler = GetItemRenderDelegate(capi, new DummySlot(new ItemStack(collectibleObject))),
             },
-            new SkillItem()
-            {
-                Code = new AssetLocation("cobblestone"),
-                Name = Lang.Get("Cobblestone"),
-                RenderHandler = GetBlockRenderDelegate(capi, collectibleObject.Code.Path.Replace("stone-", "cobblestone-")),
-            },
-            new SkillItem()
-            {
-                Code = new AssetLocation("cobblestoneslab"),
-                Name = Lang.Get("Cobblestone slab"),
-                RenderHandler = GetBlockRenderDelegate(
-                    capi,
-                    collectibleObject.Code.Path.Replace("stone-", "cobblestoneslab-") + "-down-free"
-                ),
-            },
-            new SkillItem()
-            {
-                Code = new AssetLocation("cobblestonestairs"),
-                Name = Lang.Get("Cobblestone stairs"),
-                RenderHandler = GetBlockRenderDelegate(
-                    capi,
-                    collectibleObject.Code.Path.Replace("stone-", "cobblestonestairs-") + "-up-north-free"
-                ),
-            },
+            .. recipes.Select(
+                (recipe) =>
+                {
+                    string wildcardValue = WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code.Path);
+                    string blockCode = recipe.Output.Code.Path.Replace("*", wildcardValue);
+                    return new SkillItem()
+                    {
+                        Code = new AssetLocation(blockCode),
+                        Name = Lang.Get(blockCode),
+                        RenderHandler = GetBlockRenderDelegate(capi, blockCode),
+                    };
+                }
+            ),
         ];
     }
 
