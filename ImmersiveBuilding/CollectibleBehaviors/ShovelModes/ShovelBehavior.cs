@@ -12,15 +12,15 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CollectibleBe
 {
     private static readonly int lastModeIndex = Enum.GetValues(typeof(ShovelToolModes)).Cast<int>().Max();
 
-    private SkillItem[] modes = Array.Empty<SkillItem>();
-    private IModeHandler?[] modeHandlers = Array.Empty<IModeHandler>();
+    private SkillItem[] modes = [];
+    private IModeHandler?[] modeHandlers = [];
 
     public override void OnLoaded(ICoreAPI api)
     {
         base.OnLoaded(api);
 
         // Init mode handlers
-        modeHandlers = new IModeHandler?[] { null, new ShovelPathModeHandler(api) };
+        modeHandlers = [null, new ShovelPathModeHandler(api)];
 
         if (api is not ICoreClientAPI capi)
         {
