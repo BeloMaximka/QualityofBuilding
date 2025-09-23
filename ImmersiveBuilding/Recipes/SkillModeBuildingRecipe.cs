@@ -19,6 +19,14 @@ public class SkillModeBuildingRecipe : IByteSerializable
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
         Tool = new() { Code = new(reader.ReadString()), Name = reader.ReadString() };
+
+        int skipVariantsCount = reader.ReadInt32();
+        Tool.SkipVariants = new string[skipVariantsCount];
+        for (int i = 0; i < skipVariantsCount; i++)
+        {
+            Tool.SkipVariants[i] = reader.ReadString();
+        }
+
         int ingredientCount = reader.ReadInt32();
         Ingredients = new CraftingRecipeIngredient[ingredientCount];
         for (int i = 0; i < ingredientCount; i++)
@@ -32,12 +40,22 @@ public class SkillModeBuildingRecipe : IByteSerializable
     {
         writer.Write(Tool.Code.ToString());
         writer.Write(Tool.Name ?? string.Empty);
+        writer.Write(Tool.SkipVariants?.Length ?? 0);
+        if (Tool.SkipVariants is not null)
+        {
+            foreach (string variant in Tool.SkipVariants)
+            {
+                writer.Write(variant);
+            }
+        }
+
         writer.Write(Ingredients.Length);
-        foreach (var ingredient in Ingredients)
+        foreach (CraftingRecipeIngredient ingredient in Ingredients)
         {
             writer.Write(ingredient.Code.ToString());
             writer.Write(ingredient.Quantity);
         }
+
         writer.Write(Output.Code.ToString());
     }
 }

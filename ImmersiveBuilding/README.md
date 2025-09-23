@@ -1,6 +1,5 @@
 # TODO
 
-- Fix meteoric stone
 - Add mortar crafting from clay
 - Replace clay usage in cobble crafts with mortar
 - Double the yield of mortar from crafting to deal with awkward proportions

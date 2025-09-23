@@ -24,7 +24,10 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
         // Init mode handlers
         IEnumerable<SkillModeBuildingRecipe> recipes = api
             .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
-            .BuildingRecipes.Where(recipe => WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)); // TODO: optimize this
+            .BuildingRecipes.Where(recipe =>
+                WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
+                && !recipe.Tool.SkipVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
+            ); // TODO: optimize this
 
         modeHandlers =
         [

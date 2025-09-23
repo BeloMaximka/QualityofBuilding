@@ -4,6 +4,7 @@ using ImmersiveBuilding.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
+using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding;
 
@@ -44,6 +45,11 @@ public class ImmersiveBuildingModSystem : ModSystem
         {
             foreach (Item item in api.World.SearchItems(recipesGroupedByTools.Key))
             {
+                string variant = WildcardUtil.GetWildcardValue(recipesGroupedByTools.Key, item.Code);
+                if (recipesGroupedByTools.All(recipe => recipe.Tool.SkipVariants.Contains(variant)))
+                {
+                    continue; // No recipes for this tool (meteorite-iron, for example)
+                }
                 Mod.Logger.Notification("Adding {0} to {1}", nameof(BuildingItemBehavior), item.Code.ToString());
                 CollectibleBehavior[] collectibleBehaviorList = new CollectibleBehavior[item.CollectibleBehaviors.Length + 1];
                 item.CollectibleBehaviors.CopyTo(collectibleBehaviorList, 0);

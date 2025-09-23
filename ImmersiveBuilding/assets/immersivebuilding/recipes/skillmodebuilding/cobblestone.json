@@ -2,7 +2,10 @@
 	"tool": {
 		"type": "item",
 		"code": "game:stone-*",
-		"name": "rock"
+		"name": "rock",
+		"skipVariants": [
+			"meteorite-iron"
+		]
 	},
 	"ingredients": [
 		{
