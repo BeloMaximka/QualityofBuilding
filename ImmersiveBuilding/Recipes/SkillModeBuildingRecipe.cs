@@ -11,9 +11,14 @@ public class SkillModeBuildingRecipe : IByteSerializable
 
     public CraftingRecipeIngredient Output { get; set; } = new();
 
+    public AssetLocation ResolveSubstitute(AssetLocation code, string substitute)
+    {
+        return string.IsNullOrEmpty(Tool.Name) ? code : new AssetLocation(code.ToString().Replace($"{{{Tool.Name}}}", substitute));
+    }
+
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
-        Tool = new() { Code = new(reader.ReadString()) };
+        Tool = new() { Code = new(reader.ReadString()), Name = reader.ReadString() };
         int ingredientCount = reader.ReadInt32();
         Ingredients = new CraftingRecipeIngredient[ingredientCount];
         for (int i = 0; i < ingredientCount; i++)
@@ -26,6 +31,7 @@ public class SkillModeBuildingRecipe : IByteSerializable
     public void ToBytes(BinaryWriter writer)
     {
         writer.Write(Tool.Code.ToString());
+        writer.Write(Tool.Name ?? string.Empty);
         writer.Write(Ingredients.Length);
         foreach (var ingredient in Ingredients)
         {

@@ -1,12 +1,13 @@
 {
 	"tool": {
 		"type": "item",
-		"code": "game:stone-*"
+		"code": "game:stone-*",
+		"name": "rock"
 	},
 	"ingredients": [
 		{
 			"type": "item",
-			"code": "game:stone-*",
+			"code": "game:stone-{rock}",
 			"quantity": 4
 		},
 		{
@@ -17,6 +18,6 @@
 	],
 	"output": {
 		"type": "block",
-		"code": "game:cobblestone-*"
+		"code": "game:cobblestone-{rock}"
 	}
 }

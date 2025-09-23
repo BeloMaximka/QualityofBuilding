@@ -1,8 +1,6 @@
 # TODO
 
 - Fix meteoric stone
-- Add proper translation to skill modes
-- Make cobblestone blocks use stones and mortar for building in survival mode
 - Add mortar crafting from clay
 - Replace clay usage in cobble crafts with mortar
 - Double the yield of mortar from crafting to deal with awkward proportions

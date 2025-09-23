@@ -1,10 +1,14 @@
-﻿using Vintagestory.API.Common;
+﻿using ImmersiveBuilding.Extensions;
+using ImmersiveBuilding.Recipes;
+using System.Collections.Generic;
+using System.Linq;
+using Vintagestory.API.Common;
 
 namespace ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
 
-internal class BuildingModeHandler(ICoreAPI api, string blockCode) : IModeHandler
+public class BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, string wildcardValue) : IModeHandler
 {
-    private readonly Block? block = api.World.GetBlock(new AssetLocation(blockCode));
+    private readonly Block? block = api.World.GetBlock(recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue));
 
     public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
     {
@@ -20,12 +24,27 @@ internal class BuildingModeHandler(ICoreAPI api, string blockCode) : IModeHandle
             newBlockSelection = blockSel.AddPosCopy(blockSel.Face.Normali);
         }
 
-        string failureCode = "no-failure";
-        block.TryPlaceBlock(api.World, byPlayer, slot.Itemstack, newBlockSelection, ref failureCode);
-
-        if (failureCode == "no-failure")
+        string resultCode = "success";
+        block.CanPlaceBlock(api.World, byPlayer, newBlockSelection, ref resultCode);
+        if (resultCode != "success")
         {
-            api.World.PlaySoundAt(block.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
+            return;
         }
+
+        List<ItemIngredient> ingredients =
+        [
+            .. recipe.Ingredients.Select(ingredient => new ItemIngredient()
+            {
+                Code = recipe.ResolveSubstitute(ingredient.Code, wildcardValue),
+                Quantity = ingredient.Quantity,
+            }),
+        ];
+        if (!byPlayer.TryTakeItems(ingredients))
+        {
+            return;
+        }
+
+        block.DoPlaceBlock(api.World, byPlayer, newBlockSelection, slot.Itemstack);
+        api.World.PlaySoundAt(block.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
     }
 }

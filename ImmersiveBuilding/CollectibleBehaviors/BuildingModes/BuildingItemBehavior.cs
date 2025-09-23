@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
@@ -33,8 +32,7 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
             .. recipes.Select(
                 (recipe) =>
                 {
-                    string wildcardValue = WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code);
-                    return new BuildingModeHandler(api, recipe.Output.Code.Path.Replace("*", wildcardValue));
+                    return new BuildingModeHandler(api, recipe, WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code));
                 }
             ),
         ];
@@ -46,38 +44,41 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
             return;
         }
 
+        ItemStack itemStack = new(collectibleObject);
         modes =
         [
             new()
             {
-                Code = new AssetLocation("default"),
-                Name = Lang.Get("Default"),
-                RenderHandler = GetItemRenderDelegate(capi, new DummySlot(new ItemStack(collectibleObject))),
+                Code = collectibleObject.Code,
+                Name = itemStack.GetName(),
+                RenderHandler = GetItemRenderDelegate(capi, new DummySlot(itemStack)),
             },
-            .. recipes.Select(
-                (recipe) =>
-                {
-                    string wildcardValue = WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code.Path);
-                    string blockCode = recipe.Output.Code.Path.Replace("*", wildcardValue);
-                    return new SkillItem()
-                    {
-                        Code = new AssetLocation(blockCode),
-                        Name = Lang.Get(blockCode),
-                        RenderHandler = GetBlockRenderDelegate(capi, blockCode),
-                    };
-                }
-            ),
+            .. recipes.Select((recipe) => GetModeFromRecipe(capi, recipe)),
         ];
     }
 
-    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, string code)
+    private SkillItem GetModeFromRecipe(ICoreClientAPI capi, SkillModeBuildingRecipe recipe)
     {
-        Block block = capi.World.GetBlock(new AssetLocation(code));
+        string blockCode = recipe.ResolveSubstitute(
+            recipe.Output.Code,
+            WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code)
+        );
+        Block? block = capi.World.GetBlock(blockCode);
         if (block == null)
         {
-            return (code, dt, posX, posY) => { };
+            return new SkillItem() { Code = blockCode, Name = blockCode };
         }
 
+        return new SkillItem()
+        {
+            Code = block.Code,
+            Name = new ItemStack(block).GetName(),
+            RenderHandler = GetBlockRenderDelegate(capi, block),
+        };
+    }
+
+    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, Block block)
+    {
         DummySlot dummySlot = new(new ItemStack(block));
         return GetItemRenderDelegate(capi, dummySlot);
     }
