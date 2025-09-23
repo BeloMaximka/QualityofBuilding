@@ -1,6 +1,6 @@
-﻿using ImmersiveBuilding.Features.BuildingModes;
-using ImmersiveBuilding.Features.Recipes;
-using ImmersiveBuilding.Features.ShovelModes;
+﻿using ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
+using ImmersiveBuilding.CollectibleBehaviors.ShovelModes;
+using ImmersiveBuilding.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;

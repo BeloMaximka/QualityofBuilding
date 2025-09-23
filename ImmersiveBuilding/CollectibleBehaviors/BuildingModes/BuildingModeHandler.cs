@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Features.BuildingModes;
+namespace ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
 
 internal class BuildingModeHandler(ICoreAPI api, string blockCode) : IModeHandler
 {

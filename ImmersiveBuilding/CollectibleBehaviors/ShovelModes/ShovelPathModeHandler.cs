@@ -6,7 +6,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Features.ShovelModes;
+namespace ImmersiveBuilding.CollectibleBehaviors.ShovelModes;
 
 internal class ShovelPathModeHandler : IModeHandler
 {

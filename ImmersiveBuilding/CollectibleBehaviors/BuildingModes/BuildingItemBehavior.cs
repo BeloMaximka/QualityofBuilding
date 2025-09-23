@@ -1,5 +1,5 @@
-﻿using ImmersiveBuilding.Features.Recipes;
-using ImmersiveBuilding.Shared;
+﻿using ImmersiveBuilding.Common;
+using ImmersiveBuilding.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
@@ -8,7 +8,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Features.BuildingModes;
+namespace ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
 
 internal class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
@@ -86,7 +86,7 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
     {
         return (code, dt, posX, posY) =>
         {
-            double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGrid.unscaledSlotPadding;
+            double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
             double scsize = GuiElement.scaled(size - 5);
 
             capi.Render.RenderItemstackToGui(

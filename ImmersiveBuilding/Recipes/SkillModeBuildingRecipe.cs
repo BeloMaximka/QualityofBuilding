@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Features.Recipes;
+namespace ImmersiveBuilding.Recipes;
 
 public class SkillModeBuildingRecipe : IByteSerializable
 {

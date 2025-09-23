@@ -1,4 +1,4 @@
-﻿namespace ImmersiveBuilding.Shared;
+﻿namespace ImmersiveBuilding.Common;
 
 public static class SharedConstants
 {

@@ -1,4 +1,4 @@
-﻿using ImmersiveBuilding.Shared;
+﻿using ImmersiveBuilding.Common;
 using System;
 using System.Linq;
 using Vintagestory.API.Client;
@@ -6,7 +6,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Features.ShovelModes;
+namespace ImmersiveBuilding.CollectibleBehaviors.ShovelModes;
 
 public class ShovelBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
