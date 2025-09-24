@@ -1,0 +1,26 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stone-*",
+		"name": "rock",
+		"skipVariants": [
+			"meteorite-iron"
+		]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stone-{rock}",
+			"quantity": 3
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:cobblestonestairs-{rock}-up-north-free"
+	}
+}

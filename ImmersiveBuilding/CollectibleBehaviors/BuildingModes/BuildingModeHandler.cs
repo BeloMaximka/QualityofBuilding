@@ -3,6 +3,7 @@ using ImmersiveBuilding.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 
 namespace ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
 
@@ -44,7 +45,21 @@ public class BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, s
             return;
         }
 
-        block.DoPlaceBlock(api.World, byPlayer, newBlockSelection, slot.Itemstack);
+        // TryPlaceBlock instead of DoPlaceBlock because some blocks like BlockFence don't have DoPlaceBlock override
+        block.TryPlaceBlock(api.World, byPlayer, slot.Itemstack, newBlockSelection, ref resultCode);
+        UpdateNeighbours(newBlockSelection);
         api.World.PlaySoundAt(block.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
+    }
+
+    private void UpdateNeighbours(BlockSelection blockSelection) // Some manual stuff to make client update instant
+    {
+        BlockPos tempPos = blockSelection.Position.NorthCopy();
+        api.World.BlockAccessor.GetBlock(tempPos).OnNeighbourBlockChange(api.World, tempPos, blockSelection.Position);
+        tempPos.Set(blockSelection.Position).South();
+        api.World.BlockAccessor.GetBlock(tempPos).OnNeighbourBlockChange(api.World, tempPos, blockSelection.Position);
+        tempPos.Set(blockSelection.Position).West();
+        api.World.BlockAccessor.GetBlock(tempPos).OnNeighbourBlockChange(api.World, tempPos, blockSelection.Position);
+        tempPos.Set(blockSelection.Position).East();
+        api.World.BlockAccessor.GetBlock(tempPos).OnNeighbourBlockChange(api.World, tempPos, blockSelection.Position);
     }
 }

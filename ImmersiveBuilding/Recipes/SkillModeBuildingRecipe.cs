@@ -3,6 +3,7 @@ using Vintagestory.API.Common;
 
 namespace ImmersiveBuilding.Recipes;
 
+// TODO: Refactor so FromBytes() and ToBytes() are more maintainable
 public class SkillModeBuildingRecipe : IByteSerializable
 {
     public CraftingRecipeIngredient Tool { get; set; } = new();
@@ -31,7 +32,12 @@ public class SkillModeBuildingRecipe : IByteSerializable
         Ingredients = new CraftingRecipeIngredient[ingredientCount];
         for (int i = 0; i < ingredientCount; i++)
         {
-            Ingredients[i] = new CraftingRecipeIngredient() { Code = new(reader.ReadString()), Quantity = reader.ReadInt32() };
+            Ingredients[i] = new CraftingRecipeIngredient()
+            {
+                Type = (EnumItemClass)reader.ReadInt32(),
+                Code = new(reader.ReadString()),
+                Quantity = reader.ReadInt32(),
+            };
         }
         Output = new() { Code = new(reader.ReadString()) };
     }
@@ -52,6 +58,7 @@ public class SkillModeBuildingRecipe : IByteSerializable
         writer.Write(Ingredients.Length);
         foreach (CraftingRecipeIngredient ingredient in Ingredients)
         {
+            writer.Write((int)ingredient.Type);
             writer.Write(ingredient.Code.ToString());
             writer.Write(ingredient.Quantity);
         }

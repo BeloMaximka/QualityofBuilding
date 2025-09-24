@@ -1,0 +1,21 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stone-*",
+		"name": "rock",
+		"skipVariants": [
+			"meteorite-iron"
+		]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stone-{rock}",
+			"quantity": 6
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:drystonefence-{rock}-ew-free"
+	}
+}

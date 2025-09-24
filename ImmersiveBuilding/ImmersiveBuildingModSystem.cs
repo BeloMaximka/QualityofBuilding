@@ -1,19 +1,29 @@
-﻿using ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
+﻿using HarmonyLib;
+using ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.CollectibleBehaviors.ShovelModes;
+using ImmersiveBuilding.Extensions;
 using ImmersiveBuilding.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding;
 
 public class ImmersiveBuildingModSystem : ModSystem
 {
+    private Harmony HarmonyInstance => new(Mod.Info.ModID);
+
     public List<SkillModeBuildingRecipe> BuildingRecipes { get; private set; } = [];
 
     // Set >1 so we can load recipes and patch shovel behaviors
     public override double ExecuteOrder() => 1.1;
+
+    public override void StartPre(ICoreAPI api)
+    {
+        HarmonyInstance.PatchAll();
+    }
 
     public override void Start(ICoreAPI api)
     {
@@ -22,7 +32,7 @@ public class ImmersiveBuildingModSystem : ModSystem
         BuildingRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<SkillModeBuildingRecipe>>("skillmodebuildingrecipes").Recipes;
     }
 
-    public override void AssetsLoaded(ICoreAPI api)
+    public override void AssetsFinalize(ICoreAPI api)
     {
         if (api.Side == EnumAppSide.Client)
         {
@@ -50,12 +60,61 @@ public class ImmersiveBuildingModSystem : ModSystem
                 {
                     continue; // No recipes for this tool (meteorite-iron, for example)
                 }
+
                 Mod.Logger.Notification("Adding {0} to {1}", nameof(BuildingItemBehavior), item.Code.ToString());
-                CollectibleBehavior[] collectibleBehaviorList = new CollectibleBehavior[item.CollectibleBehaviors.Length + 1];
-                item.CollectibleBehaviors.CopyTo(collectibleBehaviorList, 0);
-                collectibleBehaviorList[^1] = new BuildingItemBehavior(item);
-                item.CollectibleBehaviors = collectibleBehaviorList;
+                item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new BuildingItemBehavior(item));
+
+                // Adjust drops for blocks
+                foreach (SkillModeBuildingRecipe recipe in recipesGroupedByTools)
+                {
+                    ChangeOutputBlockDropsToRawMaterials(api, recipe, variant);
+                }
             }
         }
+    }
+
+    private void ChangeOutputBlockDropsToRawMaterials(ICoreAPI api, SkillModeBuildingRecipe recipe, string variant)
+    {
+        AssetLocation blockCode = recipe.ResolveSubstitute(recipe.Output.Code, variant);
+        if (blockCode.Path.CountChars('-') > 2) // skip for blocks like cobblestone-andesite
+        {
+            blockCode.Path = blockCode.Path.Replace(blockCode.CodePartsAfterSecond(), "*"); // Adjust drops for blocks like cobblestonestairs-up-north-free
+        }
+        Block[] blocksWithVariants = api.World.SearchBlocks(blockCode);
+
+        if (blocksWithVariants.Length == 0)
+        {
+            Mod.Logger.Warning("Unable to change recipe for {0}, no blocks found!", blockCode);
+            return;
+        }
+
+        foreach (Block block in blocksWithVariants)
+        {
+            block.Drops =
+            [
+                .. recipe
+                    .Ingredients.Select(ingredient =>
+                    {
+                        string itemCode = ingredient.Code.WithReplacedWildcard(variant);
+                        Item? item = api.World.GetItem(recipe.ResolveSubstitute(ingredient.Code, variant));
+                        if (item is null)
+                        {
+                            Mod.Logger.Warning("Unable to add recipe ingredient {0} for {0}, item not found!", itemCode);
+                            return null;
+                        }
+                        return new BlockDropItemStack(new ItemStack(item, ingredient.Quantity))
+                        {
+                            Quantity = new NatFloat(ingredient.Quantity, 0f, EnumDistribution.UNIFORM), // BlockDropItemStack hardcodes NatFloat.One
+                        };
+                    })
+                    .Where(ingredient => ingredient is not null),
+            ];
+            Mod.Logger.Notification("Changed recipe for block {0}", block.Code);
+        }
+    }
+
+    public override void Dispose()
+    {
+        HarmonyInstance.UnpatchAll(HarmonyInstance.Id);
     }
 }
