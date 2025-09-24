@@ -75,11 +75,7 @@ public class ImmersiveBuildingModSystem : ModSystem
 
     private void ChangeOutputBlockDropsToRawMaterials(ICoreAPI api, SkillModeBuildingRecipe recipe, string variant)
     {
-        AssetLocation blockCode = recipe.ResolveSubstitute(recipe.Output.Code, variant);
-        if (blockCode.Path.CountChars('-') > 2) // skip for blocks like cobblestone-andesite
-        {
-            blockCode.Path = blockCode.Path.Replace(blockCode.CodePartsAfterSecond(), "*"); // Adjust drops for blocks like cobblestonestairs-up-north-free
-        }
+        AssetLocation blockCode = recipe.ResolveSubstitute(recipe.Output.Code, variant).WithStatePartsAsWildcards();
         Block[] blocksWithVariants = api.World.SearchBlocks(blockCode);
 
         if (blocksWithVariants.Length == 0)
