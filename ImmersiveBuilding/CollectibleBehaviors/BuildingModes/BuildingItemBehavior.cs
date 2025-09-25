@@ -27,8 +27,8 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
             .BuildingRecipes.Where(recipe =>
                 WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
                 && (
-                    recipe.Tool.SkipVariants is null
-                    || !recipe.Tool.SkipVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
+                    recipe.Tool.AllowVariants.Length == 0
+                    || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
                 )
             ); // TODO: optimize this
 

@@ -3,9 +3,7 @@
 		"type": "item",
 		"code": "game:stone-*",
 		"name": "rock",
-		"skipVariants": [
-			"meteorite-iron"
-		]
+		"allowVariants": ["andesite", "chalk", "chert", "conglomerate", "limestone", "claystone", "granite", "sandstone", "shale", "basalt", "peridotite", "phyllite", "slate", "bauxite", "suevite", "whitemarble", "greenmarble", "redmarble", "kimberlite"]
 	},
 	"ingredients": [
 		{

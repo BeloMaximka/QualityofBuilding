@@ -24,6 +24,7 @@ public static class HardcodedDropsPatch
     [HarmonyPatch(typeof(BlockFenceGate), nameof(BlockFenceGate.GetDrops))]
     public static void FixBlockFenceGate(BlockFenceGate __instance, ref ItemStack[] __result) => FixDropsFor(__instance, ref __result);
 
+    // This one can be removed if we utilize the `drop` property from BlockBehaviorHorizontalOrientable. Maybe.
     [HarmonyPostfix]
     [HarmonyPatch(typeof(BlockBehaviorHorizontalOrientable), nameof(BlockBehaviorHorizontalOrientable.GetDrops))]
     public static void FixBlockBehaviorHorizontalOrientable(BlockBehaviorHorizontalOrientable __instance, ref ItemStack[] __result)

@@ -6,7 +6,7 @@ namespace ImmersiveBuilding.Extensions;
 public static class AssetLocationExtensions
 {
     private static readonly Regex stateVariationsRegex = new(
-        pattern: "-up|-down|-free|-snow|-north|-south|-west|-east|-ns|-we",
+        pattern: "-up|-down|-free|-snow|-north|-south|-west|-east|-ns|-we|-ud",
         options: RegexOptions.Compiled | RegexOptions.IgnoreCase
     );
 
