@@ -1,0 +1,18 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:plank-*",
+		"name": "wood"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:plank-{wood}",
+			"quantity": 2
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:woodenfencegate-{wood}-n-closed-left-free"
+	}
+}

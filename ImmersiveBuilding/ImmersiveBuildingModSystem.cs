@@ -56,7 +56,7 @@ public class ImmersiveBuildingModSystem : ModSystem
             foreach (Item item in api.World.SearchItems(recipesGroupedByTools.Key))
             {
                 string variant = WildcardUtil.GetWildcardValue(recipesGroupedByTools.Key, item.Code);
-                if (recipesGroupedByTools.All(recipe => recipe.Tool.SkipVariants.Contains(variant)))
+                if (recipesGroupedByTools.All(recipe => recipe.Tool.SkipVariants is not null && recipe.Tool.SkipVariants.Contains(variant)))
                 {
                     continue; // No recipes for this tool (meteorite-iron, for example)
                 }

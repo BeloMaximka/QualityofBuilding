@@ -1,0 +1,18 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:plank-*",
+		"name": "wood"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:plank-{wood}",
+			"quantity": 8
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:slantedroofingtip-{wood}-free"
+	}
+}

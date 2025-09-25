@@ -26,7 +26,10 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
             .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
             .BuildingRecipes.Where(recipe =>
                 WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
-                && !recipe.Tool.SkipVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
+                && (
+                    recipe.Tool.SkipVariants is null
+                    || !recipe.Tool.SkipVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
+                )
             ); // TODO: optimize this
 
         modeHandlers =
