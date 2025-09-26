@@ -1,0 +1,53 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stone-*",
+		"allowVariants": ["bauxite", "granite", "limestone", "andesite", "phyllite", "chalk", "claystone", "conglomerate"]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stone-bauxite",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:stone-granite",
+			"quantity": 1
+		},
+				{
+			"type": "item",
+			"code": "game:stone-limestone",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:stone-andesite",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:stone-phyllite",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:stone-chalk",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:stone-claystone",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:stone-conglomerate",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:drystone-mixed"
+	}
+}

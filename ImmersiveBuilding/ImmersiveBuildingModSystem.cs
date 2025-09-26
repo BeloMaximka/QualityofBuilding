@@ -42,7 +42,7 @@ public class ImmersiveBuildingModSystem : ModSystem
         // Add shovel behaviors
         foreach (Item item in api.World.SearchItems(AssetLocation.Create("shovel-*")))
         {
-            Mod.Logger.Notification("Adding {0} to {1}", nameof(ShovelBehavior), item.Code.ToString());
+            Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(ShovelBehavior), item.Code.ToString());
             CollectibleBehavior[] collectibleBehaviorList = new CollectibleBehavior[item.CollectibleBehaviors.Length + 1];
             item.CollectibleBehaviors.CopyTo(collectibleBehaviorList, 0);
             collectibleBehaviorList[^1] = new ShovelBehavior(item);
@@ -65,7 +65,7 @@ public class ImmersiveBuildingModSystem : ModSystem
                     continue; // No recipes for this variant
                 }
 
-                Mod.Logger.Notification("Adding {0} to {1}", nameof(BuildingItemBehavior), item.Code.ToString());
+                Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), item.Code.ToString());
                 item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new BuildingItemBehavior(item));
 
                 // Adjust drops for blocks
@@ -95,11 +95,15 @@ public class ImmersiveBuildingModSystem : ModSystem
                 .. recipe
                     .Ingredients.Select(ingredient =>
                     {
-                        string itemCode = ingredient.Code.WithReplacedWildcard(variant);
-                        Item? item = api.World.GetItem(recipe.ResolveSubstitute(ingredient.Code, variant));
+                        string itemCode = recipe.ResolveSubstitute(ingredient.Code, variant);
+                        Item? item = api.World.GetItem(itemCode);
                         if (item is null)
                         {
-                            Mod.Logger.Warning("Unable to add recipe ingredient {0} for {0}, item not found!", itemCode);
+                            Mod.Logger.Warning(
+                                "Unable to add recipe ingredient {0} for {1}, item not found!",
+                                itemCode,
+                                recipe.ResolveSubstitute(recipe.Output.Code, variant)
+                            );
                             return null;
                         }
                         return new BlockDropItemStack(new ItemStack(item, ingredient.Quantity))
@@ -109,7 +113,7 @@ public class ImmersiveBuildingModSystem : ModSystem
                     })
                     .Where(ingredient => ingredient is not null),
             ];
-            Mod.Logger.Notification("Changed recipe for block {0}", block.Code);
+            Mod.Logger.VerboseDebug("Changed recipe for block {0}", block.Code);
         }
     }
 

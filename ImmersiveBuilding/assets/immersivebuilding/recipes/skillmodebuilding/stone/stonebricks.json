@@ -1,0 +1,24 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stonebrick-*",
+		"name": "rock",
+		"allowVariants": ["andesite", "chalk", "chert", "conglomerate", "limestone", "claystone", "granite", "sandstone", "shale", "basalt", "peridotite", "phyllite", "slate", "bauxite", "suevite", "whitemarble", "greenmarble", "redmarble", "kimberlite"]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stonebrick-{rock}",
+			"quantity": 4
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:stonebricks-{rock}"
+	}
+}

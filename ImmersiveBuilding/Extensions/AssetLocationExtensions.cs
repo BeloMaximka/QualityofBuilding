@@ -21,13 +21,12 @@ public static class AssetLocationExtensions
     }
 
     /// <summary>
-    ///  Return mutated original with parts that represent block states rather than material<br></br>
     /// </summary>
     /// <param name="location"></param>
-    /// <returns>cobblestonestairs-chalk-up-north-free => cobblestonestairs-chalk-*-*</returns>
+    /// <returns>Return new AssetLocation with parts that represent block states rather than material
+    /// <br></br>cobblestonestairs-chalk-up-north-free => cobblestonestairs-chalk-*-*</returns>
     public static AssetLocation WithStatePartsAsWildcards(this AssetLocation location)
     {
-        location.Path = stateVariationsRegex.Replace(location.Path, "-*");
-        return location;
+        return new(location.Domain, stateVariationsRegex.Replace(location.Path, "-*"));
     }
 }
