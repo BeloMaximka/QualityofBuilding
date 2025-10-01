@@ -66,7 +66,7 @@ public class ImmersiveBuildingModSystem : ModSystem
                 }
 
                 Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), item.Code.ToString());
-                item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new BuildingItemBehavior(item));
+                item.CollectibleBehaviors = [new BuildingItemBehavior(item), .. item.CollectibleBehaviors];
 
                 // Adjust drops for blocks
                 foreach (SkillModeBuildingRecipe recipe in recipesGroupedByTools)
