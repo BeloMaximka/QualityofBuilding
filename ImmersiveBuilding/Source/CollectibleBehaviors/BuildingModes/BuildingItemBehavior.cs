@@ -2,6 +2,7 @@
 using ImmersiveBuilding.Source.Recipes;
 using ImmersiveBuilding.Source.Systems;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -16,7 +17,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
     private ImmersiveBuildingRenderingSystem? renderingSystem;
     private int lastModeIndex = 0;
     private SkillItem[] modes = [];
-    private IModeHandler?[] modeHandlers = [];
+    private BuildingModeHandler?[] modeHandlers = [];
     private ItemStack[] itemsToRender = [];
 
     public override void OnLoaded(ICoreAPI api)
@@ -24,18 +25,15 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         base.OnLoaded(api);
 
         // Init mode handlers
-        SkillModeBuildingRecipe[] recipes =
-        [
-            .. api
-                .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
-                .BuildingRecipes.Where(recipe =>
-                    WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
-                    && (
-                        recipe.Tool.AllowVariants.Length == 0
-                        || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
-                    )
-                ),
-        ]; // TODO: optimize this
+        IEnumerable<SkillModeBuildingRecipe> recipes = api
+            .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
+            .BuildingRecipes.Where(recipe =>
+                WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
+                && (
+                    recipe.Tool.AllowVariants.Length == 0
+                    || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
+                )
+            ); // TODO: optimize this
 
         modeHandlers =
         [
@@ -56,19 +54,11 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         }
 
         // Init things to render the tooltip at the top
-        renderingSystem = api.ModLoader.GetModSystem<ImmersiveBuildingRenderingSystem>();
         ItemStack itemStack = new(collectibleObject);
         Block airBlock = capi.World.GetBlock(0);
-        itemsToRender = new ItemStack[recipes.Length + 1];
+        renderingSystem = api.ModLoader.GetModSystem<ImmersiveBuildingRenderingSystem>();
+        itemsToRender = [.. modeHandlers.Select(handler => new ItemStack(handler?.Block ?? airBlock))];
         itemsToRender[0] = itemStack;
-        for (int i = 0; i < recipes.Length; i++)
-        {
-            // duplicate logic with GetModeFromRecipe, can be optimized
-            string blockCode = recipes[i]
-                .ResolveSubstitute(recipes[i].Output.Code, WildcardUtil.GetWildcardValue(recipes[i].Tool.Code, collectibleObject.Code));
-            Block? block = capi.World.GetBlock(blockCode);
-            itemsToRender[i + 1] = new ItemStack(block ?? airBlock);
-        }
 
         modes =
         [
