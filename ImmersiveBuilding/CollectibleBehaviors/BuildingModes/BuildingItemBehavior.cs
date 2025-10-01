@@ -1,6 +1,7 @@
 ﻿using ImmersiveBuilding.Common;
 using ImmersiveBuilding.Recipes;
-using System.Collections.Generic;
+using ImmersiveBuilding.Systems;
+using System;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -9,28 +10,32 @@ using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
 
-internal class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
+public class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
     private readonly CollectibleObject collectibleObject = collectibleObject;
+    private ImmersiveBuildingRenderingSystem? renderingSystem;
     private int lastModeIndex = 0;
-
     private SkillItem[] modes = [];
     private IModeHandler?[] modeHandlers = [];
+    private ItemStack[] itemsToRender = [];
 
     public override void OnLoaded(ICoreAPI api)
     {
         base.OnLoaded(api);
 
         // Init mode handlers
-        IEnumerable<SkillModeBuildingRecipe> recipes = api
-            .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
-            .BuildingRecipes.Where(recipe =>
-                WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
-                && (
-                    recipe.Tool.AllowVariants.Length == 0
-                    || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
-                )
-            ); // TODO: optimize this
+        SkillModeBuildingRecipe[] recipes =
+        [
+            .. api
+                .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
+                .BuildingRecipes.Where(recipe =>
+                    WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
+                    && (
+                        recipe.Tool.AllowVariants.Length == 0
+                        || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
+                    )
+                ),
+        ]; // TODO: optimize this
 
         modeHandlers =
         [
@@ -44,13 +49,27 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
         ];
         lastModeIndex = modeHandlers.Length - 1;
 
-        // Init modes for client
+        // Init client part
         if (api is not ICoreClientAPI capi)
         {
             return;
         }
 
+        // Init things to render the tooltip at the top
+        renderingSystem = api.ModLoader.GetModSystem<ImmersiveBuildingRenderingSystem>();
         ItemStack itemStack = new(collectibleObject);
+        Block airBlock = capi.World.GetBlock(0);
+        itemsToRender = new ItemStack[recipes.Length + 1];
+        itemsToRender[0] = itemStack;
+        for (int i = 0; i < recipes.Length; i++)
+        {
+            // duplicate logic with GetModeFromRecipe, can be optimized
+            string blockCode = recipes[i]
+                .ResolveSubstitute(recipes[i].Output.Code, WildcardUtil.GetWildcardValue(recipes[i].Tool.Code, collectibleObject.Code));
+            Block? block = capi.World.GetBlock(blockCode);
+            itemsToRender[i + 1] = new ItemStack(block ?? airBlock);
+        }
+
         modes =
         [
             new()
@@ -195,11 +214,23 @@ internal class BuildingItemBehavior(CollectibleObject collectibleObject) : Colle
 
     public override int GetToolMode(ItemSlot slot, IPlayer byPlayer, BlockSelection blockSelection)
     {
-        return slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int index = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+
+        if (renderingSystem is not null && !renderingSystem.SkillModeHud.IsOpened() && index < itemsToRender.Length)
+        {
+            renderingSystem.SkillModeHud.Item = itemsToRender[index];
+            renderingSystem.SkillModeHud.TryOpen(false);
+        }
+
+        return index;
     }
 
     public override void SetToolMode(ItemSlot slot, IPlayer byPlayer, BlockSelection blockSelection, int toolMode)
     {
+        if (renderingSystem is not null && toolMode < itemsToRender.Length)
+        {
+            renderingSystem.SkillModeHud.Item = itemsToRender[toolMode];
+        }
         slot.Itemstack.Attributes.SetInt(SharedConstants.ToolModeAttributeName, toolMode);
     }
 
