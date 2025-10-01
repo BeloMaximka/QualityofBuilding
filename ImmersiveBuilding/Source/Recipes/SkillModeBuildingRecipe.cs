@@ -1,20 +1,16 @@
-﻿using ImmersiveBuilding.Extensions;
+﻿using ImmersiveBuilding.Source.Extensions;
 using System.IO;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Recipes;
+namespace ImmersiveBuilding.Source.Recipes;
 
 public class SkillModeBuildingRecipe : IByteSerializable
 {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
+    public SkillModeRecipeTool Tool { get; set; } = null!;
 
-    public SkillModeRecipeTool Tool { get; set; }
+    public SkillModeRecipeIngredient[] Ingredients { get; set; } = null!;
 
-    public SkillModeRecipeIngredient[] Ingredients { get; set; }
-
-    public SkillModeRecipeOutput Output { get; set; }
-
-#pragma warning restore CS8618 // This way of (de)serializing sucks
+    public SkillModeRecipeOutput Output { get; set; } = null!;
 
     public AssetLocation ResolveSubstitute(AssetLocation code, string substitute)
     {

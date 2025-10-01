@@ -1,11 +1,11 @@
-﻿using ImmersiveBuilding.Extensions;
-using ImmersiveBuilding.Recipes;
+﻿using ImmersiveBuilding.Source.Extensions;
+using ImmersiveBuilding.Source.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
+namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
 public class BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, string wildcardValue) : IModeHandler
 {

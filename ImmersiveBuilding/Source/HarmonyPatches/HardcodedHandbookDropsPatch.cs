@@ -2,7 +2,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.GameContent;
 
-namespace ImmersiveBuilding.HarmonyPatches;
+namespace ImmersiveBuilding.Source.HarmonyPatches;
 
 [HarmonyPatch]
 public static class HardcodedHandbookDropsPatch

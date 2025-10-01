@@ -1,8 +1,8 @@
-﻿using ImmersiveBuilding.Render;
+﻿using ImmersiveBuilding.Source.Render;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Systems;
+namespace ImmersiveBuilding.Source.Systems;
 
 public class ImmersiveBuildingRenderingSystem : ModSystem
 {

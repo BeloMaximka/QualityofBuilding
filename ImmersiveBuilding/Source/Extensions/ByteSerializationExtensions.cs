@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Extensions;
+namespace ImmersiveBuilding.Source.Extensions;
 
 public static class ByteSerializationExtensions
 {

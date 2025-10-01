@@ -1,6 +1,6 @@
-﻿using ImmersiveBuilding.Common;
-using ImmersiveBuilding.Recipes;
-using ImmersiveBuilding.Systems;
+﻿using ImmersiveBuilding.Source.Common;
+using ImmersiveBuilding.Source.Recipes;
+using ImmersiveBuilding.Source.Systems;
 using System;
 using System.Linq;
 using Vintagestory.API.Client;
@@ -8,7 +8,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
+namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
 public class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {

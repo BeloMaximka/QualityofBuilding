@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Render;
+namespace ImmersiveBuilding.Source.Render;
 
 public class SkillModeBuildingHud : HudElement
 {

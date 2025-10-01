@@ -1,15 +1,15 @@
 ﻿using HarmonyLib;
-using ImmersiveBuilding.CollectibleBehaviors.BuildingModes;
-using ImmersiveBuilding.CollectibleBehaviors.ShovelModes;
-using ImmersiveBuilding.Extensions;
-using ImmersiveBuilding.Recipes;
+using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
+using ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
+using ImmersiveBuilding.Source.Extensions;
+using ImmersiveBuilding.Source.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding;
+namespace ImmersiveBuilding.Source.Systems;
 
 public class ImmersiveBuildingModSystem : ModSystem
 {

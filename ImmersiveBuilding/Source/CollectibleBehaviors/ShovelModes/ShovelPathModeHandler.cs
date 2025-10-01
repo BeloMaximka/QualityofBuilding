@@ -6,9 +6,9 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.CollectibleBehaviors.ShovelModes;
+namespace ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 
-internal class ShovelPathModeHandler : IModeHandler
+public class ShovelPathModeHandler : IModeHandler
 {
     private static readonly string[] replaceablePathBlockPatterns = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
     private readonly int[] replaceablePathBlockIds;

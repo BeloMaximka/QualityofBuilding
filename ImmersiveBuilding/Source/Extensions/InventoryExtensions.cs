@@ -5,7 +5,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Extensions;
+namespace ImmersiveBuilding.Source.Extensions;
 
 public class ItemIngredient()
 {

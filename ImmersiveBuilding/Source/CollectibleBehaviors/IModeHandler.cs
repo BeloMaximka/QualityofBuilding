@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.CollectibleBehaviors;
+namespace ImmersiveBuilding.Source.CollectibleBehaviors;
 
 public interface IModeHandler
 {
