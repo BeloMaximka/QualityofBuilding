@@ -116,7 +116,6 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         };
     }
 
-    // These handling overrides are ugly but I haven't come up with a better solution yet
     public override void OnHeldInteractStart(
         ItemSlot slot,
         EntityAgent byEntity,
@@ -162,6 +161,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handling = EnumHandling.PreventSubsequent;
+            return false;
         }
         return true;
     }
@@ -196,6 +196,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handled = EnumHandling.PreventSubsequent;
+            return false;
         }
         return true;
     }
