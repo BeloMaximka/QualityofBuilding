@@ -1,0 +1,17 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:bamboostakes"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:bamboostakes",
+			"quantity": 2
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:slantedroofingridgeend-bamboo-east-free"
+	}
+}

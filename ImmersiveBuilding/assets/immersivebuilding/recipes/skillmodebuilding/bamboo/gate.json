@@ -1,0 +1,22 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:bamboostakes"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:bamboostakes",
+			"quantity": 2
+		},
+		{
+			"type": "item",
+			"code": "game:stick",
+			"quantity": 4
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:bamboogate-brown-n-closed-free"
+	}
+}

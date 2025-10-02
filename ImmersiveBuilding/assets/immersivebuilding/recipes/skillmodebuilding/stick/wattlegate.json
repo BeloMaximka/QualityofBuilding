@@ -1,0 +1,17 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stick"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stick",
+			"quantity": 3
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:wattlegate-sticks-n-closed-left-free"
+	}
+}

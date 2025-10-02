@@ -1,0 +1,17 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stick"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stick",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:wattle-sticks-ew-free"
+	}
+}
