@@ -1,7 +1,6 @@
 ﻿using ImmersiveBuilding.Source.Extensions;
 using ImmersiveBuilding.Source.Recipes;
 using System.Collections.Generic;
-using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
@@ -9,6 +8,8 @@ namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
 public class BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, string wildcardValue) : IModeHandler
 {
+    private readonly IReadOnlyCollection<ItemIngredient> ingredients = recipe.GetItemIngredients(api.World, wildcardValue);
+
     public Block? Block { get; private set; } = api.World.GetBlock(recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue));
 
     public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
@@ -32,14 +33,6 @@ public class BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, s
             return;
         }
 
-        List<ItemIngredient> ingredients =
-        [
-            .. recipe.Ingredients.Select(ingredient => new ItemIngredient()
-            {
-                Code = recipe.ResolveSubstitute(ingredient.Code, wildcardValue),
-                Quantity = ingredient.Quantity,
-            }),
-        ];
         if (!byPlayer.TryTakeItems(ingredients))
         {
             return;
