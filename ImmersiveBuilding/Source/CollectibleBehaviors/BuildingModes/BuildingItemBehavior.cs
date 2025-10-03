@@ -2,7 +2,6 @@
 using ImmersiveBuilding.Source.Recipes;
 using ImmersiveBuilding.Source.Systems;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -13,6 +12,8 @@ namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
 public class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
+    private const int itemsPerColumn = 8;
+
     private readonly CollectibleObject collectibleObject = collectibleObject;
     private ImmersiveBuildingRenderingSystem? renderingSystem;
     private int lastModeIndex = 0;
@@ -26,15 +27,18 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         base.OnLoaded(api);
 
         // Init mode handlers
-        IEnumerable<SkillModeBuildingRecipe> recipes = api
-            .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
-            .BuildingRecipes.Where(recipe =>
-                WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
-                && (
-                    recipe.Tool.AllowVariants.Length == 0
-                    || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
-                )
-            ); // TODO: optimize this
+        SkillModeBuildingRecipe[] recipes =
+        [
+            .. api
+                .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
+                .BuildingRecipes.Where(recipe =>
+                    WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
+                    && (
+                        recipe.Tool.AllowVariants.Length == 0
+                        || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
+                    )
+                ),
+        ]; // TODO: optimize this
 
         modeHandlers =
         [
@@ -61,19 +65,20 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         itemsToRender = [.. modeHandlers.Select(handler => new ItemStack(handler?.Block ?? airBlock))];
         itemsToRender[0] = itemStack;
 
-        modes =
-        [
-            new()
-            {
-                Code = collectibleObject.Code,
-                Name = itemStack.GetName(),
-                RenderHandler = GetItemRenderDelegate(capi, new DummySlot(itemStack)),
-            },
-            .. recipes.Select((recipe) => GetModeFromRecipe(capi, recipe)),
-        ];
+        modes = new SkillItem[recipes.Length + 1];
+        modes[0] = new()
+        {
+            Code = collectibleObject.Code,
+            Name = itemStack.GetName(),
+            RenderHandler = GetItemRenderDelegate(capi, new DummySlot(itemStack)),
+        };
+        for (int i = 1; i < modes.Length; i++)
+        {
+            modes[i] = GetModeFromRecipe(capi, recipes[i - 1], i % itemsPerColumn == 0);
+        }
     }
 
-    private SkillItem GetModeFromRecipe(ICoreClientAPI capi, SkillModeBuildingRecipe recipe)
+    private SkillItem GetModeFromRecipe(ICoreClientAPI capi, SkillModeBuildingRecipe recipe, bool linebreak)
     {
         string blockCode = recipe.ResolveSubstitute(
             recipe.Output.Code,
@@ -90,6 +95,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
             Code = block.Code,
             Name = new ItemStack(block).GetName(),
             RenderHandler = GetBlockRenderDelegate(capi, block),
+            Linebreak = linebreak,
         };
     }
 
