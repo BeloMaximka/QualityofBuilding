@@ -9,6 +9,11 @@
 			"type": "item",
 			"code": "game:plank-{wood}",
 			"quantity": 2
+		},
+		{
+			"type": "item",
+			"code": "game:stick",
+			"quantity": 4
 		}
 	],
 	"output": {

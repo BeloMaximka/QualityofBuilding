@@ -1,0 +1,16 @@
+[
+  {
+    "op": "replace",
+    "path": "/0/ingredientPattern",
+    "value": "WWW\tS_S\tWWW",
+    "file": "game:recipes/grid/trapdoor.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/ingredientPattern",
+    "value": "WWW\tW_W\tWWW",
+    "file": "game:recipes/grid/trapdoor.json",
+    "side": "Server"
+  }
+]
