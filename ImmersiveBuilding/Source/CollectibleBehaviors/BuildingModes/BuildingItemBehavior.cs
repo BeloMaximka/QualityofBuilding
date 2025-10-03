@@ -19,6 +19,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
     private SkillItem[] modes = [];
     private BuildingModeHandler?[] modeHandlers = [];
     private ItemStack[] itemsToRender = [];
+    private bool differenModesOpened = false; // to handle other behaviors like CollectibleBehaviorArtPigment
 
     public override void OnLoaded(ICoreAPI api)
     {
@@ -126,7 +127,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.SkillBuldingModeAttributeName);
         if (selectedMode <= 0 || selectedMode > lastModeIndex)
         {
             return; // Not our mode
@@ -157,7 +158,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.SkillBuldingModeAttributeName);
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handling = EnumHandling.PreventSubsequent;
@@ -175,7 +176,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.SkillBuldingModeAttributeName);
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handling = EnumHandling.PreventSubsequent;
@@ -192,7 +193,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handled
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.SkillBuldingModeAttributeName);
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handled = EnumHandling.PreventSubsequent;
@@ -201,11 +202,34 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         return true;
     }
 
-    public override SkillItem[] GetToolModes(ItemSlot slot, IClientPlayer forPlayer, BlockSelection blockSel) => modes;
+    public override SkillItem[] GetToolModes(ItemSlot slot, IClientPlayer forPlayer, BlockSelection blockSel)
+    {
+        differenModesOpened = false;
+        if (!forPlayer.Entity.Controls.ShiftKey)
+        {
+            return modes;
+        }
+
+        foreach (CollectibleBehavior behavior in collectibleObject.CollectibleBehaviors)
+        {
+            if (behavior is BuildingItemBehavior)
+            {
+                continue;
+            }
+
+            SkillItem[] otherModes = behavior.GetToolModes(slot, forPlayer, blockSel);
+            if (otherModes?.Length > 0)
+            {
+                differenModesOpened = true;
+                return otherModes;
+            }
+        }
+        return modes;
+    }
 
     public override int GetToolMode(ItemSlot slot, IPlayer byPlayer, BlockSelection blockSelection)
     {
-        int index = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int index = slot.Itemstack.Attributes.GetInt(SharedConstants.SkillBuldingModeAttributeName);
 
         if (renderingSystem is not null && !renderingSystem.SkillModeHud.IsOpened() && index < itemsToRender.Length)
         {
@@ -218,11 +242,16 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
 
     public override void SetToolMode(ItemSlot slot, IPlayer byPlayer, BlockSelection blockSelection, int toolMode)
     {
+        if (differenModesOpened)
+        {
+            return;
+        }
+
         if (renderingSystem is not null && toolMode < itemsToRender.Length)
         {
             renderingSystem.SkillModeHud.Item = itemsToRender[toolMode];
         }
-        slot.Itemstack.Attributes.SetInt(SharedConstants.ToolModeAttributeName, toolMode);
+        slot.Itemstack.Attributes.SetInt(SharedConstants.SkillBuldingModeAttributeName, toolMode);
     }
 
     public override void OnUnloaded(ICoreAPI api)
