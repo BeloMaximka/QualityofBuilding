@@ -1,0 +1,15 @@
+[
+  {
+    "op": "replace",
+    "path": "/ingredientPattern",
+    "value": "_C_\tL_L",
+    "file": "game:recipes/grid/slabs/stonebrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/output/quantity",
+    "file": "game:recipes/grid/slabs/stonebrickslab.json",
+    "side": "Server"
+  }
+]

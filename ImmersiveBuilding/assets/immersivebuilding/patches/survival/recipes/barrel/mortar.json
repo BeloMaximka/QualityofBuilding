@@ -1,0 +1,9 @@
+[
+  {
+    "op": "replace",
+    "path": "/output/stackSize",
+    "value": 16,
+    "file": "game:recipes/barrel/mortar.json",
+    "side": "Server"
+  }
+]

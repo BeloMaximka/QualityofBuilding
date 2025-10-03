@@ -1,0 +1,743 @@
+[
+  {
+    "op": "replace",
+    "path": "/0/ingredientPattern",
+    "value": "L_L\t_C_\tL_L",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/0/ingredients/C/code",
+    "value": "mortar",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/0/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/1/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/2/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/2/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/2/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/2/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/2/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/3/ingredientPattern",
+    "value": "ABC\t_X_\tNSG",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/3/ingredients/X",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/3/ingredients/Z",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/3/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/4/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/4/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/4/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/4/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/4/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/5/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/5/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/5/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/5/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/5/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/6/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/6/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/6/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/6/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/6/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/7/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/7/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/7/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/7/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/7/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/8/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/8/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/8/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/8/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/8/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/9/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/9/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/9/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/9/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/9/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/10/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/10/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/10/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/10/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/10/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/11/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/11/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/11/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/11/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/11/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/12/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/12/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/12/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/12/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/12/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/13/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/13/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/13/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/13/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/13/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/14/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/14/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/14/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/14/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/14/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/15/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/15/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/15/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/15/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/15/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/16/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/16/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/16/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/16/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/16/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/17/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/17/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/17/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/17/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/17/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/18/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/18/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/18/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/18/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/18/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/19/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/19/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/19/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/19/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/19/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/20/ingredientPattern",
+    "value": "LLL\t_C_\tLLL",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/20/ingredients/G",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/20/ingredients/S",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/20/ingredients/C",
+    "value": {
+      "type": "item",
+      "code": "mortar"
+    },
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/20/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/21/ingredientPattern",
+    "value": "L_L\t_C_\tL_L",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/21/ingredients/C/code",
+    "value": "mortar",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/21/ingredients/L/code",
+    "value": "coralchunk-dead",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/21/output/quantity",
+    "file": "game:recipes/grid/cobblestone.json",
+    "side": "Server"
+  }
+]

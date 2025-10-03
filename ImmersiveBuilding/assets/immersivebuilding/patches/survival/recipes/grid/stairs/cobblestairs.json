@@ -1,0 +1,22 @@
+[
+  {
+    "op": "replace",
+    "path": "/ingredientPattern",
+    "value": "__L\t_C_\tL_L",
+    "file": "game:recipes/grid/stairs/cobblestairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/ingredients/C/code",
+    "value": "mortar",
+    "file": "game:recipes/grid/stairs/cobblestairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/output/quantity",
+    "file": "game:recipes/grid/stairs/cobblestairs.json",
+    "side": "Server"
+  }
+]

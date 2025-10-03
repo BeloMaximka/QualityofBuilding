@@ -1,0 +1,15 @@
+[
+  {
+    "op": "replace",
+    "path": "/1/ingredientPattern",
+    "value": "A_C\tDBF\tGHI",
+    "file": "game:recipes/grid/drystonefence.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/ingredients/E",
+    "file": "game:recipes/grid/drystonefence.json",
+    "side": "Server"
+  }
+]

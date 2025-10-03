@@ -1,0 +1,17 @@
+{
+	"ingredientPattern": "S",
+	"width": 1,
+	"height": 1,
+	"shapeless": true,
+	"ingredients": {
+		"S": {
+			"type": "item",
+			"code": "game:clay-*"
+		}
+	},
+	"output": {
+		"type": "item",
+		"code": "game:mortar",
+		"quantity": 2
+	}
+}
