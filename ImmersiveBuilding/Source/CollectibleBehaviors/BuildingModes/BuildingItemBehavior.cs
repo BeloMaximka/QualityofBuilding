@@ -1,7 +1,9 @@
 ﻿using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Recipes;
+using ImmersiveBuilding.Source.Render;
 using ImmersiveBuilding.Source.Systems;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -12,14 +14,12 @@ namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
 public class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
-    private const int itemsPerColumn = 8;
-
     private readonly CollectibleObject collectibleObject = collectibleObject;
-    private ImmersiveBuildingRenderingSystem? renderingSystem;
     private int lastModeIndex = 0;
-    private SkillItem[] modes = [];
+    private List<SkillItem> modes = [];
     private BuildingModeHandler?[] modeHandlers = [];
-    private ItemStack[] itemsToRender = [];
+    private ICoreClientAPI? capi;
+    private BuildingModeDialog? buildingDialog;
 
     public override void OnLoaded(ICoreAPI api)
     {
@@ -52,50 +52,49 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         lastModeIndex = modeHandlers.Length - 1;
 
         // Init client part
-        if (api is not ICoreClientAPI capi)
+        if (api is not ICoreClientAPI clientAPI)
         {
             return;
         }
+        capi = clientAPI;
 
-        // Init things to render the tooltip at the top
         ItemStack itemStack = new(collectibleObject);
+        modes = new(modeHandlers.Length)
+        {
+            new()
+            {
+                Code = collectibleObject.Code,
+                Name = itemStack.GetName(),
+                RenderHandler = GetItemRenderDelegate(capi, new DummySlot(itemStack)),
+                Data = new BuildingModeContext() { Output = itemStack },
+            }
+        };
+
         Block airBlock = capi.World.GetBlock(0);
-        renderingSystem = api.ModLoader.GetModSystem<ImmersiveBuildingRenderingSystem>();
-        itemsToRender = [.. modeHandlers.Select(handler => new ItemStack(handler?.Block ?? airBlock))];
-        itemsToRender[0] = itemStack;
+        for (int i = 1; i < modeHandlers.Length; i++)
+        {
+            SkillModeBuildingRecipe recipe = recipes[i - 1];
+            string blockCode = recipe.ResolveSubstitute(
+                recipe.Output.Code,
+                WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code)
+            );
+            Block? block = capi.World.GetBlock(blockCode);
+            if (block == null)
+            {
+                modes.Add(new SkillItem() { Code = blockCode, Name = blockCode });
+                continue;
+            }
 
-        modes = new SkillItem[recipes.Length + 1];
-        modes[0] = new()
-        {
-            Code = collectibleObject.Code,
-            Name = itemStack.GetName(),
-            RenderHandler = GetItemRenderDelegate(capi, new DummySlot(itemStack)),
-        };
-        for (int i = 1; i < modes.Length; i++)
-        {
-            modes[i] = GetModeFromRecipe(capi, recipes[i - 1], i % itemsPerColumn == 0);
+            modes.Add(
+                new SkillItem()
+                {
+                    Code = block.Code,
+                    Name = new ItemStack(block).GetName(),
+                    RenderHandler = GetBlockRenderDelegate(capi, block),
+                    Data = new BuildingModeContext() { Output = new ItemStack(modeHandlers[i]?.Block ?? airBlock) },
+                }
+            );
         }
-    }
-
-    private SkillItem GetModeFromRecipe(ICoreClientAPI capi, SkillModeBuildingRecipe recipe, bool linebreak)
-    {
-        string blockCode = recipe.ResolveSubstitute(
-            recipe.Output.Code,
-            WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code)
-        );
-        Block? block = capi.World.GetBlock(blockCode);
-        if (block == null)
-        {
-            return new SkillItem() { Code = blockCode, Name = blockCode };
-        }
-
-        return new SkillItem()
-        {
-            Code = block.Code,
-            Name = new ItemStack(block).GetName(),
-            RenderHandler = GetBlockRenderDelegate(capi, block),
-            Linebreak = linebreak,
-        };
     }
 
     private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, Block block)
@@ -132,7 +131,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = GetToolMode(slot);
         if (selectedMode <= 0 || selectedMode > lastModeIndex)
         {
             return; // Not our mode
@@ -163,7 +162,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = GetToolMode(slot);
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handling = EnumHandling.PreventSubsequent;
@@ -181,7 +180,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = GetToolMode(slot);
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handling = EnumHandling.PreventSubsequent;
@@ -198,7 +197,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handled
     )
     {
-        int selectedMode = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+        int selectedMode = GetToolMode(slot);
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handled = EnumHandling.PreventSubsequent;
@@ -207,56 +206,58 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         return true;
     }
 
-    public override SkillItem[] GetToolModes(ItemSlot slot, IClientPlayer forPlayer, BlockSelection blockSel)
+    public ItemStack? GetSelectedBuildingOutput(ItemSlot slot)
     {
-        if (!forPlayer.Entity.Controls.ShiftKey)
+        int selectedMode = GetToolMode(slot);
+        if (selectedMode < modes.Count)
         {
-            return modes;
-        }
-
-        foreach (CollectibleBehavior behavior in collectibleObject.CollectibleBehaviors)
-        {
-            if (behavior is BuildingItemBehavior)
+            BuildingModeContext? context = modes[selectedMode]?.Data as BuildingModeContext;
+            if (context is not null)
             {
-                continue;
-            }
-
-            SkillItem[] otherModes = behavior.GetToolModes(slot, forPlayer, blockSel);
-            if (otherModes?.Length > 0)
-            {
-                return otherModes;
+                return context.Output;
             }
         }
-        return modes;
+        return null;
     }
 
-    public override int GetToolMode(ItemSlot slot, IPlayer byPlayer, BlockSelection blockSelection)
-    {
-        int index = slot.Itemstack.Attributes.GetInt(SharedConstants.ToolModeAttributeName);
+    public bool IsDialogOpened() => buildingDialog?.IsOpened() == true;
 
-        if (renderingSystem is not null && !renderingSystem.SkillModeHud.IsOpened() && index < itemsToRender.Length)
+    public void ToggleDialog(ItemSlot slot)
+    {
+        if (buildingDialog is not null)
         {
-            renderingSystem.SkillModeHud.Item = itemsToRender[index];
-            renderingSystem.SkillModeHud.TryOpen(false);
+            buildingDialog.TryClose();
+            return;
         }
 
-        return index;
-    }
-
-    public override void SetToolMode(ItemSlot slot, IPlayer byPlayer, BlockSelection blockSelection, int toolMode)
-    {
-        if (renderingSystem is not null && toolMode < itemsToRender.Length)
-        {
-            renderingSystem.SkillModeHud.Item = itemsToRender[toolMode];
-        }
-        slot.Itemstack.Attributes.SetInt(SharedConstants.ToolModeAttributeName, toolMode);
+        OpenDialog(slot);
     }
 
     public override void OnUnloaded(ICoreAPI api)
     {
-        for (int i = 0; i < modes.Length; i++)
+        for (int i = 0; i < modes.Count; i++)
         {
             modes[i].Dispose();
         }
+    }
+
+    private void OpenDialog(ItemSlot slot)
+    {
+        if (capi is null)
+        {
+            return;
+        }
+
+        buildingDialog = new(modes, (index) => SetToolMode(slot, index), capi);
+        buildingDialog.OnClosed += buildingDialog.Dispose;
+        buildingDialog.OnClosed += () => buildingDialog = null;
+        buildingDialog.TryOpen();
+    }
+
+    private static int GetToolMode(ItemSlot slot) => slot.Itemstack.Attributes.GetInt(SharedConstants.BuildingModeAttributeName);
+
+    private static void SetToolMode(ItemSlot slot, int toolMode)
+    {
+        slot.Itemstack.Attributes.SetInt(SharedConstants.BuildingModeAttributeName, toolMode);
     }
 }
