@@ -1,11 +1,13 @@
 ﻿using HarmonyLib;
 using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
+using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Extensions;
 using ImmersiveBuilding.Source.Recipes;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
@@ -22,6 +24,7 @@ public class ImmersiveBuildingModSystem : ModSystem
 
     public override void StartPre(ICoreAPI api)
     {
+        UpdateStackAttributeIgnoreList();
         HarmonyInstance.PatchAll();
     }
 
@@ -74,6 +77,14 @@ public class ImmersiveBuildingModSystem : ModSystem
                     ChangeOutputBlockDropsToRawMaterials(api, recipe, variant);
                 }
             }
+        }
+    }
+
+    private static void UpdateStackAttributeIgnoreList()
+    {
+        if (!GlobalConstants.IgnoredStackAttributes.Any(attribute => attribute == SharedConstants.BuildingModeAttributeName))
+        {
+            GlobalConstants.IgnoredStackAttributes = GlobalConstants.IgnoredStackAttributes.Append(SharedConstants.BuildingModeAttributeName);
         }
     }
 
