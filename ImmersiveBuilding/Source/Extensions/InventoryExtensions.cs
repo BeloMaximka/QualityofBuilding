@@ -69,7 +69,7 @@ public static class InventoryExtensions
             string translatedMissingMaterials = string.Join(
                 ", ",
                 missingMaterials.Select(ingredient =>
-                    $"{ingredient.Quantity} {ingredient.ResolvedItemStack?.GetName() ?? ingredient.Code.ToString()}"
+                    $"{ingredient.Quantity}x {ingredient.ResolvedItemStack?.GetName().ToLower() ?? ingredient.Code.ToString()}"
                 )
             );
             if (player is IServerPlayer serverPlayer)
