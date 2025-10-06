@@ -88,9 +88,4 @@ public class BuildingModeDialog : GuiDialog
         onSelectedRecipe(num);
         TryClose();
     }
-
-    private void OnTitleBarClose()
-    {
-        TryClose();
-    }
 }
