@@ -5,46 +5,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Source.Extensions;
-
-public class ItemIngredient()
-{
-    public required EnumItemClass Type { get; set; }
-
-    public required AssetLocation Code { get; set; }
-
-    public required int Quantity { get; set; }
-
-    public ItemStack? ResolvedItemStack { get; set; }
-
-    public ItemIngredient Clone()
-    {
-        return new()
-        {
-            Type = Type,
-            Code = Code,
-            Quantity = Quantity,
-            ResolvedItemStack = ResolvedItemStack,
-        };
-    }
-
-    public void Resolve(IWorldAccessor accessor)
-    {
-        CollectibleObject? resolvedCollectible = Type == EnumItemClass.Block ? accessor.GetBlock(Code) : accessor.GetItem(Code);
-
-        if (resolvedCollectible is null)
-        {
-            accessor.Logger.Warning(
-                "Unable to resolve recipe ingredient by code {0}, {1} not found.",
-                Code.ToString(),
-                Type.ToString().ToLowerInvariant()
-            );
-            return;
-        }
-
-        ResolvedItemStack = new(resolvedCollectible, Quantity);
-    }
-}
+namespace ImmersiveBuilding.Source.Extensions.Inventory;
 
 public static class InventoryExtensions
 {
@@ -66,15 +27,9 @@ public static class InventoryExtensions
 
         if (!inventories.TryTakeItems(missingMaterials))
         {
-            string translatedMissingMaterials = string.Join(
-                ", ",
-                missingMaterials.Select(ingredient =>
-                    $"{ingredient.Quantity}x {ingredient.ResolvedItemStack?.GetName().ToLower() ?? ingredient.Code.ToString()}"
-                )
-            );
             if (player is IServerPlayer serverPlayer)
             {
-                serverPlayer.SendIngameError("nomatsforbuilding", null, translatedMissingMaterials);
+                serverPlayer.SendIngameError("nomatsforbuilding", null, missingMaterials.GetMaterialsString());
             }
             return false;
         }

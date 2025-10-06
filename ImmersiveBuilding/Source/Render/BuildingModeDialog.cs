@@ -1,12 +1,11 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Common;
+using ImmersiveBuilding.Source.Extensions.Inventory;
 using ImmersiveBuilding.Source.Network;
 using ImmersiveBuilding.Source.Systems;
 using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
-using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 
 namespace ImmersiveBuilding.Source.Render;
 
@@ -51,12 +50,10 @@ public class BuildingModeDialog : GuiDialog
         SingleComposer = capi
             .Gui.CreateCompo("buildingModeSelect", ElementStdBounds.AutosizedMainDialog)
             .AddShadedDialogBG(bgBounds, true)
-            .AddDialogTitleBar(Lang.Get("Select Recipe"), OnTitleBarClose)
             .BeginChildElements(bgBounds)
             .AddSkillItemGrid(skillItems, cols, rows, OnSlotClick, skillGridBounds, "skillitemgrid")
             .AddDynamicText("", CairoFont.WhiteSmallishText(), nameBounds, "name")
-            .AddDynamicText("", CairoFont.WhiteDetailText(), descBounds, "desc")
-            .AddDynamicText("", CairoFont.WhiteDetailText(), descBounds.BelowCopy(0, 20, 0, 0), "ingredient")
+            .AddDynamicText("", CairoFont.WhiteDetailText(), descBounds, "ingredient")
             .EndChildElements()
             .Compose();
 
@@ -72,11 +69,10 @@ public class BuildingModeDialog : GuiDialog
         {
             prevSlotOver = num;
             SingleComposer.GetDynamicText("name").SetNewText(skillItems[num].Name);
-            SingleComposer.GetDynamicText("desc").SetNewText(skillItems[num].Description);
-            string requires = "";
-            if (skillItems[num].Data is ItemStack[] ingredients)
-                requires = Lang.Get("recipeselector-requiredcount", ingredients[0].StackSize, ingredients[0].GetName().ToLower());
-            SingleComposer.GetDynamicText("ingredient").SetNewText(requires);
+            if (skillItems[num].Data is BuildingModeContext context)
+            {
+                SingleComposer.GetDynamicText("ingredient").SetNewText(context.Ingredients.GetMaterialsString());
+            }
         }
     }
 

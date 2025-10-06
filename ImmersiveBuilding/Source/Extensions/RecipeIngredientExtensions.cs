@@ -1,4 +1,5 @@
-﻿using ImmersiveBuilding.Source.Recipes;
+﻿using ImmersiveBuilding.Source.Extensions.Inventory;
+using ImmersiveBuilding.Source.Recipes;
 using System.Linq;
 using Vintagestory.API.Common;
 

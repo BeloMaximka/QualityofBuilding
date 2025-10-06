@@ -67,7 +67,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
                 Name = itemStack.GetName(),
                 RenderHandler = GetItemRenderDelegate(capi, new DummySlot(itemStack)),
                 Data = new BuildingModeContext() { Output = itemStack },
-            }
+            },
         };
 
         Block airBlock = capi.World.GetBlock(0);
@@ -91,7 +91,11 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
                     Code = block.Code,
                     Name = new ItemStack(block).GetName(),
                     RenderHandler = GetBlockRenderDelegate(capi, block),
-                    Data = new BuildingModeContext() { Output = new ItemStack(modeHandlers[i]?.Block ?? airBlock) },
+                    Data = new BuildingModeContext()
+                    {
+                        Output = new ItemStack(modeHandlers[i]?.Block ?? airBlock),
+                        Ingredients = modeHandlers[i]!.Ingredients,
+                    },
                 }
             );
         }
