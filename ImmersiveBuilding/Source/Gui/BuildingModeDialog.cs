@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 
-namespace ImmersiveBuilding.Source.Render;
+namespace ImmersiveBuilding.Source.Gui;
 
 public class BuildingModeDialog : GuiDialog
 {
@@ -37,7 +37,7 @@ public class BuildingModeDialog : GuiDialog
 
         int rows = (int)Math.Ceiling(cnt / (float)cols);
 
-        double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGrid.unscaledSlotPadding;
+        double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
         double innerWidth = Math.Max(300, cols * size);
         ElementBounds skillGridBounds = ElementBounds.Fixed(0, 30, innerWidth, rows * size);
 

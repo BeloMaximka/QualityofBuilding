@@ -1,4 +1,5 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
+using ImmersiveBuilding.Source.Gui;
 using ImmersiveBuilding.Source.Render;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
