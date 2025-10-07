@@ -10,11 +10,12 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
+using Vintagestory.GameContent;
 using Vintagestory.ServerMods;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
-public class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
+public class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject), ICustomHandbookPageContent
 {
     private readonly CollectibleObject collectibleObject = collectibleObject;
     private int lastModeIndex = 0;
@@ -91,46 +92,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         }
     }
 
-    private static string GetNameWithExtraInfo(ItemStack itemStack)
-    {
-        EnumSlabPlaceMode slabMode = (EnumSlabPlaceMode)itemStack.Attributes.GetInt("slabPlaceMode");
-        if (slabMode != EnumSlabPlaceMode.Auto)
-        {
-            return slabMode switch
-            {
-                EnumSlabPlaceMode.Horizontal => $"{itemStack.GetName()} ({Lang.Get("Horizontal")})",
-                EnumSlabPlaceMode.Vertical => $"{itemStack.GetName()} ({Lang.Get("Vertical")})",
-                _ => string.Empty,
-            };
-        }
-
-        return itemStack.GetName();
-    }
-
-    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, ItemStack itemStack)
-    {
-        DummySlot dummySlot = new(itemStack);
-        return GetItemRenderDelegate(capi, dummySlot);
-    }
-
-    private static RenderSkillItemDelegate GetItemRenderDelegate(ICoreClientAPI capi, ItemSlot slot)
-    {
-        return (code, dt, posX, posY) =>
-        {
-            double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
-            double scsize = GuiElement.scaled(size - 5);
-
-            capi.Render.RenderItemstackToGui(
-                slot,
-                posX + scsize / 2,
-                posY + scsize / 2,
-                100,
-                (float)GuiElement.scaled(GuiElementPassiveItemSlot.unscaledItemSize),
-                ColorUtil.WhiteArgb
-            );
-        };
-    }
-
+    #region Interactions
     public override void OnHeldInteractStart(
         ItemSlot slot,
         EntityAgent byEntity,
@@ -215,6 +177,55 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         }
         return true;
     }
+    #endregion
+
+    public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot, ref EnumHandling handling)
+    {
+        if (capi is null)
+        {
+            return base.GetHeldInteractionHelp(inSlot, ref handling);
+        }
+
+        return
+        [
+            new()
+            {
+                HotKeyCodes = [capi.Input.GetHotKeyByCode(BuildingModeDialog.ToggleCombinationCode).Code],
+                ActionLangCode = "heldhelp-building-menu",
+                MouseButton = EnumMouseButton.None
+            },
+        ];
+    }
+
+    public void OnHandbookPageComposed(
+        List<RichTextComponentBase> components,
+        ItemSlot inSlot,
+        ICoreClientAPI capi,
+        ItemStack[] allStacks,
+        ActionConsumable<string> openDetailPageFor
+    )
+    {
+        bool haveText = true;
+        CollectibleBehaviorHandbookTextAndExtraInfo.AddHeading(components, capi, Lang.Get("handbook-used-to-build"), ref haveText);
+
+        foreach (var handler in modeHandlers)
+        {
+            if (handler?.Output is null)
+            {
+                continue;
+            }
+
+            ItemstackTextComponent itemStackComponent = new(
+                capi,
+                handler.Output,
+                40,
+                0,
+                EnumFloat.Inline,
+                (cs) => openDetailPageFor(GuiHandbookItemStackPage.PageCodeForStack(cs))
+            );
+            components.Add(itemStackComponent);
+        }
+    }
 
     public ItemStack? GetSelectedBuildingOutput(ItemSlot slot)
     {
@@ -251,6 +262,46 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         {
             modes[i].Dispose();
         }
+    }
+
+    private static string GetNameWithExtraInfo(ItemStack itemStack)
+    {
+        EnumSlabPlaceMode slabMode = (EnumSlabPlaceMode)itemStack.Attributes.GetInt("slabPlaceMode");
+        if (slabMode != EnumSlabPlaceMode.Auto)
+        {
+            return slabMode switch
+            {
+                EnumSlabPlaceMode.Horizontal => $"{itemStack.GetName()} ({Lang.Get("Horizontal")})",
+                EnumSlabPlaceMode.Vertical => $"{itemStack.GetName()} ({Lang.Get("Vertical")})",
+                _ => string.Empty,
+            };
+        }
+
+        return itemStack.GetName();
+    }
+
+    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, ItemStack itemStack)
+    {
+        DummySlot dummySlot = new(itemStack);
+        return GetItemRenderDelegate(capi, dummySlot);
+    }
+
+    private static RenderSkillItemDelegate GetItemRenderDelegate(ICoreClientAPI capi, ItemSlot slot)
+    {
+        return (code, dt, posX, posY) =>
+        {
+            double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
+            double scsize = GuiElement.scaled(size - 5);
+
+            capi.Render.RenderItemstackToGui(
+                slot,
+                posX + scsize / 2,
+                posY + scsize / 2,
+                100,
+                (float)GuiElement.scaled(GuiElementPassiveItemSlot.unscaledItemSize),
+                ColorUtil.WhiteArgb
+            );
+        };
     }
 
     private static int GetToolMode(ItemSlot slot) => slot.Itemstack.Attributes.GetInt(SharedConstants.BuildingModeAttributeName);
