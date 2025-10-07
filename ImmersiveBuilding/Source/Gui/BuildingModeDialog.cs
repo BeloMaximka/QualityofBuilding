@@ -129,7 +129,16 @@ public class BuildingModeDialog : GuiDialog
         BuildingModeContext? context = BuildingOptions[slotIndex].Data as BuildingModeContext;
         if (context is not null && context.Output is not null)
         {
-            ImmersiveBuildingRenderingSystem.SkillModeHud.Item = context.Output;
+            if (slotIndex != 0)
+            {
+                ImmersiveBuildingRenderingSystem.SkillModeHud.Item = context.Output;
+                ImmersiveBuildingRenderingSystem.SkillModeHud.TryOpen();
+            }
+            else
+            {
+                ImmersiveBuildingRenderingSystem.SkillModeHud.TryClose();
+            }
+
         }
         buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { Mode = slotIndex });
         HeldItem.Attributes.SetInt(SharedConstants.BuildingModeAttributeName, slotIndex);

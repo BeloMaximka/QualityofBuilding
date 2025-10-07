@@ -1,4 +1,5 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
+using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Gui;
 using ImmersiveBuilding.Source.Render;
 using Vintagestory.API.Client;
@@ -92,6 +93,12 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
 
         if (behavior?.GetSelectedBuildingOutput(slot) is ItemStack item)
         {
+            if (slot.Itemstack.Attributes.GetInt(SharedConstants.BuildingModeAttributeName) == 0)
+            {
+                SkillModeHud.TryClose();
+                return;
+            }
+
             SkillModeHud.Item = item;
             if (!SkillModeHud.IsOpened())
             {
