@@ -86,11 +86,11 @@ public class BuildingModeDialog : GuiDialog
         int rows = (int)Math.Ceiling(cnt / (float)cols);
 
         double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
-        double innerWidth = Math.Max(300, cols * size);
+        double innerWidth = Math.Max(400, cols * size);
         ElementBounds skillGridBounds = ElementBounds.Fixed(0, 30, innerWidth, rows * size);
 
-        ElementBounds nameBounds = ElementBounds.Fixed(0, rows * size + 50, innerWidth, 33);
-        ElementBounds descBounds = nameBounds.BelowCopy(0, 10, 0, 0);
+        ElementBounds nameBounds = ElementBounds.Fixed(0, rows * size + 50, innerWidth, 55);
+        ElementBounds descBounds = nameBounds.BelowCopy();
 
         ElementBounds bgBounds = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding);
         bgBounds.BothSizing = ElementSizing.FitToChildren;

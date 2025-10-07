@@ -1,0 +1,19 @@
+{
+	"tool": {
+		"type": "block",
+		"code": "game:debarkedlog-*-ud",
+		"name": "wood",
+		"allowVariants": ["birch", "oak", "maple", "pine", "acacia", "kapok", "baldcypress", "larch", "redwood", "ebony", "walnut", "purpleheart"]
+	},
+	"ingredients": [
+		{
+			"type": "block",
+			"code": "game:debarkedlog-{wood}-ud",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:logquad-debarkedcorner-{wood}-north"
+	}
+}

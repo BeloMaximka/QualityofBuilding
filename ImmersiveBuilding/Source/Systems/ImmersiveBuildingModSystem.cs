@@ -56,9 +56,20 @@ public class ImmersiveBuildingModSystem : ModSystem
         BuildingRecipes.AddRange([.. api.Assets.GetMany<SkillModeBuildingRecipe>(api.Logger, "recipes/skillmodebuilding/").Values]);
         foreach (var recipesGroupedByTools in BuildingRecipes.GroupBy((recipe) => recipe.Tool.Code))
         {
-            foreach (Item item in api.World.SearchItems(recipesGroupedByTools.Key))
+            CollectibleObject[] collectibles = api.World.SearchItems(recipesGroupedByTools.Key);
+            if (collectibles.Length == 0)
             {
-                string variant = WildcardUtil.GetWildcardValue(recipesGroupedByTools.Key, item.Code);
+                collectibles = api.World.SearchBlocks(recipesGroupedByTools.Key);
+            }
+            if (collectibles.Length == 0)
+            {
+                api.Logger.Warning("No items or blocks found by code {0}", recipesGroupedByTools.Key);
+                continue;
+            }
+
+            foreach (CollectibleObject collectible in collectibles)
+            {
+                string variant = WildcardUtil.GetWildcardValue(recipesGroupedByTools.Key, collectible.Code);
                 if (
                     !recipesGroupedByTools.Any(recipe =>
                         recipe.Tool.AllowVariants.Length == 0 || recipe.Tool.AllowVariants.Contains(variant)
@@ -68,8 +79,8 @@ public class ImmersiveBuildingModSystem : ModSystem
                     continue; // No recipes for this variant
                 }
 
-                Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), item.Code.ToString());
-                item.CollectibleBehaviors = [new BuildingItemBehavior(item), .. item.CollectibleBehaviors];
+                Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), collectible.Code.ToString());
+                collectible.CollectibleBehaviors = [new BuildingItemBehavior(collectible), .. collectible.CollectibleBehaviors];
 
                 // Adjust drops for blocks
                 foreach (SkillModeBuildingRecipe recipe in recipesGroupedByTools)
@@ -84,7 +95,9 @@ public class ImmersiveBuildingModSystem : ModSystem
     {
         if (!GlobalConstants.IgnoredStackAttributes.Any(attribute => attribute == SharedConstants.BuildingModeAttributeName))
         {
-            GlobalConstants.IgnoredStackAttributes = GlobalConstants.IgnoredStackAttributes.Append(SharedConstants.BuildingModeAttributeName);
+            GlobalConstants.IgnoredStackAttributes = GlobalConstants.IgnoredStackAttributes.Append(
+                SharedConstants.BuildingModeAttributeName
+            );
         }
     }
 
@@ -107,17 +120,19 @@ public class ImmersiveBuildingModSystem : ModSystem
                     .Ingredients.Select(ingredient =>
                     {
                         string itemCode = recipe.ResolveSubstitute(ingredient.Code, variant);
-                        Item? item = api.World.GetItem(itemCode);
-                        if (item is null)
+                        CollectibleObject? collectible = api.World.GetItem(itemCode);
+                        collectible ??= api.World.GetBlock(itemCode);
+
+                        if (collectible is null)
                         {
                             Mod.Logger.Warning(
-                                "Unable to add recipe ingredient {0} for {1}, item not found!",
+                                "Unable to add recipe ingredient {0} for {1}, no blocks or items found!",
                                 itemCode,
                                 recipe.ResolveSubstitute(recipe.Output.Code, variant)
                             );
                             return null;
                         }
-                        return new BlockDropItemStack(new ItemStack(item, ingredient.Quantity))
+                        return new BlockDropItemStack(new ItemStack(collectible, ingredient.Quantity))
                         {
                             Quantity = new NatFloat(ingredient.Quantity, 0f, EnumDistribution.UNIFORM), // BlockDropItemStack hardcodes NatFloat.One
                         };
