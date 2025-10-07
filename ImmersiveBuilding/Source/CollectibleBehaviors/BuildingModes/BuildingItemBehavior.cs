@@ -7,8 +7,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
+using Vintagestory.ServerMods;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
@@ -70,40 +72,45 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
             },
         };
 
-        Block airBlock = capi.World.GetBlock(0);
         for (int i = 1; i < modeHandlers.Length; i++)
         {
-            SkillModeBuildingRecipe recipe = recipes[i - 1];
-            string blockCode = recipe.ResolveSubstitute(
-                recipe.Output.Code,
-                WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code)
-            );
-            Block? block = capi.World.GetBlock(blockCode);
-            if (block == null)
+            if (modeHandlers[i]!.Output is null)
             {
-                modes.Add(new SkillItem() { Code = blockCode, Name = blockCode });
+                modes.Add(new SkillItem() { Code = modeHandlers[i]!.OutputCode, Name = modeHandlers[i]!.OutputCode });
                 continue;
             }
 
             modes.Add(
                 new SkillItem()
                 {
-                    Code = block.Code,
-                    Name = new ItemStack(block).GetName(),
-                    RenderHandler = GetBlockRenderDelegate(capi, block),
-                    Data = new BuildingModeContext()
-                    {
-                        Output = new ItemStack(modeHandlers[i]?.Block ?? airBlock),
-                        Ingredients = modeHandlers[i]!.Ingredients,
-                    },
+                    Code = modeHandlers[i]!.Output!.Collectible.Code,
+                    Name = GetNameWithExtraInfo(modeHandlers[i]!.Output!),
+                    RenderHandler = GetBlockRenderDelegate(capi, modeHandlers[i]!.Output!),
+                    Data = new BuildingModeContext() { Output = modeHandlers[i]?.Output, Ingredients = modeHandlers[i]!.Ingredients },
                 }
             );
         }
     }
 
-    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, Block block)
+    private static string GetNameWithExtraInfo(ItemStack itemStack)
     {
-        DummySlot dummySlot = new(new ItemStack(block));
+        EnumSlabPlaceMode slabMode = (EnumSlabPlaceMode)itemStack.Attributes.GetInt("slabPlaceMode");
+        if (slabMode != EnumSlabPlaceMode.Auto)
+        {
+            return slabMode switch
+            {
+                EnumSlabPlaceMode.Horizontal => $"{itemStack.GetName()} ({Lang.Get("Horizontal")})",
+                EnumSlabPlaceMode.Vertical => $"{itemStack.GetName()} ({Lang.Get("Vertical")})",
+                _ => string.Empty,
+            };
+        }
+
+        return itemStack.GetName();
+    }
+
+    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, ItemStack itemStack)
+    {
+        DummySlot dummySlot = new(itemStack);
         return GetItemRenderDelegate(capi, dummySlot);
     }
 

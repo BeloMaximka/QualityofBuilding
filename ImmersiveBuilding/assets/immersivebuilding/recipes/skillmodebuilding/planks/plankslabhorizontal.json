@@ -1,0 +1,19 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:plank-*",
+		"name": "wood"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:plank-{wood}",
+			"quantity": 2
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:plankslab-{wood}-down-free",
+		"attributes": { "slabPlaceMode": 1 }
+	}
+}

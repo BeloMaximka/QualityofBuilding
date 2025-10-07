@@ -3,32 +3,53 @@ using ImmersiveBuilding.Source.Extensions.Inventory;
 using ImmersiveBuilding.Source.Recipes;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
-public class BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, string wildcardValue) : IModeHandler
+public class BuildingModeHandler : IModeHandler
 {
-    public readonly IReadOnlyCollection<ItemIngredient> Ingredients = recipe.GetItemIngredients(api.World, wildcardValue);
+    private readonly ICoreAPI api;
 
-    public Block? Block { get; private set; } = api.World.GetBlock(recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue));
+    public readonly IReadOnlyCollection<ItemIngredient> Ingredients;
+
+    public string OutputCode { get; private set; }
+
+    public ItemStack? Output { get; private set; }
+
+    public BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, string wildcardValue)
+    {
+        this.api = api;
+        Ingredients = recipe.GetItemIngredients(api.World, wildcardValue);
+        OutputCode = recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue);
+        Block? block = api.World.GetBlock(OutputCode);
+        if (block is not null)
+        {
+            Output = new(block);
+            if (recipe.Output.Attributes is not null && new JsonObject(recipe.Output.Attributes).ToAttribute() is ITreeAttribute treeAttribute)
+            {
+                Output.Attributes.MergeTree(treeAttribute.ConvertLongsToInts());
+            }
+        }
+    }
 
     public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
     {
         IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
-        if (byPlayer == null || Block is null)
+        if (byPlayer == null || Output is null)
         {
             return;
         }
 
         BlockSelection newBlockSelection = blockSel;
-        if (!api.World.BlockAccessor.GetBlock(blockSel.Position).IsReplacableBy(Block))
+        if (!api.World.BlockAccessor.GetBlock(blockSel.Position).IsReplacableBy(Output.Block))
         {
             newBlockSelection = blockSel.AddPosCopy(blockSel.Face.Normali);
         }
 
         string resultCode = "success";
-        Block.CanPlaceBlock(api.World, byPlayer, newBlockSelection, ref resultCode);
+        Output.Block.CanPlaceBlock(api.World, byPlayer, newBlockSelection, ref resultCode);
         if (resultCode != "success")
         {
             return;
@@ -40,9 +61,9 @@ public class BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, s
         }
 
         // TryPlaceBlock instead of DoPlaceBlock because some blocks like BlockFence don't have DoPlaceBlock override
-        Block.TryPlaceBlock(api.World, byPlayer, slot.Itemstack, newBlockSelection, ref resultCode);
+        Output.Block.TryPlaceBlock(api.World, byPlayer, Output, newBlockSelection, ref resultCode);
         UpdateNeighbours(newBlockSelection);
-        api.World.PlaySoundAt(Block.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
+        api.World.PlaySoundAt(Output.Block.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
     }
 
     private void UpdateNeighbours(BlockSelection blockSelection) // Some manual stuff to make client update instant

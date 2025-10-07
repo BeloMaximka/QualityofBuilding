@@ -79,7 +79,7 @@ public class BuildingModeDialog : GuiDialog
     private void OnSlotClick(int num)
     {
         BuildingModeContext? context = skillItems[num].Data as BuildingModeContext;
-        if (context is not null)
+        if (context is not null && context.Output is not null)
         {
             ImmersiveBuildingRenderingSystem.SkillModeHud.Item = context.Output;
         }

@@ -1,0 +1,24 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stone-*",
+		"name": "rock",
+		"allowVariants": ["andesite", "chalk", "chert", "conglomerate", "limestone", "claystone", "granite", "sandstone", "shale", "basalt", "peridotite", "phyllite", "slate", "bauxite", "suevite", "whitemarble", "greenmarble", "redmarble", "kimberlite"]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stone-{rock}",
+			"quantity": 2
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:cobblestoneslab-{rock}-down-free"
+	}
+}

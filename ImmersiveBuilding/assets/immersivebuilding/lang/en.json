@@ -1,3 +1,5 @@
 {
-    "game:ingameerror-nomatsforbuilding": "You're missing the following materials: {0}."
+    "game:ingameerror-nomatsforbuilding": "You're missing the following materials: {0}.",
+	"Horizontal": "Horizontal",
+	"Vertical": "Vertical"
 }

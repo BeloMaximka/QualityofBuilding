@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using ImmersiveBuilding.Source.Extensions;
+using System.IO;
 using Vintagestory.API.Common;
 using Vintagestory.API.Util;
 
@@ -8,9 +9,9 @@ public class SkillModeRecipeTool : IByteSerializable
 {
     public EnumItemClass Type { get; set; }
 
-    public AssetLocation Code { get; set; } = string.Empty;
+    public required AssetLocation Code { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
 
     public string[] AllowVariants { get; set; } = [];
 
@@ -18,7 +19,7 @@ public class SkillModeRecipeTool : IByteSerializable
     {
         Type = (EnumItemClass)reader.ReadInt32();
         Code = new(reader.ReadString());
-        Name = reader.ReadString();
+        Name = reader.ReadNullableString();
         AllowVariants = reader.ReadStringArray();
     }
 
@@ -26,7 +27,7 @@ public class SkillModeRecipeTool : IByteSerializable
     {
         writer.Write((int)Type);
         writer.Write(Code.ToString());
-        writer.Write(Name);
+        writer.WriteNullable(Name);
         writer.WriteArray(AllowVariants);
     }
 }

@@ -7,7 +7,7 @@ public class SkillModeRecipeIngredient : IByteSerializable
 {
     public EnumItemClass Type { get; set; }
 
-    public AssetLocation Code { get; set; } = string.Empty;
+    public required AssetLocation Code { get; set; }
 
     public int Quantity { get; set; } = 1;
 
