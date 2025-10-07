@@ -6,32 +6,80 @@ using ImmersiveBuilding.Source.Systems;
 using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 
 namespace ImmersiveBuilding.Source.Gui;
+
+// We don't need more than one building dialog
+public static class BuildingModeDialogSingleton
+{
+    private static BuildingModeDialog? dialog;
+
+    public static bool TryOpen(ICoreClientAPI capi, ItemStack heldItem, List<SkillItem> buildingOptions)
+    {
+        if (dialog is null)
+        {
+            dialog = new(capi, heldItem, buildingOptions);
+            return dialog.TryOpen();
+        }
+
+        dialog.BuildingOptions = buildingOptions;
+        dialog.HeldItem = heldItem;
+        dialog.ComposeDialog();
+        return dialog.TryOpen();
+    }
+
+    public static bool IsOpened()
+    {
+        if (dialog is null)
+        {
+            return false;
+        }
+        return dialog.IsOpened();
+    }
+
+    public static bool TryClose()
+    {
+        if (dialog is null || !dialog.IsOpened())
+        {
+            return true;
+        }
+        return dialog.TryClose();
+    }
+
+    public static void FreeRam()
+    {
+        dialog = null;
+    }
+}
 
 public class BuildingModeDialog : GuiDialog
 {
     private int prevSlotOver = -1;
+
     private readonly IClientNetworkChannel? buildingModeChannel;
 
-    private readonly List<SkillItem> skillItems;
-    private readonly Action<int> onSelectedRecipe;
+    public ItemStack HeldItem { get; set; }
+
+    public List<SkillItem> BuildingOptions { get; set; }
 
     public const string ToggleCombinationCode = "buildingmodedialog";
+
     public override string ToggleKeyCombinationCode => ToggleCombinationCode;
 
-    public BuildingModeDialog(List<SkillItem> skillItems, Action<int> onSelectedRecipe, ICoreClientAPI capi)
+    public BuildingModeDialog(ICoreClientAPI capi, ItemStack heldItem, List<SkillItem> buildingOptions)
         : base(capi)
     {
-        this.skillItems = skillItems;
-        this.onSelectedRecipe = onSelectedRecipe;
+        HeldItem = heldItem;
+        BuildingOptions = buildingOptions;
+
         buildingModeChannel = capi.Network.GetChannel(SharedConstants.BuildingModeNetworkChannel);
-        SetupDialog();
+        ComposeDialog();
     }
 
-    void SetupDialog()
+    public void ComposeDialog()
     {
-        int cnt = Math.Max(1, skillItems.Count);
+        int cnt = Math.Max(1, BuildingOptions.Count);
 
         int cols = Math.Min(cnt, 8);
 
@@ -51,7 +99,7 @@ public class BuildingModeDialog : GuiDialog
             .Gui.CreateCompo("buildingModeSelect", ElementStdBounds.AutosizedMainDialog)
             .AddShadedDialogBG(bgBounds, true)
             .BeginChildElements(bgBounds)
-            .AddSkillItemGrid(skillItems, cols, rows, OnSlotClick, skillGridBounds, "skillitemgrid")
+            .AddSkillItemGrid(BuildingOptions, cols, rows, OnSlotClick, skillGridBounds, "skillitemgrid")
             .AddDynamicText("", CairoFont.WhiteSmallishText(), nameBounds, "name")
             .AddDynamicText("", CairoFont.WhiteDetailText(), descBounds, "ingredient")
             .EndChildElements()
@@ -60,32 +108,32 @@ public class BuildingModeDialog : GuiDialog
         SingleComposer.GetSkillItemGrid("skillitemgrid").OnSlotOver = OnSlotOver;
     }
 
-    private void OnSlotOver(int num)
+    private void OnSlotOver(int slotIndex)
     {
-        if (num >= skillItems.Count)
+        if (slotIndex >= BuildingOptions.Count)
             return;
 
-        if (num != prevSlotOver)
+        if (slotIndex != prevSlotOver)
         {
-            prevSlotOver = num;
-            SingleComposer.GetDynamicText("name").SetNewText(skillItems[num].Name);
-            if (skillItems[num].Data is BuildingModeContext context)
+            prevSlotOver = slotIndex;
+            SingleComposer.GetDynamicText("name").SetNewText(BuildingOptions[slotIndex].Name);
+            if (BuildingOptions[slotIndex].Data is BuildingModeContext context)
             {
                 SingleComposer.GetDynamicText("ingredient").SetNewText(context.Ingredients.GetMaterialsString());
             }
         }
     }
 
-    private void OnSlotClick(int num)
+    private void OnSlotClick(int slotIndex)
     {
-        BuildingModeContext? context = skillItems[num].Data as BuildingModeContext;
+        BuildingModeContext? context = BuildingOptions[slotIndex].Data as BuildingModeContext;
         if (context is not null && context.Output is not null)
         {
             ImmersiveBuildingRenderingSystem.SkillModeHud.Item = context.Output;
         }
-        buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { Mode = num });
+        buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { Mode = slotIndex });
+        HeldItem.Attributes.SetInt(SharedConstants.BuildingModeAttributeName, slotIndex);
 
-        onSelectedRecipe(num);
         TryClose();
     }
 }

@@ -21,7 +21,6 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
     private List<SkillItem> modes = [];
     private BuildingModeHandler?[] modeHandlers = [];
     private ICoreClientAPI? capi;
-    private BuildingModeDialog? buildingDialog;
 
     public override void OnLoaded(ICoreAPI api)
     {
@@ -231,17 +230,19 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         return null;
     }
 
-    public bool IsDialogOpened() => buildingDialog?.IsOpened() == true;
-
     public void ToggleDialog(ItemSlot slot)
     {
-        if (buildingDialog is not null)
+        if (BuildingModeDialogSingleton.IsOpened())
         {
-            buildingDialog.TryClose();
+            BuildingModeDialogSingleton.TryClose();
             return;
         }
 
-        OpenDialog(slot);
+        if (capi is null || slot?.Itemstack is null)
+        {
+            return;
+        }
+        BuildingModeDialogSingleton.TryOpen(capi, slot.Itemstack, modes);
     }
 
     public override void OnUnloaded(ICoreAPI api)
@@ -252,23 +253,5 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         }
     }
 
-    private void OpenDialog(ItemSlot slot)
-    {
-        if (capi is null)
-        {
-            return;
-        }
-
-        buildingDialog = new(modes, (index) => SetToolMode(slot, index), capi);
-        buildingDialog.OnClosed += buildingDialog.Dispose;
-        buildingDialog.OnClosed += () => buildingDialog = null;
-        buildingDialog.TryOpen();
-    }
-
     private static int GetToolMode(ItemSlot slot) => slot.Itemstack.Attributes.GetInt(SharedConstants.BuildingModeAttributeName);
-
-    private static void SetToolMode(ItemSlot slot, int toolMode)
-    {
-        slot.Itemstack.Attributes.SetInt(SharedConstants.BuildingModeAttributeName, toolMode);
-    }
 }

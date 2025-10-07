@@ -47,14 +47,9 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
             };
         };
 
-        // Remove custom hud for irrelevant items
         api.Event.BeforeActiveSlotChanged += (args) =>
         {
-            BuildingItemBehavior? behavior = GetBuildingItemBehavior(capi.World.Player.InventoryManager.ActiveHotbarSlot);
-            if (behavior?.IsDialogOpened() == true)
-            {
-                behavior.ToggleDialog(capi.World.Player.InventoryManager.ActiveHotbarSlot);
-            }
+            BuildingModeDialogSingleton.TryClose();
             return EnumHandling.PassThrough;
         };
 
@@ -67,6 +62,7 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
 
     public override void Dispose()
     {
+        BuildingModeDialogSingleton.FreeRam();
         SkillModeHud = null!;
     }
 
@@ -90,6 +86,7 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
         if (behavior is null)
         {
             SkillModeHud.TryClose();
+            BuildingModeDialogSingleton.TryClose();
             return;
         }
 
@@ -106,14 +103,6 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
         SkillModeHud.TryClose();
     }
 
-    private static BuildingItemBehavior? GetBuildingItemBehavior(ItemSlot? slot)
-    {
-        ItemStack? activeItem = slot?.Itemstack;
-        if (activeItem is null)
-        {
-            return null;
-        }
-
-        return activeItem.Collectible.GetBehavior<BuildingItemBehavior>();
-    }
+    private static BuildingItemBehavior? GetBuildingItemBehavior(ItemSlot? slot) =>
+        slot?.Itemstack is ItemStack activeItem ? activeItem.Collectible.GetBehavior<BuildingItemBehavior>() : null;
 }
