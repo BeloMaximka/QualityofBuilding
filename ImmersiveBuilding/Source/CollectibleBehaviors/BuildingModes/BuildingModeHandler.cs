@@ -3,8 +3,10 @@ using ImmersiveBuilding.Source.Extensions.Inventory;
 using ImmersiveBuilding.Source.Recipes;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
@@ -52,6 +54,10 @@ public class BuildingModeHandler : IModeHandler
         Output.Block.CanPlaceBlock(api.World, byPlayer, newBlockSelection, ref resultCode);
         if (resultCode != "success")
         {
+            if (byPlayer is IServerPlayer serverPlayer)
+            {
+                serverPlayer.SendIngameError(resultCode, Lang.Get($"placefailure-{resultCode}"));
+            }
             return;
         }
 
