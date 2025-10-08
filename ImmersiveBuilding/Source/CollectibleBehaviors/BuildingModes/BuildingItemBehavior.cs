@@ -227,9 +227,9 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         }
     }
 
-    public ItemStack? GetSelectedBuildingOutput(ItemSlot slot)
+    public ItemStack? GetSelectedBuildingOutput(ItemStack itemStack)
     {
-        int selectedMode = GetToolMode(slot);
+        int selectedMode = GetToolMode(itemStack);
         if (selectedMode < modes.Count)
         {
             BuildingModeContext? context = modes[selectedMode]?.Data as BuildingModeContext;
@@ -304,5 +304,6 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         };
     }
 
-    private static int GetToolMode(ItemSlot slot) => slot.Itemstack.Attributes.GetInt(SharedConstants.BuildingModeAttributeName);
+    private static int GetToolMode(ItemSlot slot) => GetToolMode(slot.Itemstack);
+    private static int GetToolMode(ItemStack itemStack) => itemStack.Attributes.GetInt(SharedConstants.BuildingModeAttributeName);
 }

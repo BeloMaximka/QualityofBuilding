@@ -2,7 +2,6 @@
 using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Extensions.Inventory;
 using ImmersiveBuilding.Source.Network;
-using ImmersiveBuilding.Source.Systems;
 using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
@@ -111,7 +110,9 @@ public class BuildingModeDialog : GuiDialog
     private void OnSlotOver(int slotIndex)
     {
         if (slotIndex >= BuildingOptions.Count)
+        {
             return;
+        }
 
         if (slotIndex != prevSlotOver)
         {
@@ -126,20 +127,6 @@ public class BuildingModeDialog : GuiDialog
 
     private void OnSlotClick(int slotIndex)
     {
-        BuildingModeContext? context = BuildingOptions[slotIndex].Data as BuildingModeContext;
-        if (context is not null && context.Output is not null)
-        {
-            if (slotIndex != 0)
-            {
-                ImmersiveBuildingRenderingSystem.SkillModeHud.Item = context.Output;
-                ImmersiveBuildingRenderingSystem.SkillModeHud.TryOpen();
-            }
-            else
-            {
-                ImmersiveBuildingRenderingSystem.SkillModeHud.TryClose();
-            }
-
-        }
         buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { Mode = slotIndex });
         HeldItem.Attributes.SetInt(SharedConstants.BuildingModeAttributeName, slotIndex);
 

@@ -25,7 +25,10 @@ public class ImmersiveBuildingModSystem : ModSystem
     public override void StartPre(ICoreAPI api)
     {
         UpdateStackAttributeIgnoreList();
-        HarmonyInstance.PatchAll();
+        if (!HarmonyInstance.GetPatchedMethods().Any())
+        {
+            HarmonyInstance.PatchAll();
+        }
     }
 
     public override void Start(ICoreAPI api)
