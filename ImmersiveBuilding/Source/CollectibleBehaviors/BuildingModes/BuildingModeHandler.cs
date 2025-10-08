@@ -1,6 +1,6 @@
-﻿using ImmersiveBuilding.Source.Extensions;
-using ImmersiveBuilding.Source.Extensions.Inventory;
-using ImmersiveBuilding.Source.Recipes;
+﻿using ImmersiveBuilding.Source.Recipes;
+using ImmersiveBuilding.Source.Utils;
+using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;

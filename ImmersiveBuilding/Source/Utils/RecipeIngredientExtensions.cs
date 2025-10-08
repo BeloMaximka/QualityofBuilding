@@ -1,9 +1,9 @@
-﻿using ImmersiveBuilding.Source.Extensions.Inventory;
-using ImmersiveBuilding.Source.Recipes;
+﻿using ImmersiveBuilding.Source.Recipes;
+using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Linq;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Source.Extensions;
+namespace ImmersiveBuilding.Source.Utils;
 
 public static class RecipeIngredientExtensions
 {

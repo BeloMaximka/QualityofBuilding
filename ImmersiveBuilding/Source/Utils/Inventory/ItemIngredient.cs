@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Source.Extensions.Inventory;
+namespace ImmersiveBuilding.Source.Utils.Inventory;
 
 public class ItemIngredient()
 {

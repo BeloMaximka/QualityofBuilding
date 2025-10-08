@@ -5,7 +5,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace ImmersiveBuilding.Source.Extensions.Inventory;
+namespace ImmersiveBuilding.Source.Utils.Inventory;
 
 public static class InventoryExtensions
 {

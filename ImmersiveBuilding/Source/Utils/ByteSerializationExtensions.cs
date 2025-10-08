@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Source.Extensions;
+namespace ImmersiveBuilding.Source.Utils;
 
 public static class ByteSerializationExtensions
 {

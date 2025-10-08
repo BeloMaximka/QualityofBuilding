@@ -2,8 +2,8 @@
 using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 using ImmersiveBuilding.Source.Common;
-using ImmersiveBuilding.Source.Extensions;
 using ImmersiveBuilding.Source.Recipes;
+using ImmersiveBuilding.Source.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;

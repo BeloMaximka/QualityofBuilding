@@ -1,4 +1,4 @@
-﻿using ImmersiveBuilding.Source.Extensions.Inventory;
+﻿using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 

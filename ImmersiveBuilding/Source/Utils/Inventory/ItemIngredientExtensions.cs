@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace ImmersiveBuilding.Source.Extensions.Inventory;
+namespace ImmersiveBuilding.Source.Utils.Inventory;
 
 public static class ItemIngredientExtensions
 {

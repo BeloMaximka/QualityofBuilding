@@ -1,7 +1,7 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Common;
-using ImmersiveBuilding.Source.Extensions.Inventory;
 using ImmersiveBuilding.Source.Network;
+using ImmersiveBuilding.Source.Utils.Inventory;
 using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;

@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Datastructures;
 
-namespace ImmersiveBuilding.Source.Extensions;
+namespace ImmersiveBuilding.Source.Utils;
 
 public static class TreeAttributeExtensions
 {

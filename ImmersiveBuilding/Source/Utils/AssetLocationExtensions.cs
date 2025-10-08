@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Vintagestory.API.Common;
 
-namespace ImmersiveBuilding.Source.Extensions;
+namespace ImmersiveBuilding.Source.Utils;
 
 public static class AssetLocationExtensions
 {
