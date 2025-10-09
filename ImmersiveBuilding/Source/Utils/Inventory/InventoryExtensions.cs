@@ -19,10 +19,13 @@ public static class InventoryExtensions
             return true;
         }
 
+        DummyInventory mouseSlotInventory = new(player.Entity.Api);
+        mouseSlotInventory[0] = player.InventoryManager.MouseItemSlot;
         IEnumerable<IInventory> inventories = new IInventory[]
         {
             player.InventoryManager.GetOwnInventory("backpack"),
             player.InventoryManager.GetHotbarInventory(),
+            mouseSlotInventory,
         }.Where(inventory => inventory is not null);
 
         if (!inventories.TryTakeItems(missingMaterials))

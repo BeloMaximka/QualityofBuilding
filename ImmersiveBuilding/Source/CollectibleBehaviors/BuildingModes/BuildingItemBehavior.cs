@@ -227,16 +227,12 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         }
     }
 
-    public ItemStack? GetSelectedBuildingOutput(ItemStack itemStack)
+    public BuildingModeHandler? GetSelectedModeHandler(ItemStack itemStack)
     {
         int selectedMode = GetToolMode(itemStack);
-        if (selectedMode < modes.Count)
+        if (selectedMode < modeHandlers.Length)
         {
-            BuildingModeContext? context = modes[selectedMode]?.Data as BuildingModeContext;
-            if (context is not null)
-            {
-                return context.Output;
-            }
+            return modeHandlers[selectedMode];
         }
         return null;
     }
