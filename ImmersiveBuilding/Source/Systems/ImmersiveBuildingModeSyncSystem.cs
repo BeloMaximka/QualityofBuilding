@@ -1,6 +1,7 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Network;
+using ImmersiveBuilding.Source.Utils;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -35,6 +36,6 @@ internal class ImmersiveBuildingModeSyncSystem : ModSystem
         {
             return;
         }
-        activeItem.Attributes.SetInt(SharedConstants.BuildingModeAttributeName, networkMessage.Mode);
+        activeItem.SetBuildingMode(networkMessage.Mode);
     }
 }

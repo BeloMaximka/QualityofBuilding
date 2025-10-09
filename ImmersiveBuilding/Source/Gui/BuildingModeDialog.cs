@@ -1,6 +1,7 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Network;
+using ImmersiveBuilding.Source.Utils;
 using ImmersiveBuilding.Source.Utils.Inventory;
 using System;
 using System.Collections.Generic;
@@ -128,7 +129,7 @@ public class BuildingModeDialog : GuiDialog
     private void OnSlotClick(int slotIndex)
     {
         buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { Mode = slotIndex });
-        HeldItem.Attributes.SetInt(SharedConstants.BuildingModeAttributeName, slotIndex);
+        HeldItem.SetBuildingMode(slotIndex);
 
         TryClose();
     }

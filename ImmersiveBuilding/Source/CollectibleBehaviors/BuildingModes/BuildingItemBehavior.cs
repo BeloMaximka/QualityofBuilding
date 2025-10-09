@@ -1,7 +1,7 @@
-﻿using ImmersiveBuilding.Source.Common;
-using ImmersiveBuilding.Source.Gui;
+﻿using ImmersiveBuilding.Source.Gui;
 using ImmersiveBuilding.Source.Recipes;
 using ImmersiveBuilding.Source.Systems;
+using ImmersiveBuilding.Source.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -103,7 +103,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = GetToolMode(slot);
+        int selectedMode = slot.Itemstack.GetBuildingMode();
         if (selectedMode <= 0 || selectedMode > lastModeIndex)
         {
             return; // Not our mode
@@ -134,7 +134,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = GetToolMode(slot);
+        int selectedMode = slot.Itemstack.GetBuildingMode();
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handling = EnumHandling.PreventSubsequent;
@@ -152,7 +152,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = GetToolMode(slot);
+        int selectedMode = slot.Itemstack.GetBuildingMode();
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handling = EnumHandling.PreventSubsequent;
@@ -169,7 +169,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handled
     )
     {
-        int selectedMode = GetToolMode(slot);
+        int selectedMode = slot.Itemstack.GetBuildingMode();
         if (selectedMode > 0 && selectedMode < lastModeIndex)
         {
             handled = EnumHandling.PreventSubsequent;
@@ -192,7 +192,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
             {
                 HotKeyCodes = [capi.Input.GetHotKeyByCode(BuildingModeDialog.ToggleCombinationCode).Code],
                 ActionLangCode = "heldhelp-building-menu",
-                MouseButton = EnumMouseButton.None
+                MouseButton = EnumMouseButton.None,
             },
         ];
     }
@@ -229,7 +229,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
 
     public BuildingModeHandler? GetSelectedModeHandler(ItemStack itemStack)
     {
-        int selectedMode = GetToolMode(itemStack);
+        int selectedMode = itemStack.GetBuildingMode();
         if (selectedMode < modeHandlers.Length)
         {
             return modeHandlers[selectedMode];
@@ -299,7 +299,4 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
             );
         };
     }
-
-    private static int GetToolMode(ItemSlot slot) => GetToolMode(slot.Itemstack);
-    private static int GetToolMode(ItemStack itemStack) => itemStack.Attributes.GetInt(SharedConstants.BuildingModeAttributeName);
 }
