@@ -9,7 +9,7 @@ public static class ItemIngredientExtensions
         string.Join(
             ", ",
             ingredients.Select(ingredient =>
-                $"{ingredient.Quantity}x {ingredient.ResolvedItemStack?.GetName().ToLower() ?? ingredient.Code.ToString()}"
+                $"{ingredient.Quantity}x {ingredient.TranslatedName ?? ingredient.ResolvedItemStack?.GetName().ToLower() ?? ingredient.Code.ToString()}"
             )
         );
 }

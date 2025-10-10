@@ -11,7 +11,23 @@ public static class InventoryExtensions
 {
     private sealed record ItemSlotToTakeFrom(ItemSlot Slot, int Quantity);
 
-    public static bool TryTakeItems(this IPlayer player, IReadOnlyCollection<ItemIngredient> ingredients)
+    public static bool TryTakeItems(this IPlayer player, IReadOnlyList<IReadOnlyCollection<ItemIngredient>> recipes, out int recipeIndex)
+    {
+        recipeIndex = -1;
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            bool isSuccessful = player.TryTakeItems(recipes[i], showErrorMessage: i + 1 == recipes.Count);
+            if (isSuccessful)
+            {
+                recipeIndex = i;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool TryTakeItems(this IPlayer player, IReadOnlyCollection<ItemIngredient> ingredients, bool showErrorMessage = true)
     {
         List<ItemIngredient> missingMaterials = [.. ingredients.Select(ingredient => ingredient.Clone())];
         if (player.WorldData.CurrentGameMode == EnumGameMode.Creative)
@@ -30,7 +46,7 @@ public static class InventoryExtensions
 
         if (!inventories.TryTakeItems(missingMaterials))
         {
-            if (player is IServerPlayer serverPlayer)
+            if (showErrorMessage && player is IServerPlayer serverPlayer)
             {
                 serverPlayer.SendIngameError("nomatsforbuilding", null, missingMaterials.GetMaterialsString());
             }

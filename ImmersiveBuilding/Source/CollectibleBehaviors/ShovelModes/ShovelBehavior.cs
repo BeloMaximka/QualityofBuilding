@@ -3,7 +3,6 @@ using ImmersiveBuilding.Source.Utils;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 
@@ -11,7 +10,7 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
 {
     private readonly CollectibleObject collectibleObject = collectibleObject;
 
-    private List<SkillItem> modes = [];
+    private readonly List<SkillItem> modes = [];
 
     public override List<SkillItem> ToolModes => modes;
 
@@ -25,24 +24,17 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         ItemStack? stonePathItem = stonePath is not null ? new(stonePath) : null;
 
         // Init mode handlers
-        modes = ObjectCacheUtil.GetOrCreate<List<SkillItem>>(
-            api,
-            "immersiveBuildingShovelModes",
-            () =>
-
-                [
-                    new SkillItem() { Code = new AssetLocation("default") },
-                    new SkillItem()
-                    {
-                        Code = new AssetLocation(stonePathCode),
-                        Data = new BuildingModeContext()
-                        {
-                            Handler = new ShovelPathModeHandler(api) { StonePath = stonePath },
-                            Output = stonePathItem,
-                        },
-                    },
-                ]
-        );
+        modes.Add(new SkillItem() { Code = new AssetLocation("default") });
+        if (stonePath is not null)
+        {
+            modes.Add(
+                new SkillItem()
+                {
+                    Code = new AssetLocation(stonePathCode),
+                    Data = new BuildingModeContext() { Handler = new ShovelPathModeHandler(api, stonePath), Output = stonePathItem },
+                }
+            );
+        }
 
         if (api is not ICoreClientAPI capi)
         {
@@ -57,10 +49,6 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         {
             modes[1].Name = stonePathItem.GetName();
             modes[1].RenderHandler = stonePathItem.GetRenderDelegate(capi);
-        }
-        else
-        {
-            modes[1].Name = stonePathCode;
         }
     }
 

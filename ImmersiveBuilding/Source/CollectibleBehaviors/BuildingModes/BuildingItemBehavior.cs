@@ -253,8 +253,8 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
         {
             return slabMode switch
             {
-                EnumSlabPlaceMode.Horizontal => $"{itemStack.GetName()} ({Lang.Get("Horizontal")})",
-                EnumSlabPlaceMode.Vertical => $"{itemStack.GetName()} ({Lang.Get("Vertical")})",
+                EnumSlabPlaceMode.Horizontal => $"{itemStack.GetName()} ({Lang.Get("horizontal")})",
+                EnumSlabPlaceMode.Vertical => $"{itemStack.GetName()} ({Lang.Get("vertical")})",
                 _ => string.Empty,
             };
         }

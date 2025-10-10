@@ -19,6 +19,7 @@
 	],
 	"output": {
 		"type": "block",
-		"code": "game:cobblestoneslab-{rock}-down-free"
+		"code": "game:cobblestoneslab-{rock}-down-free",
+		"attributes": { "slabPlaceMode": 1 }
 	}
 }

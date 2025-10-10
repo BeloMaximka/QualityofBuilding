@@ -12,6 +12,8 @@ public class ItemIngredient()
 
     public ItemStack? ResolvedItemStack { get; set; }
 
+    public string? TranslatedName { get; set; }
+
     public ItemIngredient Clone()
     {
         return new()
@@ -20,6 +22,7 @@ public class ItemIngredient()
             Code = Code,
             Quantity = Quantity,
             ResolvedItemStack = ResolvedItemStack,
+            TranslatedName = TranslatedName,
         };
     }
 

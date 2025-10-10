@@ -1,7 +1,8 @@
 {
-    "game:ingameerror-nomatsforbuilding": "You're missing the following materials: {0}.",
-	"game:heldhelp-building-menu": "Open building menu",
-	"game:handbook-used-to-build": "Used to build via bulding menu",
-	"Horizontal": "Horizontal",
-	"Vertical": "Vertical"
+  "game:ingameerror-nomatsforbuilding": "You're missing the following materials: {0}.",
+  "game:heldhelp-building-menu": "Open building menu",
+  "game:handbook-used-to-build": "Used to build via bulding menu",
+  "game:any-stone": "any stone",
+  "game:horizontal": "Horizontal",
+  "game:vertical": "Vertical"
 }
