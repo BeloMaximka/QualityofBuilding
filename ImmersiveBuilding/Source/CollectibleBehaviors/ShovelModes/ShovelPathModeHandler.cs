@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Vintagestory.API.Common;
-using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
@@ -14,7 +13,7 @@ public class ShovelPathModeHandler : IModeHandler
     private readonly int[] replaceablePathBlockIds;
     private readonly Block? stonePath;
     private readonly int stonePathSlabId;
-    private readonly int[] stonePathStairIds;
+    private readonly NsweBlockIds stonePathStairIds;
 
     public ShovelPathModeHandler(ICoreAPI api)
     {
@@ -31,13 +30,12 @@ public class ShovelPathModeHandler : IModeHandler
         const string stonePathCode = "stonepath-free";
         stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
         stonePathSlabId = api.World.GetBlock(new AssetLocation("game:stonepathslab-free"))?.BlockId ?? -1;
-        stonePathStairIds =
-        [
-            api.World.GetBlock(new AssetLocation("stonepathstairs-up-south-free"))?.BlockId ?? -1,
-            api.World.GetBlock(new AssetLocation("stonepathstairs-up-east-free"))?.BlockId ?? -1,
+        stonePathStairIds = new(
             api.World.GetBlock(new AssetLocation("stonepathstairs-up-north-free"))?.BlockId ?? -1,
+            api.World.GetBlock(new AssetLocation("stonepathstairs-up-south-free"))?.BlockId ?? -1,
             api.World.GetBlock(new AssetLocation("stonepathstairs-up-west-free"))?.BlockId ?? -1,
-        ];
+            api.World.GetBlock(new AssetLocation("stonepathstairs-up-east-free"))?.BlockId ?? -1
+        );
     }
 
     public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
@@ -117,10 +115,8 @@ public class ShovelPathModeHandler : IModeHandler
             byPlayer
         );
 
-        float yaw = byPlayer.Entity.Pos.Yaw * GameMath.RAD2DEG;
-        int compasDirection = GameMath.Mod((int)Math.Round(yaw / 90f), 4); // S E N W
         api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
-        api.World.BlockAccessor.SetBlock(stonePathStairIds[compasDirection], blockSel.Position);
+        api.World.BlockAccessor.SetBlock(stonePathStairIds.GetCorrectBlockOrientationVariant(byPlayer, blockSel), blockSel.Position);
     }
 
     private void ReplaceStairsWithSlab(ICoreAPI api, BlockSelection blockSel, IPlayer byPlayer)
