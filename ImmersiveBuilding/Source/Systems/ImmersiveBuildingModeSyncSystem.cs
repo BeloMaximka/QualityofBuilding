@@ -1,5 +1,4 @@
-﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
-using ImmersiveBuilding.Source.Common;
+﻿using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Network;
 using ImmersiveBuilding.Source.Utils;
 using Vintagestory.API.Client;
@@ -31,11 +30,6 @@ internal class ImmersiveBuildingModeSyncSystem : ModSystem
             return;
         }
 
-        BuildingItemBehavior? behavior = activeItem.Collectible.GetBehavior<BuildingItemBehavior>();
-        if (behavior is null)
-        {
-            return;
-        }
-        activeItem.SetBuildingMode(networkMessage.Mode);
+        activeItem.SetBuildingMode(networkMessage.ToolModeCode);
     }
 }

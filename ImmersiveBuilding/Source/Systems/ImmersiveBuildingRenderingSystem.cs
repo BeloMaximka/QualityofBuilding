@@ -1,4 +1,4 @@
-﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
+﻿using ImmersiveBuilding.Source.CollectibleBehaviors;
 using ImmersiveBuilding.Source.Gui;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -61,7 +61,7 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
     private bool ToggleBuildingModeDialog(KeyCombination combination)
     {
         ItemSlot? slot = capi.World.Player.InventoryManager.ActiveHotbarSlot;
-        BuildingItemBehavior? behavior = GetBuildingItemBehavior(slot);
+        CustomToolModeBehavior? behavior = GetBuildingItemBehavior(slot);
         if (behavior is null)
         {
             return false;
@@ -71,6 +71,6 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
         return true;
     }
 
-    private static BuildingItemBehavior? GetBuildingItemBehavior(ItemSlot? slot) =>
-        slot?.Itemstack is ItemStack activeItem ? activeItem.Collectible.GetBehavior<BuildingItemBehavior>() : null;
+    private static CustomToolModeBehavior? GetBuildingItemBehavior(ItemSlot? slot) =>
+        slot?.Itemstack is ItemStack activeItem ? activeItem.Collectible.GetCollectibleBehavior<CustomToolModeBehavior>(true) : null;
 }

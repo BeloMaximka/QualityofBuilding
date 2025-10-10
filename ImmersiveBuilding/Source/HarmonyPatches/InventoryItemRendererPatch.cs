@@ -43,18 +43,17 @@ public static class InventoryItemRendererPatch
     {
         if (
             inSlot.Itemstack is null
-            || inSlot.Itemstack.GetBuildingMode() == 0
             || inSlot.Itemstack.Collectible.GetBehavior<BuildingItemBehavior>() is not BuildingItemBehavior behavior
-            || behavior.GetSelectedModeHandler(inSlot.Itemstack) is not BuildingModeHandler handler
-            || handler.Output is null
+            || behavior.ToolModes[inSlot.Itemstack.GetBuildingMode(behavior.ToolModes)].Data is not BuildingModeContext context
+            || context.Output is null
         )
         {
             return true;
         }
 
-        int originalQuantity = handler.Output.StackSize;
-        handler.Output.StackSize = inSlot.StackSize;
-        DummySlot outputSlot = new(handler.Output);
+        int originalQuantity = context.Output.StackSize;
+        context.Output.StackSize = inSlot.StackSize;
+        DummySlot outputSlot = new(context.Output);
         __instance.RenderItemstackToGui(
             outputSlot,
             posX - size * 0.3,
@@ -69,7 +68,7 @@ public static class InventoryItemRendererPatch
 
         // Workaround to properly render quantity
         __instance.RenderItemstackToGui(outputSlot, posX, posY, posZ, size, 0, shading, origRotate: false, showStackSize);
-        handler.Output.StackSize = originalQuantity;
+        context.Output.StackSize = originalQuantity;
 
         posX += size * 0.2;
         posY += size * 0.2;

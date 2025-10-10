@@ -6,5 +6,5 @@ namespace ImmersiveBuilding.Source.Network;
 public class SetBuildingModeMessage
 {
     [ProtoMember(1)]
-    public int Mode { get; set; }
+    public required string ToolModeCode { get; set; }
 }

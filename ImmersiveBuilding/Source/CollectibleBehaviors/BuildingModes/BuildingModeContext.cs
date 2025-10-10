@@ -8,5 +8,7 @@ public class BuildingModeContext
 {
     public ItemStack? Output { get; set; }
 
-    public IEnumerable<ItemIngredient> Ingredients { get; set; } = [];
+    public required IModeHandler Handler { get; set; }
+
+    public IReadOnlyCollection<ItemIngredient> Ingredients { get; set; } = [];
 }

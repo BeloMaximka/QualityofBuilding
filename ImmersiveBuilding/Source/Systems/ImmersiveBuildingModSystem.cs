@@ -22,7 +22,6 @@ public class ImmersiveBuildingModSystem : ModSystem
 
     public override void StartPre(ICoreAPI api)
     {
-        BuildingModeUtils.UpdateStackAttributeIgnoreList();
         if (!HarmonyInstance.GetPatchedMethods().Any())
         {
             HarmonyInstance.PatchAll();
@@ -47,10 +46,7 @@ public class ImmersiveBuildingModSystem : ModSystem
         foreach (Item item in api.World.SearchItems(AssetLocation.Create("shovel-*")))
         {
             Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(ShovelBehavior), item.Code.ToString());
-            CollectibleBehavior[] collectibleBehaviorList = new CollectibleBehavior[item.CollectibleBehaviors.Length + 1];
-            item.CollectibleBehaviors.CopyTo(collectibleBehaviorList, 0);
-            collectibleBehaviorList[^1] = new ShovelBehavior(item);
-            item.CollectibleBehaviors = collectibleBehaviorList;
+            item.CollectibleBehaviors = [new ShovelBehavior(item), .. item.CollectibleBehaviors];
         }
 
         // Add other building behaviors

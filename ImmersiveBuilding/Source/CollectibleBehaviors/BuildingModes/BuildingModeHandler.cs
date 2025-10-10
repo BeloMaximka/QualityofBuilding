@@ -1,40 +1,17 @@
-﻿using ImmersiveBuilding.Source.Recipes;
-using ImmersiveBuilding.Source.Utils;
-using ImmersiveBuilding.Source.Utils.Inventory;
+﻿using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
-public class BuildingModeHandler : IModeHandler
+public class BuildingModeHandler(ICoreAPI api) : IModeHandler
 {
-    private readonly ICoreAPI api;
+    public required IReadOnlyCollection<ItemIngredient> Ingredients { get; init; }
 
-    public readonly IReadOnlyCollection<ItemIngredient> Ingredients;
-
-    public string OutputCode { get; private set; }
-
-    public ItemStack? Output { get; private set; }
-
-    public BuildingModeHandler(ICoreAPI api, SkillModeBuildingRecipe recipe, string wildcardValue)
-    {
-        this.api = api;
-        Ingredients = recipe.GetItemIngredients(api.World, wildcardValue);
-        OutputCode = recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue);
-        Block? block = api.World.GetBlock(OutputCode);
-        if (block is not null)
-        {
-            Output = new(block);
-            if (recipe.Output.Attributes is not null && new JsonObject(recipe.Output.Attributes).ToAttribute() is ITreeAttribute treeAttribute)
-            {
-                Output.Attributes.MergeTree(treeAttribute.ConvertLongsToInts());
-            }
-        }
-    }
+    public required ItemStack? Output { get; init; }
 
     public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
     {

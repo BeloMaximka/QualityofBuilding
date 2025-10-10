@@ -55,7 +55,7 @@ public static class BuildingModeDialogSingleton
 
 public class BuildingModeDialog : GuiDialog
 {
-    private int prevSlotOver = -1;
+    private int prevSlotOver;
 
     private readonly IClientNetworkChannel? buildingModeChannel;
 
@@ -79,6 +79,7 @@ public class BuildingModeDialog : GuiDialog
 
     public void ComposeDialog()
     {
+        prevSlotOver = -1;
         int cnt = Math.Max(1, BuildingOptions.Count);
 
         int cols = Math.Min(cnt, 8);
@@ -128,8 +129,9 @@ public class BuildingModeDialog : GuiDialog
 
     private void OnSlotClick(int slotIndex)
     {
-        buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { Mode = slotIndex });
-        HeldItem.SetBuildingMode(slotIndex);
+        string toolModeCode = BuildingOptions[slotIndex].Code;
+        buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { ToolModeCode = toolModeCode });
+        HeldItem.SetBuildingMode(toolModeCode);
 
         TryClose();
     }

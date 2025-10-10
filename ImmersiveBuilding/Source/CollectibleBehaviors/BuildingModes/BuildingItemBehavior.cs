@@ -2,12 +2,14 @@
 using ImmersiveBuilding.Source.Recipes;
 using ImmersiveBuilding.Source.Systems;
 using ImmersiveBuilding.Source.Utils;
+using ImmersiveBuilding.Source.Utils.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
@@ -15,13 +17,17 @@ using Vintagestory.ServerMods;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
-public class BuildingItemBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject), ICustomHandbookPageContent
+public class BuildingItemBehavior(CollectibleObject collectibleObject)
+    : CustomToolModeBehavior(collectibleObject),
+        ICustomHandbookPageContent
 {
     private readonly CollectibleObject collectibleObject = collectibleObject;
-    private int lastModeIndex = 0;
     private List<SkillItem> modes = [];
-    private BuildingModeHandler?[] modeHandlers = [];
-    private ICoreClientAPI? capi;
+
+    public override List<SkillItem> ToolModes
+    {
+        get => modes;
+    }
 
     public override void OnLoaded(ICoreAPI api)
     {
@@ -41,54 +47,64 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
                 ),
         ]; // TODO: optimize this
 
-        modeHandlers =
-        [
-            null, // handler for default mode (vanilla behavior)
-            .. recipes.Select(
-                (recipe) =>
-                {
-                    return new BuildingModeHandler(api, recipe, WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code));
-                }
-            ),
-        ];
-        lastModeIndex = modeHandlers.Length - 1;
-
         // Init client part
-        if (api is not ICoreClientAPI clientAPI)
+        if (api is ICoreClientAPI clientAPI)
         {
-            return;
+            ClientAPI = clientAPI;
         }
-        capi = clientAPI;
 
         ItemStack itemStack = new(collectibleObject);
-        modes = new(modeHandlers.Length)
+        modes = new(recipes.Length + 1) { new() { Code = collectibleObject.Code } };
+        if (ClientAPI is not null)
         {
-            new()
-            {
-                Code = collectibleObject.Code,
-                Name = itemStack.GetName(),
-                RenderHandler = GetItemRenderDelegate(capi, new DummySlot(itemStack)),
-                Data = new BuildingModeContext() { Output = itemStack },
-            },
-        };
+            modes[0].Name = itemStack.GetName();
+            modes[0].RenderHandler = GetItemRenderDelegate(ClientAPI, new DummySlot(itemStack));
+        }
 
-        for (int i = 1; i < modeHandlers.Length; i++)
+        foreach (var recipe in recipes)
         {
-            if (modeHandlers[i]!.Output is null)
+            string wildcardValue = WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code);
+            ItemIngredient[] ingredients = recipe.GetItemIngredients(api.World, wildcardValue);
+            string outputCode = recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue);
+            Block? block = api.World.GetBlock(outputCode);
+            ItemStack? output = null;
+
+            if (block is not null)
             {
-                modes.Add(new SkillItem() { Code = modeHandlers[i]!.OutputCode, Name = modeHandlers[i]!.OutputCode });
+                output = new(block);
+                if (
+                    recipe.Output.Attributes is not null
+                    && new JsonObject(recipe.Output.Attributes).ToAttribute() is ITreeAttribute treeAttribute
+                )
+                {
+                    output.Attributes.MergeTree(treeAttribute.ConvertLongsToInts());
+                }
+            }
+
+            SkillItem mode = new()
+            {
+                Code = outputCode,
+                Data = new BuildingModeContext()
+                {
+                    Output = output,
+                    Handler = new BuildingModeHandler(api) { Ingredients = ingredients, Output = output },
+                    Ingredients = ingredients,
+                },
+            };
+            modes.Add(mode);
+
+            if (ClientAPI is null)
+            {
+                continue;
+            }
+            if (output is not null)
+            {
+                mode.Name = GetNameWithExtraInfo(output);
+                mode.RenderHandler = GetBlockRenderDelegate(ClientAPI, output);
                 continue;
             }
 
-            modes.Add(
-                new SkillItem()
-                {
-                    Code = modeHandlers[i]!.Output!.Collectible.Code,
-                    Name = GetNameWithExtraInfo(modeHandlers[i]!.Output!),
-                    RenderHandler = GetBlockRenderDelegate(capi, modeHandlers[i]!.Output!),
-                    Data = new BuildingModeContext() { Output = modeHandlers[i]?.Output, Ingredients = modeHandlers[i]!.Ingredients },
-                }
-            );
+            mode.Name = outputCode;
         }
     }
 
@@ -103,12 +119,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.GetBuildingMode();
-        if (selectedMode <= 0 || selectedMode > lastModeIndex)
-        {
-            return; // Not our mode
-        }
-
+        int selectedMode = slot.Itemstack.GetBuildingMode(modes);
         handHandling = EnumHandHandling.PreventDefault;
         handling = EnumHandling.PreventSubsequent;
 
@@ -117,12 +128,13 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
             blockSel == null
             || byPlayer == null
             || !byEntity.World.Claims.TryAccess(byPlayer, blockSel.Position, EnumBlockAccessFlags.BuildOrBreak)
+            || modes[selectedMode].Data is not BuildingModeContext context
         )
         {
             return;
         }
 
-        modeHandlers[selectedMode]?.HandleStart(slot, byEntity, blockSel, entitySel);
+        context.Handler.HandleStart(slot, byEntity, blockSel, entitySel);
     }
 
     public override bool OnHeldInteractStep(
@@ -134,8 +146,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.GetBuildingMode();
-        if (selectedMode > 0 && selectedMode < lastModeIndex)
+        if (slot.Itemstack.GetBuildingMode(modes) > 0)
         {
             handling = EnumHandling.PreventSubsequent;
             return false;
@@ -152,8 +163,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handling
     )
     {
-        int selectedMode = slot.Itemstack.GetBuildingMode();
-        if (selectedMode > 0 && selectedMode < lastModeIndex)
+        if (slot.Itemstack.GetBuildingMode(modes) > 0)
         {
             handling = EnumHandling.PreventSubsequent;
         }
@@ -169,8 +179,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         ref EnumHandling handled
     )
     {
-        int selectedMode = slot.Itemstack.GetBuildingMode();
-        if (selectedMode > 0 && selectedMode < lastModeIndex)
+        if (slot.Itemstack.GetBuildingMode(modes) > 0)
         {
             handled = EnumHandling.PreventSubsequent;
             return false;
@@ -181,7 +190,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
 
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot, ref EnumHandling handling)
     {
-        if (capi is null)
+        if (ClientAPI is null)
         {
             return base.GetHeldInteractionHelp(inSlot, ref handling);
         }
@@ -190,7 +199,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         [
             new()
             {
-                HotKeyCodes = [capi.Input.GetHotKeyByCode(BuildingModeDialog.ToggleCombinationCode).Code],
+                HotKeyCodes = [ClientAPI.Input.GetHotKeyByCode(BuildingModeDialog.ToggleCombinationCode).Code],
                 ActionLangCode = "heldhelp-building-menu",
                 MouseButton = EnumMouseButton.None,
             },
@@ -208,16 +217,16 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
         bool haveText = true;
         CollectibleBehaviorHandbookTextAndExtraInfo.AddHeading(components, capi, Lang.Get("handbook-used-to-build"), ref haveText);
 
-        foreach (var handler in modeHandlers)
+        foreach (var mode in modes)
         {
-            if (handler?.Output is null)
+            if (mode.Data is not BuildingModeContext context || context.Output is null)
             {
                 continue;
             }
 
             ItemstackTextComponent itemStackComponent = new(
                 capi,
-                handler.Output,
+                context.Output,
                 40,
                 0,
                 EnumFloat.Inline,
@@ -225,31 +234,6 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject) : Collect
             );
             components.Add(itemStackComponent);
         }
-    }
-
-    public BuildingModeHandler? GetSelectedModeHandler(ItemStack itemStack)
-    {
-        int selectedMode = itemStack.GetBuildingMode();
-        if (selectedMode < modeHandlers.Length)
-        {
-            return modeHandlers[selectedMode];
-        }
-        return null;
-    }
-
-    public void ToggleDialog(ItemSlot slot)
-    {
-        if (BuildingModeDialogSingleton.IsOpened())
-        {
-            BuildingModeDialogSingleton.TryClose();
-            return;
-        }
-
-        if (capi is null || slot?.Itemstack is null)
-        {
-            return;
-        }
-        BuildingModeDialogSingleton.TryOpen(capi, slot.Itemstack, modes);
     }
 
     public override void OnUnloaded(ICoreAPI api)

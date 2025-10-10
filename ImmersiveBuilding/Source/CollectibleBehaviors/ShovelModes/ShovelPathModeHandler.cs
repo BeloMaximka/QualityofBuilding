@@ -63,7 +63,6 @@ public class ShovelPathModeHandler : IModeHandler
         }
 
         Block block = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
-        byEntity.Api.Logger.Debug("[ImmersiveBuilding] Shovel interacted with {0}", block.Code);
         if (replaceablePathBlockIds.Contains(block.Id))
         {
             (bool isSuccessful, bool shouldDrop) = TryTakeMaterialsForPath(byPlayer);
