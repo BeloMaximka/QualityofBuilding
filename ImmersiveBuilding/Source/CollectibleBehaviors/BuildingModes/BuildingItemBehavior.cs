@@ -120,8 +120,11 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
     )
     {
         int selectedMode = slot.Itemstack.GetBuildingMode(modes);
-        handHandling = EnumHandHandling.PreventDefault;
-        handling = EnumHandling.PreventSubsequent;
+        if (selectedMode > 0)
+        {
+            handHandling = EnumHandHandling.PreventDefault;
+            handling = EnumHandling.PreventSubsequent;
+        }
 
         IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
         if (
