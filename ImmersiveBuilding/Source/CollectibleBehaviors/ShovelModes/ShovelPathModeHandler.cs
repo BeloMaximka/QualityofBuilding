@@ -11,9 +11,10 @@ public class ShovelPathModeHandler : IModeHandler
 {
     private static readonly string[] replaceablePathBlockPatterns = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
     private readonly int[] replaceablePathBlockIds;
-    private readonly Block? stonePath;
     private readonly int stonePathSlabId;
     private readonly NsweBlockIds stonePathStairIds;
+
+    public Block? StonePath { get; set; }
 
     public ShovelPathModeHandler(ICoreAPI api)
     {
@@ -27,8 +28,6 @@ public class ShovelPathModeHandler : IModeHandler
         }
         replaceablePathBlockIds = [.. blockIdsFound];
 
-        const string stonePathCode = "stonepath-free";
-        stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
         stonePathSlabId = api.World.GetBlock(new AssetLocation("game:stonepathslab-free"))?.BlockId ?? -1;
         stonePathStairIds = new(
             api.World.GetBlock(new AssetLocation("stonepathstairs-up-north-free"))?.BlockId ?? -1,
@@ -45,7 +44,7 @@ public class ShovelPathModeHandler : IModeHandler
         {
             return;
         }
-        if (stonePath is null)
+        if (StonePath is null)
         {
             return;
         }
@@ -54,7 +53,7 @@ public class ShovelPathModeHandler : IModeHandler
         Block selectedBlock = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
         if (
             byEntity.World.BlockAccessor.IsValidPos(blockSel.Position.DownCopy())
-            && (selectedBlock.IsReplacableBy(stonePath) || selectedBlock.BlockMaterial == EnumBlockMaterial.Plant)
+            && (selectedBlock.IsReplacableBy(StonePath) || selectedBlock.BlockMaterial == EnumBlockMaterial.Plant)
         )
         {
             blockSel.Position.Down();
@@ -66,14 +65,14 @@ public class ShovelPathModeHandler : IModeHandler
             (bool isSuccessful, bool shouldDrop) = TryTakeMaterialsForPath(byPlayer);
             if (isSuccessful)
             {
-                ReplaceSoilWithPath(blockSel, byEntity, slot, byPlayer, shouldDrop, stonePath.Id);
+                ReplaceSoilWithPath(blockSel, byEntity, slot, byPlayer, shouldDrop, StonePath.Id);
             }
             else if (byEntity is EntityPlayer { Player: IServerPlayer player })
             {
                 player.SendIngameError("nomatsforpath", "You don't have enough materials");
             }
         }
-        else if (byEntity.Controls.ShiftKey && block.Id == stonePath.Id)
+        else if (byEntity.Controls.ShiftKey && block.Id == StonePath.Id)
         {
             ReplacePathWithStairs(byEntity.Api, blockSel, byPlayer);
         }
@@ -173,7 +172,7 @@ public class ShovelPathModeHandler : IModeHandler
                 }
 
                 // Stone path block (highest priority)
-                if (stonePath is not null && slot.Itemstack.Block?.Id == stonePath.Id)
+                if (StonePath is not null && slot.Itemstack.Block?.Id == StonePath.Id)
                 {
                     slot.TakeOut(1);
                     return (true, true);

@@ -1,18 +1,15 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Utils;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 
 public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolModeBehavior(collectibleObject)
 {
-    private static readonly int lastModeIndex = Enum.GetValues(typeof(ShovelToolModes)).Cast<int>().Max();
+    private readonly CollectibleObject collectibleObject = collectibleObject;
 
     private List<SkillItem> modes = [];
 
@@ -22,6 +19,11 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
     {
         base.OnLoaded(api);
 
+        Block? stonePath;
+        const string stonePathCode = "stonepath-free";
+        stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
+        ItemStack? stonePathItem = stonePath is not null ? new(stonePath) : null;
+
         // Init mode handlers
         modes = ObjectCacheUtil.GetOrCreate<List<SkillItem>>(
             api,
@@ -29,11 +31,15 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
             () =>
 
                 [
-                    new SkillItem() { Code = new AssetLocation("dig") },
+                    new SkillItem() { Code = new AssetLocation("default") },
                     new SkillItem()
                     {
-                        Code = new AssetLocation("path"),
-                        Data = new BuildingModeContext() { Handler = new ShovelPathModeHandler(api) },
+                        Code = new AssetLocation(stonePathCode),
+                        Data = new BuildingModeContext()
+                        {
+                            Handler = new ShovelPathModeHandler(api) { StonePath = stonePath },
+                            Output = stonePathItem,
+                        },
                     },
                 ]
         );
@@ -44,30 +50,18 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         }
 
         // Init modes for client
-        modes[0]
-            .WithIcon(
-                capi,
-                capi.Gui.LoadSvgWithPadding(
-                    loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-dig.svg"),
-                    textureWidth: 48,
-                    textureHeight: 48,
-                    padding: 8,
-                    color: -1
-                )
-            )
-            .Name = Lang.Get("Dig mode");
-        modes[1]
-            .WithIcon(
-                capi,
-                capi.Gui.LoadSvgWithPadding(
-                    loc: new AssetLocation("immersivebuilding:textures/icons/shovel-mode-path.svg"),
-                    textureWidth: 48,
-                    textureHeight: 48,
-                    padding: 8,
-                    color: -1
-                )
-            )
-            .Name = Lang.Get("Path mode");
+        ItemStack itemStack = new(collectibleObject);
+        modes[0].Name = itemStack.GetName();
+        modes[0].RenderHandler = itemStack.GetRenderDelegate(capi);
+        if (stonePathItem is not null)
+        {
+            modes[1].Name = stonePathItem.GetName();
+            modes[1].RenderHandler = stonePathItem.GetRenderDelegate(capi);
+        }
+        else
+        {
+            modes[1].Name = stonePathCode;
+        }
     }
 
     public override void OnHeldInteractStart(
@@ -104,10 +98,9 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
 
     private bool CanHandleMode(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel)
     {
-        int selectedMode = slot.Itemstack.GetBuildingMode(modes);
-        if (selectedMode <= 0 || selectedMode > lastModeIndex)
+        if (slot.Itemstack.GetBuildingMode(modes) == 0)
         {
-            return false; // Not our mode
+            return false;
         }
 
         if (blockSel == null)

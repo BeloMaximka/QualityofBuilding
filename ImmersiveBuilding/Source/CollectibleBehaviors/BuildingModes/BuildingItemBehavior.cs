@@ -10,7 +10,6 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 using Vintagestory.ServerMods;
@@ -58,7 +57,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
         if (ClientAPI is not null)
         {
             modes[0].Name = itemStack.GetName();
-            modes[0].RenderHandler = GetItemRenderDelegate(ClientAPI, new DummySlot(itemStack));
+            modes[0].RenderHandler = itemStack.GetRenderDelegate(ClientAPI);
         }
 
         foreach (var recipe in recipes)
@@ -100,7 +99,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
             if (output is not null)
             {
                 mode.Name = GetNameWithExtraInfo(output);
-                mode.RenderHandler = GetBlockRenderDelegate(ClientAPI, output);
+                mode.RenderHandler = output.GetRenderDelegate(ClientAPI);
                 continue;
             }
 
@@ -261,29 +260,5 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
         }
 
         return itemStack.GetName();
-    }
-
-    private static RenderSkillItemDelegate GetBlockRenderDelegate(ICoreClientAPI capi, ItemStack itemStack)
-    {
-        DummySlot dummySlot = new(itemStack);
-        return GetItemRenderDelegate(capi, dummySlot);
-    }
-
-    private static RenderSkillItemDelegate GetItemRenderDelegate(ICoreClientAPI capi, ItemSlot slot)
-    {
-        return (code, dt, posX, posY) =>
-        {
-            double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
-            double scsize = GuiElement.scaled(size - 5);
-
-            capi.Render.RenderItemstackToGui(
-                slot,
-                posX + scsize / 2,
-                posY + scsize / 2,
-                100,
-                (float)GuiElement.scaled(GuiElementPassiveItemSlot.unscaledItemSize),
-                ColorUtil.WhiteArgb
-            );
-        };
     }
 }

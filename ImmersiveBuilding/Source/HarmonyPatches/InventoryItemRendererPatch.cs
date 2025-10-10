@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using ImmersiveBuilding.Source.CollectibleBehaviors;
 using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Utils;
 using Vintagestory.API.Client;
@@ -43,7 +44,7 @@ public static class InventoryItemRendererPatch
     {
         if (
             inSlot.Itemstack is null
-            || inSlot.Itemstack.Collectible.GetBehavior<BuildingItemBehavior>() is not BuildingItemBehavior behavior
+            || inSlot.Itemstack.Collectible.GetCollectibleBehavior<CustomToolModeBehavior>(true) is not CustomToolModeBehavior behavior
             || behavior.ToolModes[inSlot.Itemstack.GetBuildingMode(behavior.ToolModes)].Data is not BuildingModeContext context
             || context.Output is null
         )
