@@ -1,0 +1,13 @@
+[
+  {
+    "op": "add",
+    "path": "/drops",
+    "value": [
+      {
+        "code": "stonepath-free"
+      }
+    ],
+    "file": "game:blocktypes/stone/generic/stonepathstairs.json",
+    "side": "Server"
+  }
+]
