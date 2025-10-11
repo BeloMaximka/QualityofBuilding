@@ -53,7 +53,7 @@ public class ShovelPathModeHandler : IModeHandler
                     Type = EnumItemClass.Item,
                     Code = "stone-*",
                     Quantity = 4,
-                    TranslatedName = Lang.Get("any-stone")
+                    TranslatedName = Lang.Get("any-stone"),
                 },
             ],
         ];
@@ -83,23 +83,25 @@ public class ShovelPathModeHandler : IModeHandler
             int recipeIndex = -1;
             if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
             {
-                ReplaceSoilWithPath(blockSel, byEntity, slot, byPlayer, recipeIndex == 0, stonePath.Id);
+                ReplaceSoilWithPath(blockSel, byEntity, byPlayer, recipeIndex == 0, stonePath.Id);
+                DamageShovel(byPlayer, byEntity, slot);
             }
         }
         else if (byEntity.Controls.ShiftKey && block.Id == stonePath.Id)
         {
             ReplacePathWithStairs(byEntity.Api, blockSel, byPlayer);
+            DamageShovel(byPlayer, byEntity, slot);
         }
         else if (byEntity.Controls.ShiftKey && stonePathStairIds.Contains(block.Id))
         {
             ReplaceStairsWithSlab(byEntity.Api, blockSel, byPlayer);
+            DamageShovel(byPlayer, byEntity, slot);
         }
     }
 
     private static void ReplaceSoilWithPath(
         BlockSelection blockSel,
         EntityAgent byEntity,
-        ItemSlot slot,
         IPlayer byPlayer,
         bool shouldDrop,
         int stonePathId
@@ -113,7 +115,6 @@ public class ShovelPathModeHandler : IModeHandler
             byPlayer
         );
 
-        slot.Itemstack.Item?.DamageItem(byEntity.World, byEntity, slot);
         byEntity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
         byEntity.World.BlockAccessor.SetBlock(stonePathId, blockSel.Position);
     }
@@ -144,7 +145,15 @@ public class ShovelPathModeHandler : IModeHandler
 
         // Workaround because I couldn't remove drop from stairs
         api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
-        api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 1);
+        api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
         api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
+    }
+
+    private static void DamageShovel(IPlayer player, EntityAgent byEntity, ItemSlot slot)
+    {
+        if (player.WorldData.CurrentGameMode != EnumGameMode.Creative)
+        {
+            slot.Itemstack.Item?.DamageItem(byEntity.World, byEntity, slot);
+        }
     }
 }
