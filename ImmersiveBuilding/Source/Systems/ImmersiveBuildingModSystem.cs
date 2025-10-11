@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using ImmersiveBuilding.Source.BlockBehaviors;
 using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 using ImmersiveBuilding.Source.Recipes;
@@ -39,7 +40,18 @@ public class ImmersiveBuildingModSystem : ModSystem
     {
         if (api.Side == EnumAppSide.Client)
         {
-            return; // It seems server syncs behaviors and recipes with the client
+            foreach (Block stonePathBlock in api.World.SearchBlocks("stonepath-*"))
+            {
+                stonePathBlock.BlockBehaviors = stonePathBlock.BlockBehaviors.Append(new StonePathBehavior(stonePathBlock));
+            }
+            foreach (Block pathStairsStairsBlock in api.World.SearchBlocks("stonepathstairs-*"))
+            {
+                pathStairsStairsBlock.BlockBehaviors = pathStairsStairsBlock.BlockBehaviors.Append(
+                    new StonePathBehavior(pathStairsStairsBlock)
+                );
+            }
+
+            return;
         }
 
         // Add shovel behaviors

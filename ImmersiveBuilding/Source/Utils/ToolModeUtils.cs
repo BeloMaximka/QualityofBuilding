@@ -23,7 +23,7 @@ public static class ToolModeUtils
 
     public static void SetBuildingMode(this ItemStack itemStack, string value)
     {
-        if (value == "default")
+        if (value == "game:default")
         {
             itemStack.Attributes.RemoveAttribute(BuildingModeAttributeName);
         }
@@ -32,4 +32,7 @@ public static class ToolModeUtils
             itemStack.Attributes.SetString(BuildingModeAttributeName, value);
         }
     }
+
+    public static bool HasMode(this ItemStack itemStack, string toolModeCode) =>
+        itemStack.Attributes.GetString(BuildingModeAttributeName) == toolModeCode;
 }

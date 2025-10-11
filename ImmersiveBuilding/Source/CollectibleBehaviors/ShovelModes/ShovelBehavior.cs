@@ -1,4 +1,5 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
+using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Utils;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
@@ -8,9 +9,13 @@ namespace ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 
 public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolModeBehavior(collectibleObject)
 {
+    private const string stonePathCode = "stonepath-free";
+
     private readonly CollectibleObject collectibleObject = collectibleObject;
 
     private readonly List<SkillItem> modes = [];
+
+    public const string StonePathToolModeCode = $"{SharedConstants.ModName}:{stonePathCode}";
 
     public override List<SkillItem> ToolModes => modes;
 
@@ -19,7 +24,6 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         base.OnLoaded(api);
 
         Block? stonePath;
-        const string stonePathCode = "stonepath-free";
         stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
         ItemStack? stonePathItem = stonePath is not null ? new(stonePath) : null;
 
@@ -30,7 +34,7 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
             modes.Add(
                 new SkillItem()
                 {
-                    Code = new AssetLocation(stonePathCode),
+                    Code = new AssetLocation(StonePathToolModeCode),
                     Data = new BuildingModeContext() { Handler = new ShovelPathModeHandler(api, stonePath), Output = stonePathItem },
                 }
             );
