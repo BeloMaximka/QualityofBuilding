@@ -1,0 +1,16 @@
+[
+  {
+    "op": "replace",
+    "path": "/ingredientPattern",
+    "value": "S_,_S",
+    "file": "game:recipes/grid/stairs/clayshinglestairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/output/quantity",
+    "value": 1,
+    "file": "game:recipes/grid/stairs/clayshinglestairs.json",
+    "side": "Server"
+  }
+]

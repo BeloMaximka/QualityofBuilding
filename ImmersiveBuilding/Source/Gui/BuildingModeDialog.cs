@@ -120,10 +120,11 @@ public class BuildingModeDialog : GuiDialog
         {
             prevSlotOver = slotIndex;
             SingleComposer.GetDynamicText("name").SetNewText(BuildingOptions[slotIndex].Name);
-            if (BuildingOptions[slotIndex].Data is BuildingModeContext context)
-            {
-                SingleComposer.GetDynamicText("ingredient").SetNewText(context.Ingredients.GetMaterialsString());
-            }
+            SingleComposer
+                .GetDynamicText("ingredient")
+                .SetNewText(
+                    BuildingOptions[slotIndex].Data is BuildingModeContext context ? context.Ingredients.GetMaterialsString() : string.Empty
+                );
         }
     }
 

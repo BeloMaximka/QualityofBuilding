@@ -1,0 +1,19 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:shingle-burned-*",
+		"name": "color",
+		"allowVariants": ["black", "brown", "cream", "fire", "gray", "orange", "red", "tan"]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:shingle-burned-{color}",
+			"quantity": 2
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:slantedroofingridgehalfright-{color}clay-east-free"
+	}
+}

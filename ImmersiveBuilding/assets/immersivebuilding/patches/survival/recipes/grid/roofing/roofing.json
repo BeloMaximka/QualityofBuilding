@@ -222,5 +222,95 @@
     },
     "file": "game:recipes/grid/roofing.json",
     "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/30/height",
+    "value": 2,
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/30/ingredientPattern",
+    "value": "_H,H_",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/30/output/quantity",
+    "value": 1,
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/30/width",
+    "value": 2,
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/31/height",
+    "value": 3,
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/31/ingredientPattern",
+    "value": "_H_,H_H,_H_",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/32/ingredientPattern",
+    "value": "H",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/32/ingredients/S",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/32/output/quantity",
+    "value": 1,
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/32/width",
+    "value": 1,
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/34/ingredientPattern",
+    "value": "HH,H_,H_",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/35/ingredientPattern",
+    "value": "HH,_H,_H",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/35/height",
+    "value": 3,
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
   }
 ]
