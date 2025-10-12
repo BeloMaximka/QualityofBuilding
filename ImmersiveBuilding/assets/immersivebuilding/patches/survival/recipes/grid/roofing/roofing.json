@@ -1,0 +1,226 @@
+[
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/68",
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/68",
+    "value": {
+      "ingredientPattern": "_H,HP,PS",
+      "ingredients": {
+        "H": {
+          "type": "item",
+          "code": "drygrass",
+          "name": "type",
+          "quantity": 2
+        },
+        "P": {
+          "type": "item",
+          "code": "firewood",
+          "quantity": 2
+        },
+        "S": {
+          "type": "block",
+          "code": "soil-medium-none",
+          "quantity": 4
+        }
+      },
+      "width": 2,
+      "height": 3,
+      "output": {
+        "type": "block",
+        "code": "slantedroofing-sod-east-free",
+        "quantity": 4
+      }
+    },
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/69",
+    "value": {
+      "ingredientPattern": "___,H_H,PSP",
+      "ingredients": {
+        "H": {
+          "type": "item",
+          "code": "drygrass",
+          "name": "type",
+          "quantity": 2
+        },
+        "P": {
+          "type": "item",
+          "code": "firewood",
+          "quantity": 2
+        },
+        "S": {
+          "type": "block",
+          "code": "soil-medium-none",
+          "quantity": 4
+        }
+      },
+      "width": 3,
+      "height": 3,
+      "output": {
+        "type": "block",
+        "code": "slantedroofingridge-sod-ns-free",
+        "quantity": 4
+      }
+    },
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/70",
+    "value": {
+      "ingredientPattern": "_H_,HHH,PSP",
+      "ingredients": {
+        "H": {
+          "type": "item",
+          "code": "drygrass",
+          "name": "type"
+        },
+        "P": {
+          "type": "item",
+          "code": "firewood",
+          "quantity": 2
+        },
+        "S": {
+          "type": "block",
+          "code": "soil-medium-none",
+          "quantity": 4
+        }
+      },
+      "width": 3,
+      "height": 3,
+      "output": {
+        "type": "block",
+        "code": "slantedroofingtip-sod-free",
+        "quantity": 4
+      }
+    },
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/71",
+    "value": {
+      "ingredientPattern": "___,PH_,PSH",
+      "ingredients": {
+        "H": {
+          "type": "item",
+          "code": "drygrass",
+          "name": "type",
+          "quantity": 2
+        },
+        "P": {
+          "type": "item",
+          "code": "firewood",
+          "quantity": 2
+        },
+        "S": {
+          "type": "block",
+          "code": "soil-medium-none",
+          "quantity": 4
+        }
+      },
+      "width": 3,
+      "height": 3,
+      "output": {
+        "type": "block",
+        "code": "slantedroofingcornerinner-sod-east-free",
+        "quantity": 4
+      }
+    },
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/72",
+    "value": {
+      "ingredientPattern": "__,HH,PS",
+      "ingredients": {
+        "H": {
+          "type": "item",
+          "code": "drygrass",
+          "name": "type",
+          "quantity": 2
+        },
+        "P": {
+          "type": "item",
+          "code": "firewood",
+          "name": "wood",
+          "quantity": 4
+        },
+        "S": {
+          "type": "block",
+          "code": "soil-medium-none",
+          "quantity": 4
+        }
+      },
+      "width": 2,
+      "height": 3,
+      "output": {
+        "type": "block",
+        "code": "slantedroofingcornerouter-sod-east-free",
+        "quantity": 4
+      }
+    },
+    "file": "game:recipes/grid/roofing.json",
+    "side": "Server"
+  }
+]
