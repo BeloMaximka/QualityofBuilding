@@ -8,6 +8,8 @@ public class SkillModeBuildingRecipe : IByteSerializable
 {
     public SkillModeRecipeTool Tool { get; set; } = null!;
 
+    public bool ReplaceDrops { get; set; } = true;
+
     public SkillModeRecipeIngredient[] Ingredients { get; set; } = null!;
 
     public SkillModeRecipeOutput Output { get; set; } = null!;
@@ -20,6 +22,7 @@ public class SkillModeBuildingRecipe : IByteSerializable
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
         Tool = reader.Read<SkillModeRecipeTool>(resolver);
+        ReplaceDrops = reader.ReadBoolean();
         Ingredients = reader.ReadArray<SkillModeRecipeIngredient>(resolver);
         Output = reader.Read<SkillModeRecipeOutput>(resolver);
     }
@@ -27,6 +30,7 @@ public class SkillModeBuildingRecipe : IByteSerializable
     public void ToBytes(BinaryWriter writer)
     {
         writer.Write(Tool);
+        writer.Write(ReplaceDrops);
         writer.WriteArray(Ingredients);
         writer.Write(Output);
     }

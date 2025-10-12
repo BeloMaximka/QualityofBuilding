@@ -1,0 +1,25 @@
+{
+	"tool": {
+		"type": "block",
+		"code": "game:soil-*",
+		"name": "soil"
+	},
+	"replaceDrops": false,
+	"ingredients": [
+		{
+			"type": "block",
+			"code": "game:soil-{soil}",
+			"quantity": 1
+		},
+        {
+			"type": "item",
+			"code": "game:stone-*",
+			"quantity": 4,
+			"translationCode":"game:any-stone"
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:stonepathslab-free"
+	}
+}

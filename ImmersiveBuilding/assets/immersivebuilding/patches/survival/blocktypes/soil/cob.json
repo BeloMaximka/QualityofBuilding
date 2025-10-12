@@ -1,0 +1,17 @@
+[
+  {
+    "op": "replace",
+    "path": "/drops",
+    "value": [
+      {
+        "code": "soil-verylow-none"
+      },
+      {
+        "type": "item",
+        "code": "drygrass"
+      }
+    ],
+    "file": "game:blocktypes/soil/cob.json",
+    "side": "Server"
+  }
+]

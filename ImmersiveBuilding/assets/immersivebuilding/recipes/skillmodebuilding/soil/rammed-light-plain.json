@@ -1,0 +1,19 @@
+{
+	"tool": {
+		"type": "block",
+		"code": "game:soil-*",
+		"name": "soil"
+	},
+	"replaceDrops": false,
+	"ingredients": [
+		{
+			"type": "block",
+			"code": "game:soil-{soil}",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:rammed-light-plain"
+	}
+}

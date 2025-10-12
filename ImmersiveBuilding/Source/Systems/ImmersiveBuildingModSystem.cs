@@ -92,7 +92,7 @@ public class ImmersiveBuildingModSystem : ModSystem
                 collectible.CollectibleBehaviors = [new BuildingItemBehavior(collectible), .. collectible.CollectibleBehaviors];
 
                 // Adjust drops for blocks
-                foreach (SkillModeBuildingRecipe recipe in recipesGroupedByTools)
+                foreach (SkillModeBuildingRecipe recipe in recipesGroupedByTools.Where(recipe => recipe.ReplaceDrops))
                 {
                     ChangeOutputBlockDropsToRawMaterials(api, recipe, variant);
                 }

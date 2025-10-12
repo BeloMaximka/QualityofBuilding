@@ -1,0 +1,13 @@
+[
+  {
+    "op": "add",
+    "path": "/drops",
+    "value": [
+      {
+        "code": "soil-verylow-none"
+      }
+    ],
+    "file": "game:blocktypes/soil/aridpackeddirt.json",
+    "side": "Server"
+  }
+]

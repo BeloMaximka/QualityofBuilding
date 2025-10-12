@@ -2,6 +2,7 @@
 using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Linq;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace ImmersiveBuilding.Source.Utils;
 
@@ -17,7 +18,16 @@ public static class RecipeIngredientExtensions
                     Code = recipe.ResolveSubstitute(ingredient.Code, wildcardValue),
                     Quantity = ingredient.Quantity,
                 };
-                itemIngredient.Resolve(accessor);
+
+                if (ingredient.TranslationCode is not null)
+                {
+                    itemIngredient.TranslatedName = Lang.Get(ingredient.TranslationCode);
+                }
+                else
+                {
+                    itemIngredient.Resolve(accessor);
+                }
+
                 return itemIngredient;
             }),
         ];
