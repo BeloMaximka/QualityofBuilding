@@ -1,0 +1,33 @@
+[
+  {
+    "op": "replace",
+    "path": "/drops",
+    "value": [
+      {
+        "type": "block",
+        "code": "soil-verylow-none"
+      },
+      {
+        "type": "item",
+        "code": "mortar"
+      },
+      {
+        "type": "item",
+        "code": "drygrass",
+        "quantity": {
+          "avg": 2,
+          "var": 1
+        }
+      }
+    ],
+    "file": "game:blocktypes/soil/mudbrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/behaviors/0/properties/dropChance",
+    "value": 1,
+    "file": "game:blocktypes/soil/mudbrickslab.json",
+    "side": "Server"
+  }
+]

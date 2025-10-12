@@ -1,0 +1,47 @@
+[
+  {
+    "op": "replace",
+    "path": "/ingredientPattern",
+    "value": "GLG\t_C_",
+    "file": "game:recipes/grid/slabs/mudbrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/ingredients/C/quantity",
+    "file": "game:recipes/grid/slabs/mudbrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/ingredients/C/code",
+    "value": "mortar",
+    "file": "game:recipes/grid/slabs/mudbrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/ingredients/G/quantity",
+    "file": "game:recipes/grid/slabs/mudbrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/ingredients/L/quantity",
+    "file": "game:recipes/grid/slabs/mudbrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/ingredients/L/code",
+    "value": "soil-*-none",
+    "file": "game:recipes/grid/slabs/mudbrickslab.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/output/quantity",
+    "file": "game:recipes/grid/slabs/mudbrickslab.json",
+    "side": "Server"
+  }
+]

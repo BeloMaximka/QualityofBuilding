@@ -1,0 +1,26 @@
+[
+  {
+    "op": "replace",
+    "path": "/drops",
+    "value": [
+      {
+        "type": "block",
+        "code": "soil-verylow-none"
+      },
+      {
+        "type": "item",
+        "code": "mortar"
+      },
+      {
+        "type": "item",
+        "code": "drygrass",
+        "quantity": {
+          "avg": 4,
+          "var": 1
+        }
+      }
+    ],
+    "file": "game:blocktypes/soil/mudbrick.json",
+    "side": "Server"
+  }
+]

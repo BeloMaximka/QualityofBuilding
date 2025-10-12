@@ -1,0 +1,84 @@
+[
+  {
+    "op": "replace",
+    "path": "/0/ingredientPattern",
+    "value": "G_G\t_C_\tGLG",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/0/ingredients/S",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/0/ingredients/C/quantity",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/0/ingredients/C/code",
+    "value": "mortar",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/0/ingredients/G/quantity",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/0/ingredients/L/allowedVariants",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/0/output/quantity",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/ingredientPattern",
+    "value": "G_G\t_L_\tGCG",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/ingredients/C/quantity",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/ingredients/C/code",
+    "value": "mortar",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/ingredients/G/quantity",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/ingredients/L/allowedVariants",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/1/output/quantity",
+    "file": "game:recipes/grid/mudbricks.json",
+    "side": "Server"
+  }
+]

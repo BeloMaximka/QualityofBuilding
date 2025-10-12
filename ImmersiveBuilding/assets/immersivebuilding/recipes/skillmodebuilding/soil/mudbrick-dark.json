@@ -1,0 +1,29 @@
+{
+	"tool": {
+		"type": "block",
+		"code": "game:soil-*",
+		"name": "soil"
+	},
+	"replaceDrops": false,
+	"ingredients": [
+		{
+			"type": "block",
+			"code": "game:soil-{soil}",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:drygrass",
+			"quantity": 4
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:mudbrick-dark"
+	}
+}
