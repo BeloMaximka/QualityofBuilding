@@ -64,7 +64,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
         {
             string wildcardValue = WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code);
             ItemIngredient[] ingredients = recipe.GetItemIngredients(api.World, wildcardValue);
-            string outputCode = recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue);
+            AssetLocation outputCode = recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue);
             Block? block = api.World.GetBlock(outputCode);
             ItemStack? output = null;
 
@@ -82,7 +82,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
 
             SkillItem mode = new()
             {
-                Code = outputCode,
+                Code = recipe.CodeSuffix.Length != 0 ? outputCode + recipe.CodeSuffix : outputCode,
                 Data = new BuildingModeContext()
                 {
                     Output = output,
