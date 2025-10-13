@@ -5,6 +5,7 @@ using ImmersiveBuilding.Source.Utils;
 using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -185,6 +186,15 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
         return true;
     }
     #endregion
+
+    public override void GetHeldItemName(StringBuilder sb, ItemStack itemStack)
+    {
+        int selectedMode = itemStack.GetBuildingMode(modes);
+        if (selectedMode > 0 && modes[selectedMode].Data is BuildingModeContext context)
+        {
+            sb.Append($" ({context.Output?.GetName()})");
+        }
+    }
 
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot, ref EnumHandling handling)
     {
