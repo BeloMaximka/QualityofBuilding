@@ -1,0 +1,18 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:burnedbrick-fire"
+	},
+	"replaceDrops": false,
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:burnedbrick-fire",
+			"quantity": 8
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:bloomerybase-north"
+	}
+}
