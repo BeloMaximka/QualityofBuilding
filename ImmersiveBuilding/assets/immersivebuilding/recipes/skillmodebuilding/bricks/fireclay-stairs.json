@@ -1,0 +1,22 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:burnedbrick-fire"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:burnedbrick-fire",
+			"quantity": 2
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:brickstairs-fire-up-north-free"
+	}
+}

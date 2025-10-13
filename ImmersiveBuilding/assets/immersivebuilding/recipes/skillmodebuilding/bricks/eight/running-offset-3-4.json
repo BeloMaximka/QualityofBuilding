@@ -1,0 +1,24 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:burnedbrick-*",
+		"name": "color",
+		"skipVariants": ["fire", "clinker"]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:burnedbrick-{color}",
+			"quantity": 2
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 2
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:brickcourse-eight-runningl-{color}"
+	}
+}

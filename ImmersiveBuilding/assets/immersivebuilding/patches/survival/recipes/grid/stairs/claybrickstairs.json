@@ -1,0 +1,58 @@
+[
+  {
+    "op": "replace",
+    "path": "/0/height",
+    "value": 2,
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/0/ingredientPattern",
+    "value": "CB\tB_",
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/0/output/quantity",
+    "value": 1,
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/0/width",
+    "value": 2,
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/height",
+    "value": 2,
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/ingredientPattern",
+    "value": "CB\tB_",
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/output/quantity",
+    "value": 1,
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/1/width",
+    "value": 2,
+    "file": "game:recipes/grid/stairs/claybrickstairs.json",
+    "side": "Server"
+  }
+]

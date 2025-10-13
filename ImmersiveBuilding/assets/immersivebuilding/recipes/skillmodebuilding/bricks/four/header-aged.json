@@ -1,0 +1,24 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:burnedbrick-*",
+		"name": "color",
+		"skipVariants": ["clinker"]
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:burnedbrick-{color}",
+			"quantity": 2
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:claybricks-uneven-four-header-{color}"
+	}
+}

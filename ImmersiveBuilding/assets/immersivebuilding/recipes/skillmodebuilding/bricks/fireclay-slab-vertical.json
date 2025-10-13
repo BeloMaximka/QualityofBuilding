@@ -1,0 +1,24 @@
+{
+	"codeSuffix":"-vertical",
+	"tool": {
+		"type": "item",
+		"code": "game:burnedbrick-fire"
+	},
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:burnedbrick-fire",
+			"quantity": 1
+		},
+		{
+			"type": "item",
+			"code": "game:mortar",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:brickslabs-fire-down-free",
+		"attributes": { "slabPlaceMode": 2 }
+	}
+}
