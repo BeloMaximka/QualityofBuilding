@@ -2,7 +2,6 @@
 using ImmersiveBuilding.Source.CollectibleBehaviors;
 using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Utils;
-using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
 
@@ -11,7 +10,7 @@ namespace ImmersiveBuilding.Source.HarmonyPatches;
 [HarmonyPatch]
 public static class InventoryItemRendererPatch
 {
-    public static ICoreClientAPI? ClientAPI { get; set; }
+    private static readonly DummySlot outputSlot = new();
 
     // Maybe it's worth to try a different approach with RegisterItemstackRenderer
     [HarmonyPrefix]
@@ -54,7 +53,7 @@ public static class InventoryItemRendererPatch
 
         int originalQuantity = context.Output.StackSize;
         context.Output.StackSize = inSlot.StackSize;
-        DummySlot outputSlot = new(context.Output);
+        outputSlot.Itemstack = context.Output;
         __instance.RenderItemstackToGui(
             outputSlot,
             posX - size * 0.3,
@@ -69,6 +68,7 @@ public static class InventoryItemRendererPatch
 
         // Workaround to properly render quantity
         __instance.RenderItemstackToGui(outputSlot, posX, posY, posZ, size, 0, shading, origRotate: false, showStackSize);
+        outputSlot.Itemstack = null;
         context.Output.StackSize = originalQuantity;
 
         posX += size * 0.2;
