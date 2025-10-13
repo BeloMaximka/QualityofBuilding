@@ -84,8 +84,11 @@ public class ImmersiveBuildingModSystem : ModSystem
                     continue; // No recipes for this variant
                 }
 
-                Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), collectible.Code.ToString());
-                collectible.CollectibleBehaviors = [new BuildingItemBehavior(collectible), .. collectible.CollectibleBehaviors];
+                if (collectible.GetBehavior<BuildingItemBehavior>() is null) // Prevent duplicate behavior from recipes like firebrick
+                {
+                    Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), collectible.Code.ToString());
+                    collectible.CollectibleBehaviors = [new BuildingItemBehavior(collectible), .. collectible.CollectibleBehaviors];
+                }
 
                 // Adjust drops for blocks
                 foreach (
