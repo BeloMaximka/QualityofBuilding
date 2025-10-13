@@ -16,6 +16,8 @@ public class SkillModeBuildingRecipe : IByteSerializable
 
     public SkillModeRecipeOutput Output { get; set; } = null!;
 
+    public bool IsValidVariant(string variant) => Tool.IsValidVariant(variant);
+
     public AssetLocation ResolveSubstitute(AssetLocation code, string substitute)
     {
         return string.IsNullOrEmpty(Tool.Name) ? code : new AssetLocation(code.ToString().Replace($"{{{Tool.Name}}}", substitute));

@@ -3,7 +3,6 @@ using ImmersiveBuilding.Source.Recipes;
 using ImmersiveBuilding.Source.Systems;
 using ImmersiveBuilding.Source.Utils;
 using ImmersiveBuilding.Source.Utils.Inventory;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
@@ -39,10 +38,7 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
                 .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
                 .BuildingRecipes.Where(recipe =>
                     WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
-                    && (
-                        recipe.Tool.AllowVariants.Length == 0
-                        || recipe.Tool.AllowVariants.Contains(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
-                    )
+                    && recipe.IsValidVariant(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
                 ),
         ]; // TODO: optimize this
 

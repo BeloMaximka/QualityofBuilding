@@ -79,11 +79,7 @@ public class ImmersiveBuildingModSystem : ModSystem
             foreach (CollectibleObject collectible in collectibles)
             {
                 string variant = WildcardUtil.GetWildcardValue(recipesGroupedByTools.Key, collectible.Code);
-                if (
-                    !recipesGroupedByTools.Any(recipe =>
-                        recipe.Tool.AllowVariants.Length == 0 || recipe.Tool.AllowVariants.Contains(variant)
-                    )
-                )
+                if (!recipesGroupedByTools.Any(recipe => recipe.IsValidVariant(variant)))
                 {
                     continue; // No recipes for this variant
                 }
@@ -92,7 +88,11 @@ public class ImmersiveBuildingModSystem : ModSystem
                 collectible.CollectibleBehaviors = [new BuildingItemBehavior(collectible), .. collectible.CollectibleBehaviors];
 
                 // Adjust drops for blocks
-                foreach (SkillModeBuildingRecipe recipe in recipesGroupedByTools.Where(recipe => recipe.ReplaceDrops))
+                foreach (
+                    SkillModeBuildingRecipe recipe in recipesGroupedByTools.Where(recipe =>
+                        recipe.ReplaceDrops && recipe.IsValidVariant(variant)
+                    )
+                )
                 {
                     ChangeOutputBlockDropsToRawMaterials(api, recipe, variant);
                 }

@@ -15,12 +15,30 @@ public class SkillModeRecipeTool : IByteSerializable
 
     public string[] AllowVariants { get; set; } = [];
 
+    public string[] SkipVariants { get; set; } = [];
+
+    public bool IsValidVariant(string variant)
+    {
+        if (AllowVariants.Length != 0)
+        {
+            return AllowVariants.Contains(variant);
+        }
+
+        if (SkipVariants.Length != 0)
+        {
+            return !SkipVariants.Contains(variant);
+        }
+
+        return true;
+    }
+
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
         Type = (EnumItemClass)reader.ReadInt32();
         Code = new(reader.ReadString());
         Name = reader.ReadNullableString();
         AllowVariants = reader.ReadStringArray();
+        SkipVariants = reader.ReadStringArray();
     }
 
     public void ToBytes(BinaryWriter writer)
@@ -29,5 +47,6 @@ public class SkillModeRecipeTool : IByteSerializable
         writer.Write(Code.ToString());
         writer.WriteNullable(Name);
         writer.WriteArray(AllowVariants);
+        writer.WriteArray(SkipVariants);
     }
 }
