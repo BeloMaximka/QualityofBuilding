@@ -2,8 +2,10 @@
 using ImmersiveBuilding.Source.Common;
 using ImmersiveBuilding.Source.Utils;
 using System.Collections.Generic;
+using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 
@@ -22,38 +24,8 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
     public override void OnLoaded(ICoreAPI api)
     {
         base.OnLoaded(api);
-
-        Block? stonePath;
-        stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
-        ItemStack? stonePathItem = stonePath is not null ? new(stonePath) : null;
-
-        // Init mode handlers
-        modes.Add(new SkillItem() { Code = new AssetLocation("default") });
-        if (stonePath is not null)
-        {
-            modes.Add(
-                new SkillItem()
-                {
-                    Code = new AssetLocation(StonePathToolModeCode),
-                    Data = new BuildingModeContext() { Handler = new ShovelPathModeHandler(api, stonePath), Output = stonePathItem },
-                }
-            );
-        }
-
-        if (api is not ICoreClientAPI capi)
-        {
-            return;
-        }
-
-        // Init modes for client
-        ItemStack itemStack = new(collectibleObject);
-        modes[0].Name = itemStack.GetName();
-        modes[0].RenderHandler = itemStack.GetRenderDelegate(capi);
-        if (stonePathItem is not null)
-        {
-            modes[1].Name = stonePathItem.GetName();
-            modes[1].RenderHandler = stonePathItem.GetRenderDelegate(capi);
-        }
+        AddInitDefaultAndPathModes(api);
+        AddSoilReplaceModes(api);
     }
 
     public override void OnHeldInteractStart(
@@ -85,6 +57,88 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         for (int i = 0; i < modes.Count; i++)
         {
             modes[i].Dispose();
+        }
+    }
+
+    private void AddInitDefaultAndPathModes(ICoreAPI api)
+    {
+        Block? stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
+        ItemStack? stonePathItem = stonePath is not null ? new(stonePath) : null;
+        modes.Add(new SkillItem() { Code = new AssetLocation("default") });
+        if (stonePath is not null)
+        {
+            modes.Add(
+                new SkillItem()
+                {
+                    Code = new AssetLocation(StonePathToolModeCode),
+                    Data = new BuildingModeContext() { Handler = new ShovelPathModeHandler(api, stonePath), Output = stonePathItem },
+                }
+            );
+        }
+
+        if (api is not ICoreClientAPI capi)
+        {
+            return;
+        }
+
+        // Init modes for client
+        ItemStack itemStack = new(collectibleObject);
+        modes[0].Name = Lang.Get("default-behavior");
+        modes[0].RenderHandler = itemStack.GetRenderDelegate(capi);
+        if (stonePathItem is not null)
+        {
+            modes[1].Name = Lang.Get("make-roads");
+            modes[1].RenderHandler = stonePathItem.GetRenderDelegate(capi);
+        }
+    }
+
+    private void AddSoilReplaceModes(ICoreAPI api)
+    {
+        // Maybe move hardcoded values into config
+        string[] replacableBlocksCodes = ["soil-*", "forestfloor-*", "drypackeddirt", "packeddirt", "rammed-light-*"];
+        List<int> replacableBlockIds = new(28);
+        foreach (var code in replacableBlocksCodes)
+        {
+            Block[] blocks = api.World.SearchBlocks(code);
+            replacableBlockIds.AddRange(blocks.Select(block => block.Id));
+        }
+
+        string[] outputBlockCodes =
+        [
+            "drypackeddirt",
+            "packeddirt",
+            "rammed-light-plain",
+            "rammed-light-thickheavy",
+            "rammed-light-thicklight",
+            "rammed-light-thinheavy",
+            "rammed-light-thinlight",
+        ];
+        int[] replacableBlockIdsArray = [.. replacableBlockIds];
+        foreach (var code in outputBlockCodes)
+        {
+            Block? outputBlock = api.World.GetBlock(code);
+            if (outputBlock is null)
+            {
+                continue;
+            }
+            ItemStack outputStack = new(outputBlock);
+            SkillItem replaceMode = new()
+            {
+                Code = new AssetLocation($"{SharedConstants.ModName}:{outputBlock.Code}"),
+                Data = new BuildingModeContext()
+                {
+                    Handler = new ReplaceModeHandler(replacableBlockIdsArray, outputBlock.Id),
+                    Output = new(outputBlock),
+                },
+            };
+
+            if (api is ICoreClientAPI capi)
+            {
+                replaceMode.Name = Lang.Get("replace-soil-with", outputStack.GetName().ToLower());
+                replaceMode.RenderHandler = outputStack.GetRenderDelegate(capi);
+            }
+
+            modes.Add(replaceMode);
         }
     }
 

@@ -2,9 +2,15 @@
   "game:ingameerror-nomatsforbuilding": "You're missing the following materials: {0}.",
   "game:heldhelp-building-menu": "Open building menu",
   "game:handbook-used-to-build": "Used to build via bulding menu",
+
   "game:interactionhelp-build-stairs": "Make stairs",
   "game:interactionhelp-build-slab": "Make slab",
+
   "game:any-stone": "any stone",
   "game:horizontal": "Horizontal",
-  "game:vertical": "Vertical"
+  "game:vertical": "Vertical",
+  
+  "game:default-behavior": "Default behavior",
+  "game:make-roads": "Make roads",
+  "game:replace-soil-with": "Replace soil (including rammed) with {0}"
 }
