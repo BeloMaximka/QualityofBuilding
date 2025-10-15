@@ -2,6 +2,7 @@
 using ImmersiveBuilding.Source.Gui;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace ImmersiveBuilding.Source.Systems;
 
@@ -17,7 +18,7 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
 
         api.Input.RegisterHotKey(
             BuildingModeDialog.ToggleCombinationCode,
-            "Opens the building dialog",
+            Lang.Get("heldhelp-building-menu"),
             GlKeys.B,
             HotkeyType.GUIOrOtherControls
         );

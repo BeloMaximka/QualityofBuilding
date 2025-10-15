@@ -1,5 +1,6 @@
 ﻿using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.Common;
+using ImmersiveBuilding.Source.Gui;
 using ImmersiveBuilding.Source.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,6 +53,24 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         context?.Handler?.HandleStart(slot, byEntity, blockSel, entitySel);
     }
 
+    public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot, ref EnumHandling handling)
+    {
+        if (ClientAPI is null)
+        {
+            return base.GetHeldInteractionHelp(inSlot, ref handling);
+        }
+
+        return
+        [
+            new()
+            {
+                HotKeyCodes = [ClientAPI.Input.GetHotKeyByCode(BuildingModeDialog.ToggleCombinationCode).Code],
+                ActionLangCode = "heldhelp-building-menu",
+                MouseButton = EnumMouseButton.None,
+            },
+        ];
+    }
+
     public override void OnUnloaded(ICoreAPI api)
     {
         for (int i = 0; i < modes.Count; i++)
@@ -71,7 +90,21 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
                 new SkillItem()
                 {
                     Code = new AssetLocation(StonePathToolModeCode),
-                    Data = new BuildingModeContext() { Handler = new ShovelPathModeHandler(api, stonePath), Output = stonePathItem },
+                    Data = new BuildingModeContext()
+                    {
+                        Handler = new ShovelPathModeHandler(api, stonePath),
+                        Output = stonePathItem,
+                        Ingredients =
+                        [
+                            new()
+                            {
+                                Type = EnumItemClass.Item,
+                                Code = "stone-*",
+                                TranslatedName = Lang.Get("a-or-b", Lang.Get("any-stone"), stonePathItem?.GetName().ToLower()),
+                                Quantity = 4,
+                            },
+                        ],
+                    },
                 }
             );
         }

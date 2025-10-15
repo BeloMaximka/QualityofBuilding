@@ -12,5 +12,6 @@
   
   "game:default-behavior": "Default behavior",
   "game:make-roads": "Make roads",
-  "game:replace-soil-with": "Replace soil (including rammed) with {0}"
+  "game:replace-soil-with": "Replace soil (including rammed) with {0}",
+  "game:a-or-b": "{0} or {1}"
 }
