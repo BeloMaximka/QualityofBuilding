@@ -10,7 +10,7 @@ using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.Source.Systems;
 
-public class ImmersiveBuildingRenderingSystem : ModSystem
+public class ImmersiveBuildingClientSystem : ModSystem
 {
     private ICoreClientAPI capi = null!;
 
