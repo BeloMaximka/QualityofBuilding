@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ImmersiveBuilding.Source.Gui;
+using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -89,12 +90,35 @@ public class BuildingItemHandbookInfoBehavior(CollectibleObject collectibleObjec
                     new SlideshowItemstackTextComponent(
                         capi,
                         recipe.Tools,
-                        40,
+                        unscaledSize: 40,
                         EnumFloat.Inline,
                         (cs) => openDetailPageFor(GuiHandbookItemStackPage.PageCodeForStack(cs))
                     )
                 );
-                components.Add(new ClearFloatTextComponent(capi, 14f));
+                components.Add(
+                    new RichTextComponent(capi, "+", CairoFont.WhiteMediumText())
+                    {
+                        VerticalAlign = EnumVerticalAlign.Middle,
+                        PaddingRight = 4,
+                        PaddingLeft = 4,
+                    }
+                );
+                components.Add(
+                    new HotkeyComponent(capi, BuildingModeDialog.ToggleCombinationCode, CairoFont.WhiteSmallishText())
+                    {
+                        VerticalAlign = EnumVerticalAlign.Middle,
+                        PaddingRight = 4,
+                        PaddingLeft = 4,
+                    }
+                );
+                components.Add(
+                    new RichTextComponent(capi, ":", CairoFont.WhiteSmallishText())
+                    {
+                        VerticalAlign = EnumVerticalAlign.Middle,
+                        PaddingLeft = 4,
+                    }
+                );
+                components.Add(new ClearFloatTextComponent(capi, 0f));
             }
 
             foreach (var ingredientGroup in recipe.IngredientGroups.Where(group => group.Length > 0))
@@ -103,12 +127,24 @@ public class BuildingItemHandbookInfoBehavior(CollectibleObject collectibleObjec
                     new SlideshowItemstackTextComponent(
                         capi,
                         ingredientGroup,
-                        40,
+                        unscaledSize: 40,
                         EnumFloat.Inline,
                         (cs) => openDetailPageFor(GuiHandbookItemStackPage.PageCodeForStack(cs))
                     )
+                    {
+                        ShowStackSize = true,
+                    }
                 );
             }
+
+            components.Add(
+                new RichTextComponent(capi, "=", CairoFont.WhiteMediumText())
+                {
+                    VerticalAlign = EnumVerticalAlign.Middle,
+                    PaddingRight = 8,
+                    PaddingLeft = 8,
+                }
+            );
 
             components.Add(
                 new ItemstackTextComponent(
@@ -120,6 +156,8 @@ public class BuildingItemHandbookInfoBehavior(CollectibleObject collectibleObjec
                     (cs) => openDetailPageFor(GuiHandbookItemStackPage.PageCodeForStack(cs))
                 )
             );
+
+            components.Add(new ClearFloatTextComponent(capi, 8f));
         }
     }
 }
