@@ -1,21 +1,20 @@
 ﻿using ImmersiveBuilding.Source.Recipes;
 using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Linq;
-using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
 namespace ImmersiveBuilding.Source.Utils;
 
 public static class RecipeIngredientExtensions
 {
-    public static ItemIngredient[] GetItemIngredients(this SkillModeBuildingRecipe recipe, IWorldAccessor accessor, string wildcardValue) =>
+    public static ItemIngredient[] GetItemIngredients(this SkillModeBuildingRecipe recipe) =>
         [
             .. recipe.Ingredients.Select(ingredient =>
             {
                 ItemIngredient itemIngredient = new()
                 {
                     Type = ingredient.Type,
-                    Code = recipe.ResolveSubstitute(ingredient.Code, wildcardValue),
+                    Code = ingredient.Code,
                     Quantity = ingredient.Quantity,
                 };
 
@@ -23,9 +22,9 @@ public static class RecipeIngredientExtensions
                 {
                     itemIngredient.TranslatedName = Lang.Get(ingredient.TranslationCode);
                 }
-                else
+                else if (ingredient.ResolvedItemStack is not null)
                 {
-                    itemIngredient.Resolve(accessor);
+                    itemIngredient.TranslatedName = ingredient.ResolvedItemStack.GetName();
                 }
 
                 return itemIngredient;

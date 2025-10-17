@@ -6,7 +6,7 @@ namespace ImmersiveBuilding.Source.Recipes;
 
 public class SkillModeBuildingRecipe : IByteSerializable
 {
-    public string CodeSuffix { get; set; } = string.Empty;
+    public AssetLocation Code { get; set; } = string.Empty;
 
     public SkillModeRecipeTool Tool { get; set; } = null!;
 
@@ -16,16 +16,19 @@ public class SkillModeBuildingRecipe : IByteSerializable
 
     public SkillModeRecipeOutput Output { get; set; } = null!;
 
-    public bool IsValidVariant(string variant) => Tool.IsValidVariant(variant);
-
-    public AssetLocation ResolveSubstitute(AssetLocation code, string substitute)
+    public void ResolveItemStacks(IWorldAccessor resolver)
     {
-        return string.IsNullOrEmpty(Tool.Name) ? code : new AssetLocation(code.ToString().Replace($"{{{Tool.Name}}}", substitute));
-    }
+        Tool.ResolveItemStack(resolver);
+        Output.ResolveItemStack(resolver);
+        foreach (var ingredient in Ingredients)
+        {
+            ingredient.ResolveItemStack(resolver);
+        }
 
+    }
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
-        CodeSuffix = reader.ReadString();
+        Code = reader.ReadString();
         Tool = reader.Read<SkillModeRecipeTool>(resolver);
         ReplaceDrops = reader.ReadBoolean();
         Ingredients = reader.ReadArray<SkillModeRecipeIngredient>(resolver);
@@ -34,7 +37,7 @@ public class SkillModeBuildingRecipe : IByteSerializable
 
     public void ToBytes(BinaryWriter writer)
     {
-        writer.Write(CodeSuffix);
+        writer.Write(Code);
         writer.Write(Tool);
         writer.Write(ReplaceDrops);
         writer.WriteArray(Ingredients);

@@ -1,7 +1,5 @@
-﻿using ImmersiveBuilding.Source.Utils;
-using System.IO;
+﻿using System.IO;
 using Vintagestory.API.Common;
-using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.Source.Recipes;
 
@@ -11,42 +9,35 @@ public class SkillModeRecipeTool : IByteSerializable
 
     public required AssetLocation Code { get; set; }
 
-    public string? Name { get; set; }
+    public ItemStack? ResolvedItemStack { get; set; }
 
-    public string[] AllowVariants { get; set; } = [];
-
-    public string[] SkipVariants { get; set; } = [];
-
-    public bool IsValidVariant(string variant)
+    public void ResolveItemStack(IWorldAccessor resolver)
     {
-        if (AllowVariants.Length != 0)
+        if (ResolvedItemStack is not null)
         {
-            return AllowVariants.Contains(variant);
+            return;
         }
 
-        if (SkipVariants.Length != 0)
-        {
-            return !SkipVariants.Contains(variant);
-        }
+        CollectibleObject? collectible = resolver.GetItem(Code);
+        collectible ??= resolver.GetBlock(Code);
 
-        return true;
+        if (collectible is null)
+        {
+            resolver.Logger.Warning("Unable to resolve building recipe tool for {0}, no blocks or items found!", Code);
+            return;
+        }
+        ResolvedItemStack = new ItemStack(collectible);
     }
 
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
         Type = (EnumItemClass)reader.ReadInt32();
         Code = new(reader.ReadString());
-        Name = reader.ReadNullableString();
-        AllowVariants = reader.ReadStringArray();
-        SkipVariants = reader.ReadStringArray();
     }
 
     public void ToBytes(BinaryWriter writer)
     {
         writer.Write((int)Type);
         writer.Write(Code.ToString());
-        writer.WriteNullable(Name);
-        writer.WriteArray(AllowVariants);
-        writer.WriteArray(SkipVariants);
     }
 }

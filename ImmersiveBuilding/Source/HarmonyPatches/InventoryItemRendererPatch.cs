@@ -44,6 +44,7 @@ public static class InventoryItemRendererPatch
         if (
             inSlot.Itemstack is null
             || inSlot.Itemstack.Collectible.GetCollectibleBehavior<CustomToolModeBehavior>(true) is not CustomToolModeBehavior behavior
+            || behavior.ToolModes.Count == 0
             || behavior.ToolModes[inSlot.Itemstack.GetBuildingMode(behavior.ToolModes)].Data is not BuildingModeContext context
             || context.Output is null
         )

@@ -14,6 +14,26 @@ public class SkillModeRecipeIngredient : IByteSerializable
 
     public string? TranslationCode { get; set; }
 
+    public ItemStack? ResolvedItemStack { get; set; }
+
+    public void ResolveItemStack(IWorldAccessor resolver)
+    {
+        if (ResolvedItemStack is not null)
+        {
+            return;
+        }
+
+        CollectibleObject? collectible = resolver.GetItem(Code);
+        collectible ??= resolver.GetBlock(Code);
+
+        if (collectible is null)
+        {
+            resolver.Logger.Warning("Unable to resolve building recipe ingredient for {0}, no blocks or items found!", Code);
+            return;
+        }
+        ResolvedItemStack = new ItemStack(collectible, Quantity);
+    }
+
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
         Type = (EnumItemClass)reader.ReadInt32();

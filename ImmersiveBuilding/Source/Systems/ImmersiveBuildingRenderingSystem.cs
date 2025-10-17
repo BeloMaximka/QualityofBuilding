@@ -1,8 +1,10 @@
-﻿using ImmersiveBuilding.Source.CollectibleBehaviors;
+﻿using ImmersiveBuilding.Source.BlockBehaviors;
+using ImmersiveBuilding.Source.CollectibleBehaviors;
 using ImmersiveBuilding.Source.Gui;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.Source.Systems;
 
@@ -52,6 +54,17 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
             BuildingModeDialogSingleton.TryClose();
             return EnumHandling.PassThrough;
         };
+
+        foreach (Block stonePathBlock in api.World.SearchBlocks("stonepath-*"))
+        {
+            stonePathBlock.BlockBehaviors = stonePathBlock.BlockBehaviors.Append(new StonePathBehavior(stonePathBlock));
+        }
+        foreach (Block pathStairsStairsBlock in api.World.SearchBlocks("stonepathstairs-*"))
+        {
+            pathStairsStairsBlock.BlockBehaviors = pathStairsStairsBlock.BlockBehaviors.Append(
+                new StonePathBehavior(pathStairsStairsBlock)
+            );
+        }
     }
 
     public override void Dispose()

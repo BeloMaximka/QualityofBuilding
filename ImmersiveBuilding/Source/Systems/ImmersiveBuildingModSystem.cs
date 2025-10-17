@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using ImmersiveBuilding.Source.BlockBehaviors;
 using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 using ImmersiveBuilding.Source.CollectibleBehaviors.ShovelModes;
 using ImmersiveBuilding.Source.Recipes;
@@ -8,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Util;
+using Vintagestory.API.Server;
 
 namespace ImmersiveBuilding.Source.Systems;
 
@@ -32,80 +31,80 @@ public class ImmersiveBuildingModSystem : ModSystem
     public override void Start(ICoreAPI api)
     {
         api.RegisterCollectibleBehaviorClass(nameof(ShovelBehavior), typeof(ShovelBehavior));
-        api.RegisterCollectibleBehaviorClass(nameof(BuildingItemBehavior), typeof(BuildingItemBehavior));
         BuildingRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<SkillModeBuildingRecipe>>("skillmodebuildingrecipes").Recipes;
+
+        if (api.Side == EnumAppSide.Server)
+        {
+            api.RegisterCollectibleBehaviorClass(nameof(BuildingItemBehavior), typeof(BuildingItemBehavior));
+        }
     }
 
     public override void AssetsFinalize(ICoreAPI api)
     {
-        if (api.Side == EnumAppSide.Client)
+        if (api.Side == EnumAppSide.Server)
         {
-            foreach (Block stonePathBlock in api.World.SearchBlocks("stonepath-*"))
+            // Add shovel behaviors
+            foreach (Item item in api.World.SearchItems(AssetLocation.Create("shovel-*")))
             {
-                stonePathBlock.BlockBehaviors = stonePathBlock.BlockBehaviors.Append(new StonePathBehavior(stonePathBlock));
+                Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(ShovelBehavior), item.Code.ToString());
+                item.CollectibleBehaviors = [new ShovelBehavior(item), .. item.CollectibleBehaviors];
             }
-            foreach (Block pathStairsStairsBlock in api.World.SearchBlocks("stonepathstairs-*"))
-            {
-                pathStairsStairsBlock.BlockBehaviors = pathStairsStairsBlock.BlockBehaviors.Append(
-                    new StonePathBehavior(pathStairsStairsBlock)
-                );
-            }
-
-            return;
         }
 
-        // Add shovel behaviors
-        foreach (Item item in api.World.SearchItems(AssetLocation.Create("shovel-*")))
-        {
-            Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(ShovelBehavior), item.Code.ToString());
-            item.CollectibleBehaviors = [new ShovelBehavior(item), .. item.CollectibleBehaviors];
-        }
-
-        // Add other building behaviors
-        BuildingRecipes.AddRange([.. api.Assets.GetMany<SkillModeBuildingRecipe>(api.Logger, "recipes/skillmodebuilding/").Values]);
+        // Add other building behaviors manually
+        InitBuildingRecipes(api);
         foreach (var recipesGroupedByTools in BuildingRecipes.GroupBy((recipe) => recipe.Tool.Code))
         {
-            CollectibleObject[] collectibles = api.World.SearchItems(recipesGroupedByTools.Key);
-            if (collectibles.Length == 0)
+            CollectibleObject? tool = recipesGroupedByTools.First().Tool.ResolvedItemStack?.Collectible;
+            if (tool is null)
             {
-                collectibles = api.World.SearchBlocks(recipesGroupedByTools.Key);
-            }
-            if (collectibles.Length == 0)
-            {
-                api.Logger.Warning("No items or blocks found by code {0}", recipesGroupedByTools.Key);
                 continue;
             }
 
-            foreach (CollectibleObject collectible in collectibles)
+            if (tool.GetBehavior<BuildingItemBehavior>() is null) // Prevent duplicate behavior from recipes like firebrick
             {
-                string variant = WildcardUtil.GetWildcardValue(recipesGroupedByTools.Key, collectible.Code);
-                if (!recipesGroupedByTools.Any(recipe => recipe.IsValidVariant(variant)))
-                {
-                    continue; // No recipes for this variant
-                }
+                Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), tool.Code.ToString());
+                tool.CollectibleBehaviors = [new BuildingItemBehavior(tool, api, recipesGroupedByTools), .. tool.CollectibleBehaviors];
+            }
 
-                if (collectible.GetBehavior<BuildingItemBehavior>() is null) // Prevent duplicate behavior from recipes like firebrick
-                {
-                    Mod.Logger.VerboseDebug("Adding {0} to {1}", nameof(BuildingItemBehavior), collectible.Code.ToString());
-                    collectible.CollectibleBehaviors = [new BuildingItemBehavior(collectible), .. collectible.CollectibleBehaviors];
-                }
-
-                // Adjust drops for blocks
-                foreach (
-                    SkillModeBuildingRecipe recipe in recipesGroupedByTools.Where(recipe =>
-                        recipe.ReplaceDrops && recipe.IsValidVariant(variant)
-                    )
-                )
-                {
-                    ChangeOutputBlockDropsToRawMaterials(api, recipe, variant);
-                }
+            if (api is not ICoreServerAPI sapi)
+            {
+                continue;
+            }
+            // Adjust drops for blocks
+            foreach (SkillModeBuildingRecipe recipe in recipesGroupedByTools.Where(recipe => recipe.ReplaceDrops))
+            {
+                ChangeOutputBlockDropsToRawMaterials(sapi, recipe);
             }
         }
     }
 
-    private void ChangeOutputBlockDropsToRawMaterials(ICoreAPI api, SkillModeBuildingRecipe recipe, string variant)
+    public override void Dispose()
     {
-        AssetLocation blockCode = recipe.ResolveSubstitute(recipe.Output.Code, variant).WithStatePartsAsWildcards();
+        HarmonyInstance.UnpatchAll(HarmonyInstance.Id);
+    }
+
+    private void InitBuildingRecipes(ICoreAPI api)
+    {
+        if (api.Side == EnumAppSide.Server)
+        {
+            foreach (var recipeJson in api.Assets.GetMany<SkillModeBuildingRecipeJson>(api.Logger, "recipes/skillmodebuilding/").Values)
+            {
+                BuildingRecipes.AddRange(recipeJson.Unpack(api.World));
+            }
+        }
+
+        foreach (SkillModeBuildingRecipe recipe in BuildingRecipes)
+        {
+            recipe.ResolveItemStacks(api.World);
+        }
+
+        Mod.Logger.Notification("Initialized {0} building recipes", BuildingRecipes.Count);
+    }
+
+    private void ChangeOutputBlockDropsToRawMaterials(ICoreServerAPI api, SkillModeBuildingRecipe recipe)
+    {
+        AssetLocation blockCode = recipe.Output.Code.WithStatePartsAsWildcards();
         Block[] blocksWithVariants = api.World.SearchBlocks(blockCode);
 
         if (blocksWithVariants.Length == 0)
@@ -120,33 +119,16 @@ public class ImmersiveBuildingModSystem : ModSystem
             [
                 .. recipe
                     .Ingredients.Select(ingredient =>
-                    {
-                        string itemCode = recipe.ResolveSubstitute(ingredient.Code, variant);
-                        CollectibleObject? collectible = api.World.GetItem(itemCode);
-                        collectible ??= api.World.GetBlock(itemCode);
-
-                        if (collectible is null)
-                        {
-                            Mod.Logger.Warning(
-                                "Unable to add recipe ingredient {0} for {1}, no blocks or items found!",
-                                itemCode,
-                                recipe.ResolveSubstitute(recipe.Output.Code, variant)
-                            );
-                            return null;
-                        }
-                        return new BlockDropItemStack(new ItemStack(collectible, ingredient.Quantity))
-                        {
-                            Quantity = new NatFloat(ingredient.Quantity, 0f, EnumDistribution.UNIFORM), // BlockDropItemStack hardcodes NatFloat.One
-                        };
-                    })
+                        ingredient.ResolvedItemStack is not null
+                            ? new BlockDropItemStack(ingredient.ResolvedItemStack)
+                            {
+                                Quantity = new NatFloat(ingredient.Quantity, 0f, EnumDistribution.UNIFORM), // BlockDropItemStack hardcodes NatFloat.One
+                            }
+                            : null
+                    )
                     .Where(ingredient => ingredient is not null),
             ];
             Mod.Logger.VerboseDebug("Changed recipe for block {0}", block.Code);
         }
-    }
-
-    public override void Dispose()
-    {
-        HarmonyInstance.UnpatchAll(HarmonyInstance.Id);
     }
 }

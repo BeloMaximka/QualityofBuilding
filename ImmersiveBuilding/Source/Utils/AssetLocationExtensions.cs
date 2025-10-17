@@ -27,6 +27,7 @@ public static class AssetLocationExtensions
     /// <br></br>cobblestonestairs-chalk-up-north-free => cobblestonestairs-chalk-*-*</returns>
     public static AssetLocation WithStatePartsAsWildcards(this AssetLocation location)
     {
+        // TODO: Think of a better way to do this
         return new(location.Domain, stateVariationsRegex.Replace(location.Path, "-*"));
     }
 }

@@ -1,89 +1,54 @@
 ﻿using ImmersiveBuilding.Source.Gui;
 using ImmersiveBuilding.Source.Recipes;
-using ImmersiveBuilding.Source.Systems;
 using ImmersiveBuilding.Source.Utils;
 using ImmersiveBuilding.Source.Utils.Inventory;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.API.Datastructures;
-using Vintagestory.API.Util;
-using Vintagestory.GameContent;
 using Vintagestory.ServerMods;
 
 namespace ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes;
 
-public class BuildingItemBehavior(CollectibleObject collectibleObject)
-    : CustomToolModeBehavior(collectibleObject),
-        ICustomHandbookPageContent
+public class BuildingItemBehavior : CustomToolModeBehavior
 {
-    private readonly CollectibleObject collectibleObject = collectibleObject;
-    private List<SkillItem> modes = [];
+    private readonly List<SkillItem> modes;
+
+    public override bool ClientSideOptional => true;
 
     public override List<SkillItem> ToolModes
     {
         get => modes;
     }
 
-    public override void OnLoaded(ICoreAPI api)
+    public BuildingItemBehavior(CollectibleObject collectibleObject, ICoreAPI api, IEnumerable<SkillModeBuildingRecipe> recipes)
+        : base(collectibleObject)
     {
-        base.OnLoaded(api);
-
-        // Init mode handlers
-        SkillModeBuildingRecipe[] recipes =
-        [
-            .. api
-                .ModLoader.GetModSystem<ImmersiveBuildingModSystem>()
-                .BuildingRecipes.Where(recipe =>
-                    WildcardUtil.Match(recipe.Tool.Code, collectibleObject.Code)
-                    && recipe.IsValidVariant(WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code))
-                ),
-        ]; // TODO: optimize this
-
-        // Init client part
         if (api is ICoreClientAPI clientAPI)
         {
             ClientAPI = clientAPI;
         }
 
         ItemStack itemStack = new(collectibleObject);
-        modes = new(recipes.Length + 1) { new() { Code = collectibleObject.Code } };
+        modes = [new() { Code = collectibleObject.Code }];
         if (ClientAPI is not null)
         {
             modes[0].Name = itemStack.GetName();
             modes[0].RenderHandler = itemStack.GetRenderDelegate(ClientAPI);
         }
 
-        foreach (var recipe in recipes)
+        foreach (SkillModeBuildingRecipe recipe in recipes)
         {
-            string wildcardValue = WildcardUtil.GetWildcardValue(recipe.Tool.Code, collectibleObject.Code);
-            ItemIngredient[] ingredients = recipe.GetItemIngredients(api.World, wildcardValue);
-            AssetLocation outputCode = recipe.ResolveSubstitute(recipe.Output.Code, wildcardValue);
-            Block? block = api.World.GetBlock(outputCode);
-            ItemStack? output = null;
-
-            if (block is not null)
-            {
-                output = new(block);
-                if (
-                    recipe.Output.Attributes is not null
-                    && new JsonObject(recipe.Output.Attributes).ToAttribute() is ITreeAttribute treeAttribute
-                )
-                {
-                    output.Attributes.MergeTree(treeAttribute.ConvertLongsToInts());
-                }
-            }
+            ItemIngredient[] ingredients = recipe.GetItemIngredients();
 
             SkillItem mode = new()
             {
-                Code = recipe.CodeSuffix.Length != 0 ? outputCode + recipe.CodeSuffix : outputCode,
+                Code = recipe.Code,
                 Data = new BuildingModeContext()
                 {
-                    Output = output,
-                    Handler = new BuildingModeHandler(api) { Ingredients = ingredients, Output = output },
+                    Output = recipe.Output.ResolvedItemStack,
+                    Handler = new BuildingModeHandler(api) { Ingredients = ingredients, Output = recipe.Output.ResolvedItemStack },
                     Ingredients = ingredients,
                 },
             };
@@ -93,14 +58,14 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
             {
                 continue;
             }
-            if (output is not null)
+            if (recipe.Output.ResolvedItemStack is not null)
             {
-                mode.Name = GetNameWithExtraInfo(output);
-                mode.RenderHandler = output.GetRenderDelegate(ClientAPI);
+                mode.Name = GetNameWithExtraInfo(recipe.Output.ResolvedItemStack);
+                mode.RenderHandler = recipe.Output.ResolvedItemStack.GetRenderDelegate(ClientAPI);
                 continue;
             }
 
-            mode.Name = outputCode;
+            mode.Name = recipe.Output.Code;
         }
     }
 
@@ -212,36 +177,6 @@ public class BuildingItemBehavior(CollectibleObject collectibleObject)
                 MouseButton = EnumMouseButton.None,
             },
         ];
-    }
-
-    public void OnHandbookPageComposed(
-        List<RichTextComponentBase> components,
-        ItemSlot inSlot,
-        ICoreClientAPI capi,
-        ItemStack[] allStacks,
-        ActionConsumable<string> openDetailPageFor
-    )
-    {
-        bool haveText = true;
-        CollectibleBehaviorHandbookTextAndExtraInfo.AddHeading(components, capi, Lang.Get("handbook-used-to-build"), ref haveText);
-
-        foreach (var mode in modes)
-        {
-            if (mode.Data is not BuildingModeContext context || context.Output is null)
-            {
-                continue;
-            }
-
-            ItemstackTextComponent itemStackComponent = new(
-                capi,
-                context.Output,
-                40,
-                0,
-                EnumFloat.Inline,
-                (cs) => openDetailPageFor(GuiHandbookItemStackPage.PageCodeForStack(cs))
-            );
-            components.Add(itemStackComponent);
-        }
     }
 
     public override void OnUnloaded(ICoreAPI api)

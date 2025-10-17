@@ -10,8 +10,6 @@ public class ItemIngredient()
 
     public required int Quantity { get; set; }
 
-    public ItemStack? ResolvedItemStack { get; set; }
-
     public string? TranslatedName { get; set; }
 
     public ItemIngredient Clone()
@@ -21,25 +19,7 @@ public class ItemIngredient()
             Type = Type,
             Code = Code,
             Quantity = Quantity,
-            ResolvedItemStack = ResolvedItemStack,
             TranslatedName = TranslatedName,
         };
-    }
-
-    public void Resolve(IWorldAccessor accessor)
-    {
-        CollectibleObject? resolvedCollectible = Type == EnumItemClass.Block ? accessor.GetBlock(Code) : accessor.GetItem(Code);
-
-        if (resolvedCollectible is null)
-        {
-            accessor.Logger.Warning(
-                "Unable to resolve recipe ingredient by code {0}, {1} not found.",
-                Code.ToString(),
-                Type.ToString().ToLowerInvariant()
-            );
-            return;
-        }
-
-        ResolvedItemStack = new(resolvedCollectible, Quantity);
     }
 }
