@@ -1,14 +1,14 @@
 {
 	"tool": {
 		"type": "block",
-		"code": "game:soil-*",
+		"code": "game:soil-*-none",
 		"name": "soil"
 	},
     "replaceDrops": false,
 	"ingredients": [
 		{
 			"type": "block",
-			"code": "game:soil-{soil}",
+			"code": "game:soil-{soil}-none",
 			"quantity": 1
 		},
 		{
