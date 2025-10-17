@@ -6,6 +6,11 @@ namespace ImmersiveBuilding.Source.Recipes;
 
 public class SkillModeBuildingRecipe : IByteSerializable
 {
+    /// <summary>
+    /// Used to group recipes created by the same file
+    /// </summary>
+    public int GroupId { get; set; } = -1;
+
     public AssetLocation Code { get; set; } = string.Empty;
 
     public SkillModeRecipeTool Tool { get; set; } = null!;
@@ -28,6 +33,7 @@ public class SkillModeBuildingRecipe : IByteSerializable
     }
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
     {
+        GroupId = reader.ReadInt32();
         Code = reader.ReadString();
         Tool = reader.Read<SkillModeRecipeTool>(resolver);
         ReplaceDrops = reader.ReadBoolean();
@@ -37,6 +43,7 @@ public class SkillModeBuildingRecipe : IByteSerializable
 
     public void ToBytes(BinaryWriter writer)
     {
+        writer.Write(GroupId);
         writer.Write(Code);
         writer.Write(Tool);
         writer.Write(ReplaceDrops);

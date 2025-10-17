@@ -88,9 +88,10 @@ public class ImmersiveBuildingModSystem : ModSystem
     {
         if (api.Side == EnumAppSide.Server)
         {
+            int groupId = 0;
             foreach (var recipeJson in api.Assets.GetMany<SkillModeBuildingRecipeJson>(api.Logger, "recipes/skillmodebuilding/").Values)
             {
-                BuildingRecipes.AddRange(recipeJson.Unpack(api.World));
+                BuildingRecipes.AddRange(recipeJson.Unpack(api.World, groupId++));
             }
         }
 

@@ -8,6 +8,7 @@ namespace ImmersiveBuilding.Source.Recipes;
 
 public class SkillModeBuildingRecipeJson
 {
+
     public string CodeSuffix { get; set; } = string.Empty;
 
     public required SkillModeRecipeToolJson Tool { get; set; }
@@ -18,12 +19,21 @@ public class SkillModeBuildingRecipeJson
 
     public required SkillModeRecipeOutput Output { get; set; }
 
-    public SkillModeBuildingRecipe[] Unpack(IWorldAccessor resolver)
+    public SkillModeBuildingRecipe[] Unpack(IWorldAccessor resolver, int groupId)
     {
         List<SkillModeBuildingRecipe> recipes = [];
         CollectibleObject[] tools = resolver.SearchItems(Tool.Code);
+        if (tools.Length == 0)
+        {
+            tools = resolver.SearchBlocks(Tool.Code);
+        }
 
-        foreach (string toolCode in tools.Select(tool => tool.Code))
+        if (tools.Length == 0)
+        {
+            resolver.Logger.Warning("No tools found for building recipe with code {0}", Tool.Code);
+        }
+
+        foreach (AssetLocation toolCode in tools.Select(tool => tool.Code))
         {
             string variant = WildcardUtil.GetWildcardValue(Tool.Code, toolCode);
             if (!Tool.IsValidVariant(variant))
@@ -35,6 +45,7 @@ public class SkillModeBuildingRecipeJson
             recipes.Add(
                 new()
                 {
+                    GroupId = groupId,
                     Code = new AssetLocation($"{SharedConstants.ModName}:{outputCode}{CodeSuffix}"),
                     Tool = new SkillModeRecipeTool { Type = Tool.Type, Code = new AssetLocation(toolCode) },
                     ReplaceDrops = ReplaceDrops,

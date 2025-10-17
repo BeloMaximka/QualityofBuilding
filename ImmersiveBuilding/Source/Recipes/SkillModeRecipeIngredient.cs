@@ -1,5 +1,6 @@
 ﻿using ImmersiveBuilding.Source.Utils;
 using System.IO;
+using System.Linq;
 using Vintagestory.API.Common;
 
 namespace ImmersiveBuilding.Source.Recipes;
@@ -14,7 +15,10 @@ public class SkillModeRecipeIngredient : IByteSerializable
 
     public string? TranslationCode { get; set; }
 
-    public ItemStack? ResolvedItemStack { get; set; }
+    public ItemStack[] ResolvedItemStacks { get; set; } = [];
+
+    // Maybe we should get rid of ResolvedItemStack in the future to avoid potentials bugs
+    public ItemStack? ResolvedItemStack => ResolvedItemStacks.Length > 0 ? ResolvedItemStacks[0] : null;
 
     public void ResolveItemStack(IWorldAccessor resolver)
     {
@@ -23,15 +27,18 @@ public class SkillModeRecipeIngredient : IByteSerializable
             return;
         }
 
-        CollectibleObject? collectible = resolver.GetItem(Code);
-        collectible ??= resolver.GetBlock(Code);
+        CollectibleObject[] collectibles = resolver.SearchItems(Code);
+        if (collectibles.Length == 0)
+        {
+            collectibles = resolver.SearchBlocks(Code);
+        }
 
-        if (collectible is null)
+        if (collectibles.Length == 0)
         {
             resolver.Logger.Warning("Unable to resolve building recipe ingredient for {0}, no blocks or items found!", Code);
             return;
         }
-        ResolvedItemStack = new ItemStack(collectible, Quantity);
+        ResolvedItemStacks = [.. collectibles.Select(collectible => new ItemStack(collectible, Quantity))];
     }
 
     public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
@@ -40,6 +47,7 @@ public class SkillModeRecipeIngredient : IByteSerializable
         Code = new(reader.ReadString());
         Quantity = reader.ReadInt32();
         TranslationCode = reader.ReadNullableString();
+        ResolvedItemStacks = [];
     }
 
     public void ToBytes(BinaryWriter writer)

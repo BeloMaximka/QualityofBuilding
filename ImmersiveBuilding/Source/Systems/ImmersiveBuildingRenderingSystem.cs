@@ -1,6 +1,8 @@
 ﻿using ImmersiveBuilding.Source.BlockBehaviors;
 using ImmersiveBuilding.Source.CollectibleBehaviors;
+using ImmersiveBuilding.Source.CollectibleBehaviors.BuildingModes.Handbook;
 using ImmersiveBuilding.Source.Gui;
+using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -11,6 +13,8 @@ namespace ImmersiveBuilding.Source.Systems;
 public class ImmersiveBuildingRenderingSystem : ModSystem
 {
     private ICoreClientAPI capi = null!;
+
+    public override double ExecuteOrder() => 1.2;
 
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Client;
 
@@ -65,6 +69,11 @@ public class ImmersiveBuildingRenderingSystem : ModSystem
                 new StonePathBehavior(pathStairsStairsBlock)
             );
         }
+    }
+
+    public override void AssetsFinalize(ICoreAPI api)
+    {
+        capi.InitBuildingRecipesForHandbook();
     }
 
     public override void Dispose()
