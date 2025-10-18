@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
 using QualityOfBuilding.Source.CollectibleBehaviors.ShovelModes;
+using QualityOfBuilding.Source.Commands;
 using QualityOfBuilding.Source.Recipes;
 using QualityOfBuilding.Source.Utils;
 using System.Collections.Generic;
@@ -33,9 +34,10 @@ public class QualityOfBuildingModSystem : ModSystem
         api.RegisterCollectibleBehaviorClass(nameof(ShovelBehavior), typeof(ShovelBehavior));
         BuildingRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<SkillModeBuildingRecipe>>("skillmodebuildingrecipes").Recipes;
 
-        if (api.Side == EnumAppSide.Server)
+        if (api is ICoreServerAPI sapi)
         {
-            api.RegisterCollectibleBehaviorClass(nameof(BuildingItemBehavior), typeof(BuildingItemBehavior));
+            GenerateBuildingRecipeJsonFromGridRecipeCommand.Register(sapi);
+            sapi.RegisterCollectibleBehaviorClass(nameof(BuildingItemBehavior), typeof(BuildingItemBehavior));
         }
     }
 

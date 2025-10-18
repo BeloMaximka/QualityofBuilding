@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Newtonsoft.Json;
+using System.IO;
 using Vintagestory.API.Common;
 
 namespace QualityOfBuilding.Source.Recipes;
@@ -9,6 +10,7 @@ public class SkillModeRecipeTool : IByteSerializable
 
     public required AssetLocation Code { get; set; }
 
+    [JsonIgnore]
     public ItemStack? ResolvedItemStack { get; set; }
 
     public void ResolveItemStack(IWorldAccessor resolver)

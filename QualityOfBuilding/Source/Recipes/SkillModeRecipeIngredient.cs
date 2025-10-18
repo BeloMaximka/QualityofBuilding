@@ -1,4 +1,5 @@
-﻿using QualityOfBuilding.Source.Utils;
+﻿using Newtonsoft.Json;
+using QualityOfBuilding.Source.Utils;
 using System.IO;
 using System.Linq;
 using Vintagestory.API.Common;
@@ -15,9 +16,11 @@ public class SkillModeRecipeIngredient : IByteSerializable
 
     public string? TranslationCode { get; set; }
 
+    [JsonIgnore]
     public ItemStack[] ResolvedItemStacks { get; set; } = [];
 
     // Maybe we should get rid of ResolvedItemStack in the future to avoid potentials bugs
+    [JsonIgnore]
     public ItemStack? ResolvedItemStack => ResolvedItemStacks.Length > 0 ? ResolvedItemStacks[0] : null;
 
     public void ResolveItemStack(IWorldAccessor resolver)

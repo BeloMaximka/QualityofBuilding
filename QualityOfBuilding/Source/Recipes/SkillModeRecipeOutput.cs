@@ -1,5 +1,6 @@
-﻿using QualityOfBuilding.Source.Utils;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QualityOfBuilding.Source.Utils;
 using System.IO;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -14,6 +15,7 @@ public class SkillModeRecipeOutput : IByteSerializable
 
     public JToken? Attributes { get; set; }
 
+    [JsonIgnore]
     public ItemStack? ResolvedItemStack { get; set; }
 
     public void ResolveItemStack(IWorldAccessor resolver)
