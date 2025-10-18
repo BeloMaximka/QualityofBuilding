@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Util;
 
 namespace ImmersiveBuilding.Source.Utils;
 
+// I don't like additional allocations caused my AssetLocation
 public static class ToolModeUtils
 {
     public const string BuildingModeAttributeName = "toolMode";
@@ -17,8 +17,16 @@ public static class ToolModeUtils
             return 0;
         }
 
-        int index = toolModes.IndexOf(mode => mode.Code == selectedMode);
-        return index == -1 ? 0 : index;
+        int index = 0;
+        foreach (SkillItem mode in toolModes)
+        {
+            if (mode.Code == selectedMode)
+            {
+                return index;
+            }
+            index++;
+        }
+        return 0;
     }
 
     public static void SetBuildingMode(this ItemStack itemStack, string value)
