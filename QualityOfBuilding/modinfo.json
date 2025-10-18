@@ -1,13 +1,13 @@
 {
     "type": "code",
     "modid": "qualityofbuilding",
-    "name": "QualityOfBuilding",
+    "name": "Quality Of Building",
     "authors": [
         "BeloMaximka"
     ],
-    "description": "To be added",
+    "description": "Makes building suck less",
     "version": "1.0.0",
     "dependencies": {
-        "game": ""
+        "game": "1.21.0"
     }
 }
