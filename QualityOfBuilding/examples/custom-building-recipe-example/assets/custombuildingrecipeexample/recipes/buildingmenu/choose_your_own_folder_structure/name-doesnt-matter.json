@@ -1,0 +1,26 @@
+{
+	"tool": {
+		"type": "item",
+		"code": "game:stonebrick-*",
+		"name": "rock",
+		"allowVariants": ["andesite", "chalk", "chert"]
+	},
+	"replaceDrops": false,
+	"ingredients": [
+		{
+			"type": "item",
+			"code": "game:stonebrick-{rock}",
+			"quantity": 4
+		},
+		{
+			"type": "item",
+			"code": "game:clay-*",
+			"quantity": 1,
+			"translationCode": "custombuildingrecipeexample:any-clay"
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:stonebricks-{rock}"
+	}
+}

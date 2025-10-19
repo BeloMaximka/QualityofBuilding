@@ -1,0 +1,20 @@
+{
+  "Type": 1,
+  "TextureSize": 32,
+  "Name": "Custom building recipe example",
+  "Version": "",
+  "NetworkVersion": null,
+  "IconPath": null,
+  "Description": "",
+  "Website": "",
+  "CoreMod": false,
+  "ModID": "custombuildingrecipeexample",
+  "Authors": [
+    ""
+  ],
+  "Contributors": [],
+  "Side": "Universal",
+  "RequiredOnClient": true,
+  "RequiredOnServer": true,
+  "Dependencies": {}
+}
