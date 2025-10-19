@@ -1,0 +1,18 @@
+{
+	"tool": {
+		"type": "block",
+		"code": "game:stonepath-free"
+	},
+	"replaceDrops": false,
+	"ingredients": [
+		{
+			"type": "block",
+			"code": "game:stonepath-free",
+			"quantity": 1
+		}
+	],
+	"output": {
+		"type": "block",
+		"code": "game:stonepathslab-free"
+	}
+}
