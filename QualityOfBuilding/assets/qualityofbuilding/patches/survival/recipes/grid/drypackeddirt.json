@@ -1,0 +1,15 @@
+[
+  {
+    "op": "replace",
+    "path": "/ingredientPattern",
+    "value": "___\tGGG\tGGG",
+    "file": "game:recipes/grid/drypackeddirt.json",
+    "side": "Server"
+  },
+  {
+    "op": "remove",
+    "path": "/ingredients/S",
+    "file": "game:recipes/grid/drypackeddirt.json",
+    "side": "Server"
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "op": "add",
+    "path": "/0/ingredients/C/quantity",
+    "value": 4,
+    "file": "game:recipes/grid/claybrickblock.json",
+    "side": "Server"
+  },
+  {
+    "op": "add",
+    "path": "/1/ingredients/C/quantity",
+    "value": 4,
+    "file": "game:recipes/grid/claybrickblock.json",
+    "side": "Server"
+  }
+]

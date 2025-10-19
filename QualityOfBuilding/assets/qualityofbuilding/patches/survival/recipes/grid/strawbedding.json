@@ -1,0 +1,9 @@
+[
+  {
+    "op": "replace",
+    "path": "/output/quantity",
+    "value": 3,
+    "file": "game:recipes/grid/strawbedding.json",
+    "side": "Server"
+  }
+]

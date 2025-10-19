@@ -1,0 +1,16 @@
+[
+  {
+    "op": "replace",
+    "path": "/ingredientPattern",
+    "value": "GDG\tD_D\tGDG",
+    "file": "game:recipes/grid/cob.json",
+    "side": "Server"
+  },
+  {
+    "op": "replace",
+    "path": "/output/quantity",
+    "value": 4,
+    "file": "game:recipes/grid/cob.json",
+    "side": "Server"
+  }
+]
