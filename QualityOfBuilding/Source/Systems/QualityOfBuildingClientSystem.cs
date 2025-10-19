@@ -1,6 +1,7 @@
 ﻿using QualityOfBuilding.Source.BlockBehaviors;
 using QualityOfBuilding.Source.CollectibleBehaviors;
 using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes.Handbook;
+using QualityOfBuilding.Source.Commands;
 using QualityOfBuilding.Source.Gui;
 using System.Linq;
 using Vintagestory.API.Client;
@@ -21,6 +22,8 @@ public class QualityOfBuildingClientSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         capi = api;
+
+        CheckInvalidRecipeProportionsCommand.Register(capi);
 
         api.Input.RegisterHotKey(
             BuildingModeDialog.ToggleCombinationCode,

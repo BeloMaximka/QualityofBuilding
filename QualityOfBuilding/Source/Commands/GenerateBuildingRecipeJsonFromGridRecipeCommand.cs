@@ -77,8 +77,7 @@ static class GenerateBuildingRecipeJsonFromGridRecipeCommand
         }
         catch (Exception e)
         {
-            return new TextCommandResult() { Status = EnumCommandStatus.Error, StatusMessage = e.Message };
-            throw;
+            return new TextCommandResult() { Status = EnumCommandStatus.Error, StatusMessage = e.ToString() };
         }
     }
 
