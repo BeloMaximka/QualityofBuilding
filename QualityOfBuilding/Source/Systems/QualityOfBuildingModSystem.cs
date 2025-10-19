@@ -91,7 +91,7 @@ public class QualityOfBuildingModSystem : ModSystem
         if (api.Side == EnumAppSide.Server)
         {
             int groupId = 0;
-            foreach (var recipeJson in api.Assets.GetMany<SkillModeBuildingRecipeJson>(api.Logger, "recipes/skillmodebuilding/").Values)
+            foreach (var recipeJson in api.Assets.GetMany<SkillModeBuildingRecipeJson>(api.Logger, "recipes/buildingmenu/").Values)
             {
                 BuildingRecipes.AddRange(recipeJson.Unpack(api.World, groupId++));
             }
