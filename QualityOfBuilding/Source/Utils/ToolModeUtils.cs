@@ -4,7 +4,6 @@ using Vintagestory.API.Common;
 
 namespace QualityOfBuilding.Source.Utils;
 
-// I don't like additional allocations caused my AssetLocation
 public static class ToolModeUtils
 {
     public const string BuildingModeAttributeName = "toolMode";
@@ -20,7 +19,7 @@ public static class ToolModeUtils
         int index = 0;
         foreach (SkillItem mode in toolModes)
         {
-            if (mode.Code == selectedMode)
+            if (CompareWithoutAllocations(mode.Code, selectedMode))
             {
                 return index;
             }
@@ -43,4 +42,30 @@ public static class ToolModeUtils
 
     public static bool HasMode(this ItemStack itemStack, string toolModeCode) =>
         itemStack.Attributes.GetString(BuildingModeAttributeName) == toolModeCode;
+
+    private static bool CompareWithoutAllocations(AssetLocation location, string codeWithDomain)
+    {
+        int domainLen = location.Domain.Length;
+        int pathLen = location.Path.Length;
+
+        if (codeWithDomain.Length != domainLen + pathLen + 1)
+            return false;
+
+        for (int i = 0; i < domainLen; i++)
+        {
+            if (codeWithDomain[i] != location.Domain[i])
+                return false;
+        }
+
+        if (codeWithDomain[domainLen] != ':')
+            return false;
+
+        for (int i = 0; i < pathLen; i++)
+        {
+            if (codeWithDomain[domainLen + 1 + i] != location.Path[i])
+                return false;
+        }
+
+        return true;
+    }
 }
