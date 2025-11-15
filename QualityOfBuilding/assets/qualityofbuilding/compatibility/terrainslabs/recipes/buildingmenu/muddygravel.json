@@ -1,0 +1,18 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:muddygravel"
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:muddygravel",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:muddygravel-game"
+  }
+}

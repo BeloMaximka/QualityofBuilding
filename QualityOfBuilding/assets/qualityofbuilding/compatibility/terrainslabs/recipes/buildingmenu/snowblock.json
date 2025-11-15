@@ -1,0 +1,18 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:snowblock"
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:snowblock",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:snowblock-game"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:sand-*",
+    "name": "rock",
+    "allowVariants": [
+      "andesite",
+      "chalk",
+      "chert",
+      "conglomerate",
+      "limestone",
+      "claystone",
+      "granite",
+      "sandstone",
+      "shale",
+      "basalt",
+      "peridotite",
+      "phyllite",
+      "slate",
+      "bauxite"
+    ]
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:sand-{rock}",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:sand-game-{rock}"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:packedglacierice"
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:packedglacierice",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:packedglacierice-game"
+  }
+}

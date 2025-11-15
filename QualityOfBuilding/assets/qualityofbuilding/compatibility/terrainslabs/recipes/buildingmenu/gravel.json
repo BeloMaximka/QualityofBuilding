@@ -1,0 +1,40 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:gravel-*",
+    "name": "rock",
+    "allowVariants": [
+      "andesite",
+      "chalk",
+      "chert",
+      "conglomerate",
+      "limestone",
+      "claystone",
+      "granite",
+      "sandstone",
+      "shale",
+      "basalt",
+      "peridotite",
+      "phyllite",
+      "slate",
+      "bauxite",
+      "suevite",
+      "whitemarble",
+      "greenmarble",
+      "redmarble",
+      "kimberlite"
+    ]
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:gravel-{rock}",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:gravel-game-{rock}"
+  }
+}

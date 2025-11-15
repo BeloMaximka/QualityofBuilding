@@ -1,0 +1,18 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:cob-none"
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:cob-none",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:cob-game-none"
+  }
+}

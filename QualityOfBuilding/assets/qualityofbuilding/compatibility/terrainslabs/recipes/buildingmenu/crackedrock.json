@@ -1,0 +1,20 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:crackedrock-*",
+		"name": "rock",
+		"allowVariants": ["andesite", "chalk", "chert", "conglomerate", "limestone", "claystone", "granite", "sandstone", "shale", "basalt", "peridotite", "phyllite", "slate", "bauxite", "suevite", "whitemarble", "greenmarble", "redmarble", "kimberlite"]
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:crackedrock-{rock}",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:crackedrock-game-{rock}"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "tool": {
+    "type": "block",
+    "code": "game:soil-*-none",
+    "name": "fertility"
+  },
+  "replaceDrops": false,
+  "ingredients": [
+    {
+      "type": "block",
+      "code": "game:soil-{fertility}-none",
+      "quantity": 1
+    }
+  ],
+  "output": {
+    "type": "block",
+    "code": "terrainslabs:soil-game-{fertility}-none"
+  }
+}
