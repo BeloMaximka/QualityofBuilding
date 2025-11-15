@@ -128,7 +128,16 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
     private void AddSoilReplaceModes(ICoreAPI api)
     {
         // Maybe move hardcoded values into config
-        string[] replacableBlocksCodes = ["soil-*", "forestfloor-*", "drypackeddirt", "packeddirt", "rammed-light-*"];
+        string[] replacableBlocksCodes =
+        [
+            "terrainslabs:soil-*",
+            "terrainslabs:forestfloor-*",
+            "game:soil-*",
+            "game:forestfloor-*",
+            "drypackeddirt",
+            "packeddirt",
+            "rammed-light-*",
+        ];
         List<int> replacableBlockIds = new(28);
         foreach (var code in replacableBlocksCodes)
         {

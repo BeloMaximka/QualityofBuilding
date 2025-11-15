@@ -9,8 +9,8 @@ namespace QualityOfBuilding.Source.CollectibleBehaviors.ShovelModes;
 
 public class ShovelPathModeHandler : IModeHandler
 {
-    private static readonly string[] replaceablePathBlockPatterns = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
-    private readonly int[] replaceablePathBlockIds;
+    private readonly int[] replacableSlabIds;
+    private readonly int[] replacableBlockIds;
     private readonly int stonePathSlabId;
     private readonly NsweBlockIds stonePathStairIds;
     private readonly ItemIngredient[][] recipes;
@@ -18,15 +18,28 @@ public class ShovelPathModeHandler : IModeHandler
 
     public ShovelPathModeHandler(ICoreAPI api, Block stonePath)
     {
+        string[] replacableBlocks = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
         List<int> blockIdsFound = [];
-        foreach (string replaceableBlock in replaceablePathBlockPatterns)
+        foreach (string replaceableBlock in replacableBlocks)
         {
             foreach (Block searchBlock in api.World.SearchBlocks(new AssetLocation(replaceableBlock)))
             {
                 blockIdsFound.Add(searchBlock.BlockId);
             }
         }
-        replaceablePathBlockIds = [.. blockIdsFound];
+        replacableBlockIds = [.. blockIdsFound];
+
+        string[] replacableSlabs = ["terrainslabs:soil-*", "terrainslabs:forestfloor-*", "terrainslabs:sand-*", "terrainslabs:gravel-*"];
+        List<int> slabIdsFound = [];
+
+        foreach (string replaceableSlab in replacableSlabs)
+        {
+            foreach (Block slab in api.World.SearchBlocks(new AssetLocation(replaceableSlab)))
+            {
+                slabIdsFound.Add(slab.BlockId);
+            }
+        }
+        replacableSlabIds = [.. slabIdsFound];
 
         this.stonePath = stonePath;
         stonePathSlabId = api.World.GetBlock(new AssetLocation("game:stonepathslab-free"))?.BlockId ?? -1;
@@ -78,12 +91,21 @@ public class ShovelPathModeHandler : IModeHandler
         }
 
         Block block = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
-        if (replaceablePathBlockIds.Contains(block.Id))
+        if (replacableBlockIds.Contains(block.Id))
         {
             int recipeIndex = -1;
             if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
             {
                 ReplaceSoilWithPath(blockSel, byEntity, byPlayer, recipeIndex == 0, stonePath.Id);
+                DamageShovel(byPlayer, byEntity, slot);
+            }
+        }
+        else if (replacableSlabIds.Contains(block.Id))
+        {
+            int recipeIndex = -1;
+            if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
+            {
+                ReplaceSoilWithPath(blockSel, byEntity, byPlayer, recipeIndex == 0, stonePathSlabId);
                 DamageShovel(byPlayer, byEntity, slot);
             }
         }
