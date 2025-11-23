@@ -18,8 +18,8 @@ public static class ItemChiselPatch
         if (
             mouseslot.Itemstack is null
             || mouseslot.Itemstack.Collectible.GetBehavior<BuildingItemBehavior>() is not BuildingItemBehavior buildingBehavior
-             || buildingBehavior.ToolModes[mouseslot.Itemstack.GetBuildingMode(buildingBehavior.ToolModes)].Data is not BuildingModeContext context
-            || context.Output is null
+             || buildingBehavior.BuildingModes[mouseslot.Itemstack.GetBuildingMode(buildingBehavior.BuildingModes)] is not BuildingMode mode
+            || mode.Output is null
             || blockSel is null
         )
         {
@@ -28,7 +28,7 @@ public static class ItemChiselPatch
 
         if (
             ___api.World.BlockAccessor.GetBlockEntity(blockSel.Position) is not BlockEntityChisel be
-            || !ItemChisel.IsValidChiselingMaterial(___api, blockSel.Position, context.Output.Block, byPlayer)
+            || !ItemChisel.IsValidChiselingMaterial(___api, blockSel.Position, mode.Output.Block, byPlayer)
         )
         {
             return false;
@@ -36,15 +36,15 @@ public static class ItemChiselPatch
 
         if (byPlayer.WorldData.CurrentGameMode != EnumGameMode.Creative)
         {
-            be.AddMaterial(context.Output.Block, out bool isFull);
-            if (!isFull && !byPlayer.TryTakeItems(context.Ingredients))
+            be.AddMaterial(mode.Output.Block, out bool isFull);
+            if (!isFull && !byPlayer.TryTakeItems(mode.Ingredients))
             {
-                be.RemoveMaterial(context.Output.Block);
+                be.RemoveMaterial(mode.Output.Block);
             }
         }
         else
         {
-            be.AddMaterial(context.Output.Block, out _, false);
+            be.AddMaterial(mode.Output.Block, out _, false);
         }
 
         be.MarkDirty();

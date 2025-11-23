@@ -1,4 +1,5 @@
-﻿using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
+﻿using Cairo;
+using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
 using QualityOfBuilding.Source.Network;
 using QualityOfBuilding.Source.Utils;
 using QualityOfBuilding.Source.Utils.Inventory;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 
 namespace QualityOfBuilding.Source.Gui;
 
@@ -14,7 +16,7 @@ public static class BuildingModeDialogSingleton
 {
     private static BuildingModeDialog? dialog;
 
-    public static bool TryOpen(ICoreClientAPI capi, ItemStack heldItem, List<SkillItem> buildingOptions)
+    public static bool TryOpen(ICoreClientAPI capi, ItemStack heldItem, List<BuildingMode> buildingOptions)
     {
         if (dialog is null)
         {
@@ -24,7 +26,6 @@ public static class BuildingModeDialogSingleton
 
         dialog.BuildingOptions = buildingOptions;
         dialog.HeldItem = heldItem;
-        dialog.ComposeDialog();
         return dialog.TryOpen();
     }
 
@@ -48,64 +49,253 @@ public static class BuildingModeDialogSingleton
 
     public static void FreeRam()
     {
+        dialog?.Dispose();
         dialog = null;
     }
 }
 
+// TODO: Optimize
 public class BuildingModeDialog : GuiDialog
 {
-    private int prevSlotOver;
-
+    private int prevSelectedMode;
+    private int selectedMode;
+    private readonly float radiusFactor = 0.75f;
+    private readonly float maxItemSize;
     private readonly IClientNetworkChannel? buildingModeChannel;
 
-    public ItemStack HeldItem { get; set; }
+    private LoadedTexture wheelTexture;
+    private readonly ImageSurface surface;
+    private readonly Context context;
 
-    public List<SkillItem> BuildingOptions { get; set; }
+    public ItemStack HeldItem { get; set; }
+    public IReadOnlyList<BuildingMode> BuildingOptions { get; set; }
 
     public const string ToggleCombinationCode = "buildingmodedialog";
-
     public override string ToggleKeyCombinationCode => ToggleCombinationCode;
 
-    public BuildingModeDialog(ICoreClientAPI capi, ItemStack heldItem, List<SkillItem> buildingOptions)
+    public BuildingModeDialog(ICoreClientAPI capi, ItemStack heldItem, List<BuildingMode> buildingOptions)
         : base(capi)
     {
+        maxItemSize = (float)GuiElementPassiveItemSlot.unscaledSlotSize + (float)GuiElementItemSlotGridBase.unscaledSlotPadding;
+
         HeldItem = heldItem;
         BuildingOptions = buildingOptions;
 
         buildingModeChannel = capi.Network.GetChannel(SetBuildingModePacket.Channel);
+
+        wheelTexture = new(capi);
+        surface = new(Format.Argb32, capi.Render.FrameWidth, capi.Render.FrameHeight);
+        context = new(surface);
+
         ComposeDialog();
     }
 
-    public void ComposeDialog()
+    public override void OnGuiClosed()
     {
-        prevSlotOver = -1;
-        int cnt = Math.Max(1, BuildingOptions.Count);
+        if (selectedMode == prevSelectedMode)
+        {
+            return;
+        }
 
-        int cols = Math.Min(cnt, 8);
+        string toolModeCode = BuildingOptions[selectedMode].Code;
+        buildingModeChannel?.SendPacket(new SetBuildingModePacket() { ToolModeCode = toolModeCode });
+        HeldItem.SetBuildingMode(toolModeCode);
+    }
 
-        int rows = (int)Math.Ceiling(cnt / (float)cols);
+    public override void OnGuiOpened()
+    {
+        selectedMode = HeldItem.GetBuildingMode(BuildingOptions);
+        prevSelectedMode = selectedMode;
+    }
 
-        double size = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
-        double innerWidth = Math.Max(400, cols * size);
-        ElementBounds skillGridBounds = ElementBounds.Fixed(0, 30, innerWidth, rows * size);
+    public override void OnMouseMove(MouseEvent args)
+    {
+        base.OnMouseMove(args);
 
-        ElementBounds nameBounds = ElementBounds.Fixed(0, rows * size + 50, innerWidth, 55);
-        ElementBounds descBounds = nameBounds.BelowCopy();
+        if (BuildingOptions.Count == 0)
+        {
+            return;
+        }
 
-        ElementBounds bgBounds = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding);
-        bgBounds.BothSizing = ElementSizing.FitToChildren;
+        // mouse vector from center
+        double dx = args.X - capi.Render.FrameWidth * 0.5f;
+        double dy = args.Y - capi.Render.FrameHeight * 0.5f;
+
+        // skip if mouse near center
+        if (Math.Sqrt(dx * dx + dy * dy) < 32)
+        {
+            return;
+        }
+
+        double startAngle = -Math.PI / 2.0;
+        double angleStep = 2.0 * Math.PI / BuildingOptions.Count;
+        startAngle -= angleStep / 2.0;
+        // convert mouseAngle (atan2 -PI..PI) to a positive offset relative to startAngle in range [0, 2PI)
+        double rel = Math.Atan2(dy, dx) - startAngle;
+        // normalize to [0, 2PI)
+        rel = rel % (2.0 * Math.PI);
+        if (rel < 0)
+            rel += 2.0 * Math.PI;
+
+        OnSlotOver((int)(rel / angleStep));
+    }
+
+    public override void OnMouseDown(MouseEvent args)
+    {
+        args.Handled = true;
+        TryClose();
+    }
+
+    public override void OnMouseWheel(MouseWheelEventArgs args)
+    {
+        int newIndex = selectedMode + args.delta;
+        if (newIndex < 0)
+        {
+            newIndex += BuildingOptions.Count;
+        }
+        else if (newIndex >= BuildingOptions.Count)
+        {
+            newIndex -= BuildingOptions.Count;
+        }
+        OnSlotOver(newIndex);
+        args.SetHandled();
+    }
+
+    public override void OnRenderGUI(float deltaTime)
+    {
+        if (BuildingOptions.Count == 0)
+        {
+            return;
+        }
+
+        float centerX = capi.Render.FrameWidth * 0.5f;
+        float centerY = capi.Render.FrameHeight * 0.5f;
+
+        float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
+        float radius = maxHalf * radiusFactor;
+
+        double startAngle = -Math.PI / 2.0;
+        double angleOffset = startAngle;
+        double angleStep = 2.0 * Math.PI / BuildingOptions.Count;
+        startAngle -= angleStep / 2;
+
+        float size = Math.Min(maxItemSize, radius * (float)angleStep / 3);
+
+        double outerRadius = radius;
+        double innerRadius = outerRadius - maxItemSize * 2.5;
+
+        context.Antialias = Antialias.Subpixel;
+        context.LineWidth = 1;
+        context.Clear();
+
+        for (int index = 0; index < BuildingOptions.Count; ++index)
+        {
+            double a0 = startAngle + index * angleStep;
+            double a1 = a0 + angleStep;
+
+            // create path for ring segment:
+            // 1) move to outer arc start
+            double x0 = centerX + Math.Cos(a0) * outerRadius;
+            double y0 = centerY + Math.Sin(a0) * outerRadius;
+            context.MoveTo(x0, y0);
+
+            // 2) outer arc forward from a0 to a1
+            context.Arc(centerX, centerY, outerRadius, a0, a1);
+
+            // 3) line to inner arc at a1
+            double x1In = centerX + Math.Cos(a1) * innerRadius;
+            double y1In = centerY + Math.Sin(a1) * innerRadius;
+            context.LineTo(x1In, y1In);
+
+            // 4) inner arc backwards from a1 to a0
+            context.ArcNegative(centerX, centerY, innerRadius, a1, a0);
+
+            context.ClosePath();
+            bool hovered = (index == selectedMode);
+            double[] color = hovered ? GuiStyle.DialogHighlightColor : GuiStyle.DialogLightBgColor;
+            context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+            context.FillPreserve();
+
+            // stroke outline
+            context.SetSourceRGBA(0, 0, 0, 0.45);
+            context.Stroke();
+
+            // separator line
+            context.Save();
+            context.LineTo(centerX + Math.Cos(a0) * outerRadius, centerY + Math.Sin(a0) * outerRadius);
+            context.Stroke();
+            context.Restore();
+
+            double segmentRagius = (outerRadius - innerRadius) / 2;
+            float itemCenterX = centerX + (float)(Math.Cos(angleOffset + index * angleStep) * (radius - segmentRagius));
+            float itemCenterY = centerY + (float)(Math.Sin(angleOffset + index * angleStep) * (radius - segmentRagius));
+
+            capi.Render.RenderItemstackToGui(
+                BuildingOptions[index].RenderSlot,
+                itemCenterX,
+                itemCenterY,
+                100,
+                size,
+                ColorUtil.WhiteArgb,
+                true,
+                showStackSize: false
+            );
+        }
+
+        // central circle
+        context.Save();
+        context.SetSourceRGBA(0, 0, 0, 0.5);
+        context.Arc(centerX, centerY, innerRadius * 0.95, 0, Math.PI * 2);
+        context.Fill();
+        context.Restore();
+
+        surface.Flush();
+        capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref wheelTexture);
+        capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0);
+
+        base.OnRenderGUI(deltaTime);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        GC.SuppressFinalize(this);
+        wheelTexture?.Dispose();
+        context.Dispose();
+        surface.Dispose();
+    }
+
+    private void ComposeDialog()
+    {
+        double innerWidth = 400;
+
+        ElementBounds nameBounds = ElementBounds.Fixed(0, 0, innerWidth, 55);
+        ElementBounds descBounds = nameBounds.BelowCopy().WithFixedSize(innerWidth, 150);
+        ElementBounds bgBounds = ElementBounds.Fill.WithSizing(ElementSizing.FitToChildren);
+
+        CairoFont nameFont = new()
+        {
+            Color = GuiStyle.DialogDefaultTextColor,
+            Fontname = GuiStyle.StandardFontName,
+            UnscaledFontsize = GuiStyle.SmallishFontSize,
+            Orientation = EnumTextOrientation.Center,
+        };
+
+        CairoFont descFont = new()
+        {
+            Color = GuiStyle.DialogDefaultTextColor,
+            Fontname = GuiStyle.StandardFontName,
+            UnscaledFontsize = GuiStyle.DetailFontSize,
+            Orientation = EnumTextOrientation.Center,
+        };
 
         SingleComposer = capi
             .Gui.CreateCompo("buildingModeSelect", ElementStdBounds.AutosizedMainDialog)
-            .AddShadedDialogBG(bgBounds, true)
             .BeginChildElements(bgBounds)
-            .AddSkillItemGrid(BuildingOptions, cols, rows, OnSlotClick, skillGridBounds, "skillitemgrid")
-            .AddDynamicText("", CairoFont.WhiteSmallishText(), nameBounds, "name")
-            .AddDynamicText("", CairoFont.WhiteDetailText(), descBounds, "ingredient")
+            .AddDynamicText("", nameFont, nameBounds, "name")
+            .AddDynamicText("", descFont, descBounds, "ingredient")
             .EndChildElements()
             .Compose();
-
-        SingleComposer.GetSkillItemGrid("skillitemgrid").OnSlotOver = OnSlotOver;
     }
 
     private void OnSlotOver(int slotIndex)
@@ -115,24 +305,11 @@ public class BuildingModeDialog : GuiDialog
             return;
         }
 
-        if (slotIndex != prevSlotOver)
+        if (slotIndex != selectedMode)
         {
-            prevSlotOver = slotIndex;
+            selectedMode = slotIndex;
             SingleComposer.GetDynamicText("name").SetNewText(BuildingOptions[slotIndex].Name);
-            SingleComposer
-                .GetDynamicText("ingredient")
-                .SetNewText(
-                    BuildingOptions[slotIndex].Data is BuildingModeContext context ? context.Ingredients.GetMaterialsString() : string.Empty
-                );
+            SingleComposer.GetDynamicText("ingredient").SetNewText(BuildingOptions[slotIndex].Ingredients.GetMaterialsString("\n"));
         }
-    }
-
-    private void OnSlotClick(int slotIndex)
-    {
-        string toolModeCode = BuildingOptions[slotIndex].Code;
-        buildingModeChannel?.SendPacket(new SetBuildingModePacket() { ToolModeCode = toolModeCode });
-        HeldItem.SetBuildingMode(toolModeCode);
-
-        TryClose();
     }
 }

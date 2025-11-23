@@ -10,17 +10,14 @@ using Vintagestory.API.Config;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors.ShovelModes;
 
-public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolModeBehavior(collectibleObject)
+public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeBehavior(collectibleObject)
 {
     private const string stonePathCode = "stonepath-free";
-
     private readonly CollectibleObject collectibleObject = collectibleObject;
-
-    private readonly List<SkillItem> modes = [];
+    private readonly List<BuildingMode> modes = [];
 
     public const string StonePathToolModeCode = $"{SharedConstants.ModName}:{stonePathCode}";
-
-    public override List<SkillItem> ToolModes => modes;
+    public override List<BuildingMode> BuildingModes => modes;
 
     public override void OnLoaded(ICoreAPI api)
     {
@@ -49,8 +46,7 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         handling = EnumHandling.PreventDefault;
 
         int selectedMode = slot.Itemstack.GetBuildingMode(modes);
-        BuildingModeContext? context = modes[selectedMode].Data as BuildingModeContext;
-        context?.Handler?.HandleStart(slot, byEntity, blockSel, entitySel);
+        modes[selectedMode].Handler.HandleStart(slot, byEntity, blockSel, entitySel);
     }
 
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot, ref EnumHandling handling)
@@ -71,57 +67,41 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
         ];
     }
 
-    public override void OnUnloaded(ICoreAPI api)
-    {
-        for (int i = 0; i < modes.Count; i++)
-        {
-            modes[i].Dispose();
-        }
-    }
-
     private void AddInitDefaultAndPathModes(ICoreAPI api)
     {
         Block? stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
         ItemStack? stonePathItem = stonePath is not null ? new(stonePath) : null;
-        modes.Add(new SkillItem() { Code = new AssetLocation("default") });
+        modes.Add(
+            new BuildingMode()
+            {
+                Code = new AssetLocation("default"),
+                Name = Lang.Get("default-behavior"),
+                Handler = new DummyHanlder(),
+                RenderSlot = new DummySlot(new(collectibleObject)),
+            }
+        );
         if (stonePath is not null)
         {
             modes.Add(
-                new SkillItem()
+                new BuildingMode()
                 {
                     Code = new AssetLocation(StonePathToolModeCode),
-                    Data = new BuildingModeContext()
-                    {
-                        Handler = new ShovelPathModeHandler(api, stonePath),
-                        Output = stonePathItem,
-                        Ingredients =
-                        [
-                            new()
-                            {
-                                Type = EnumItemClass.Item,
-                                Code = "stone-*",
-                                TranslatedName = Lang.Get("a-or-b", Lang.Get("any-stone"), stonePathItem?.GetName().ToLower()),
-                                Quantity = 4,
-                            },
-                        ],
-                    },
+                    Name = Lang.Get("make-roads"),
+                    Handler = new ShovelPathModeHandler(api, stonePath),
+                    Output = stonePathItem,
+                    RenderSlot = new DummySlot(stonePathItem),
+                    Ingredients =
+                    [
+                        new()
+                        {
+                            Type = EnumItemClass.Item,
+                            Code = "stone-*",
+                            TranslatedName = Lang.Get("a-or-b", Lang.Get("any-stone"), stonePathItem?.GetName().ToLower()),
+                            Quantity = 4,
+                        },
+                    ],
                 }
             );
-        }
-
-        if (api is not ICoreClientAPI capi)
-        {
-            return;
-        }
-
-        // Init modes for client
-        ItemStack itemStack = new(collectibleObject);
-        modes[0].Name = Lang.Get("default-behavior");
-        modes[0].RenderHandler = itemStack.GetRenderDelegate(capi);
-        if (stonePathItem is not null)
-        {
-            modes[1].Name = Lang.Get("make-roads");
-            modes[1].RenderHandler = stonePathItem.GetRenderDelegate(capi);
         }
     }
 
@@ -164,21 +144,14 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : CustomToolMod
                 continue;
             }
             ItemStack outputStack = new(outputBlock);
-            SkillItem replaceMode = new()
+            BuildingMode replaceMode = new()
             {
                 Code = new AssetLocation($"{SharedConstants.ModName}:{outputBlock.Code}"),
-                Data = new BuildingModeContext()
-                {
-                    Handler = new ReplaceModeHandler(replacableBlockIdsArray, outputBlock.Id),
-                    Output = new(outputBlock),
-                },
+                Name = Lang.Get("replace-soil-with", outputStack.GetName().ToLower()),
+                RenderSlot = new DummySlot(outputStack),
+                Output = new(outputBlock),
+                Handler = new ReplaceModeHandler(replacableBlockIdsArray, outputBlock.Id),
             };
-
-            if (api is ICoreClientAPI capi)
-            {
-                replaceMode.Name = Lang.Get("replace-soil-with", outputStack.GetName().ToLower());
-                replaceMode.RenderHandler = outputStack.GetRenderDelegate(capi);
-            }
 
             modes.Add(replaceMode);
         }

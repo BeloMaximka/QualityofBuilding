@@ -11,13 +11,13 @@ using Vintagestory.ServerMods;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
 
-public class BuildingItemBehavior : CustomToolModeBehavior
+public class BuildingItemBehavior : BuildingModeBehavior
 {
-    private readonly List<SkillItem> modes;
+    private readonly List<BuildingMode> modes = [];
 
     public override bool ClientSideOptional => true;
 
-    public override List<SkillItem> ToolModes
+    public override List<BuildingMode> BuildingModes
     {
         get => modes;
     }
@@ -31,41 +31,33 @@ public class BuildingItemBehavior : CustomToolModeBehavior
         }
 
         ItemStack itemStack = new(collectibleObject);
-        modes = [new() { Code = collectibleObject.Code }];
-        if (ClientAPI is not null)
-        {
-            modes[0].Name = itemStack.GetName();
-            modes[0].RenderHandler = itemStack.GetRenderDelegate(ClientAPI);
-        }
+        modes.Add(
+            new()
+            {
+                Code = collectibleObject.Code,
+                Name = itemStack.GetName(),
+                RenderSlot = new DummySlot(itemStack),
+                Handler = new DummyHanlder(),
+            }
+        );
 
         foreach (SkillModeBuildingRecipe recipe in recipes)
         {
             ItemIngredient[] ingredients = recipe.GetItemIngredients();
-
-            SkillItem mode = new()
+            BuildingMode option = new()
             {
                 Code = recipe.Code,
-                Data = new BuildingModeContext()
-                {
-                    Output = recipe.Output.ResolvedItemStack,
-                    Handler = new BuildingModeHandler(api) { Ingredients = ingredients, Output = recipe.Output.ResolvedItemStack },
-                    Ingredients = ingredients,
-                },
+                Ingredients = ingredients,
+                Name = recipe.Output.Code,
+                Handler = new BuildingModeHandler(api) { Ingredients = ingredients, Output = recipe.Output.ResolvedItemStack },
             };
-            modes.Add(mode);
-
-            if (ClientAPI is null)
-            {
-                continue;
-            }
             if (recipe.Output.ResolvedItemStack is not null)
             {
-                mode.Name = GetNameWithExtraInfo(recipe.Output.ResolvedItemStack);
-                mode.RenderHandler = recipe.Output.ResolvedItemStack.GetRenderDelegate(ClientAPI);
-                continue;
+                option.Name = GetNameWithExtraInfo(recipe.Output.ResolvedItemStack);
+                option.RenderSlot = new DummySlot(recipe.Output.ResolvedItemStack);
+                option.Output = recipe.Output.ResolvedItemStack;
             }
-
-            mode.Name = recipe.Output.Code;
+            modes.Add(option);
         }
     }
 
@@ -92,13 +84,12 @@ public class BuildingItemBehavior : CustomToolModeBehavior
             blockSel == null
             || byPlayer == null
             || !byEntity.World.Claims.TryAccess(byPlayer, blockSel.Position, EnumBlockAccessFlags.BuildOrBreak)
-            || modes[selectedMode].Data is not BuildingModeContext context
         )
         {
             return;
         }
 
-        context.Handler.HandleStart(slot, byEntity, blockSel, entitySel);
+        modes[selectedMode].Handler.HandleStart(slot, byEntity, blockSel, entitySel);
     }
 
     public override bool OnHeldInteractStep(
@@ -155,9 +146,9 @@ public class BuildingItemBehavior : CustomToolModeBehavior
     public override void GetHeldItemName(StringBuilder sb, ItemStack itemStack)
     {
         int selectedMode = itemStack.GetBuildingMode(modes);
-        if (selectedMode > 0 && modes[selectedMode].Data is BuildingModeContext context)
+        if (selectedMode > 0)
         {
-            sb.Append($" ({context.Output?.GetName()})");
+            sb.Append($" ({modes[selectedMode].Output?.GetName()})");
         }
     }
 
@@ -177,14 +168,6 @@ public class BuildingItemBehavior : CustomToolModeBehavior
                 MouseButton = EnumMouseButton.None,
             },
         ];
-    }
-
-    public override void OnUnloaded(ICoreAPI api)
-    {
-        for (int i = 0; i < modes.Count; i++)
-        {
-            modes[i].Dispose();
-        }
     }
 
     private static string GetNameWithExtraInfo(ItemStack itemStack)

@@ -1,11 +1,12 @@
-﻿using QualityOfBuilding.Source.Gui;
+﻿using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
+using QualityOfBuilding.Source.Gui;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors;
 
-public abstract class CustomToolModeBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
+public abstract class BuildingModeBehavior(CollectibleObject collectibleObject) : CollectibleBehavior(collectibleObject)
 {
     public ICoreClientAPI? ClientAPI { get; set; }
 
@@ -15,7 +16,7 @@ public abstract class CustomToolModeBehavior(CollectibleObject collectibleObject
         ClientAPI = api as ICoreClientAPI;
     }
 
-    public abstract List<SkillItem> ToolModes { get; }
+    public abstract List<BuildingMode> BuildingModes { get; }
 
     public virtual void ToggleDialog(ItemSlot slot)
     {
@@ -29,6 +30,6 @@ public abstract class CustomToolModeBehavior(CollectibleObject collectibleObject
         {
             return;
         }
-        BuildingModeDialogSingleton.TryOpen(ClientAPI, slot.Itemstack, ToolModes);
+        BuildingModeDialogSingleton.TryOpen(ClientAPI, slot.Itemstack, BuildingModes);
     }
 }

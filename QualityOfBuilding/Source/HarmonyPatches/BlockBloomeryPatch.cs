@@ -25,8 +25,8 @@ public static class BlockBloomeryPatch
         if (
             blockSel is null
             || hotbarstack?.Collectible?.GetBehavior<BuildingItemBehavior>() is not BuildingItemBehavior buildingBehavior
-            || buildingBehavior.ToolModes[hotbarstack.GetBuildingMode(buildingBehavior.ToolModes)].Data is not BuildingModeContext context
-            || context.Output?.Collectible?.Code?.PathStartsWith("bloomerychimney") == false
+            || buildingBehavior.BuildingModes[hotbarstack.GetBuildingMode(buildingBehavior.BuildingModes)] is not BuildingMode mode
+            || mode.Output?.Collectible?.Code?.PathStartsWith("bloomerychimney") == false
         )
         {
             return true;
@@ -35,18 +35,18 @@ public static class BlockBloomeryPatch
 
 
         Block aboveBlock = world.BlockAccessor.GetBlock(blockSel.Position.UpCopy());
-        if (aboveBlock.IsReplacableBy(context.Output!.Block))
+        if (aboveBlock.IsReplacableBy(mode.Output!.Block))
         {
-            if (byPlayer.WorldData.CurrentGameMode != EnumGameMode.Creative && !byPlayer.TryTakeItems(context.Ingredients))
+            if (byPlayer.WorldData.CurrentGameMode != EnumGameMode.Creative && !byPlayer.TryTakeItems(mode.Ingredients))
             {
                 return false;
             }
 
-            context.Output.Block.DoPlaceBlock(
+            mode.Output.Block.DoPlaceBlock(
                 world,
                 byPlayer,
                 new BlockSelection() { Position = blockSel.Position.UpCopy(), Face = BlockFacing.UP },
-                context.Output!
+                mode.Output
             );
             world.PlaySoundAt(__instance.Sounds?.Place, blockSel.Position, 0.5, byPlayer, true, 16, 1);
         }

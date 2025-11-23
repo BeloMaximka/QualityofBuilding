@@ -87,7 +87,7 @@ public class ClientSystem : ModSystem
     private bool ToggleBuildingModeDialog(KeyCombination combination)
     {
         ItemSlot? slot = capi.World.Player.InventoryManager.ActiveHotbarSlot;
-        CustomToolModeBehavior? behavior = GetBuildingItemBehavior(slot);
+        BuildingModeBehavior? behavior = GetBuildingItemBehavior(slot);
         if (behavior is null)
         {
             return false;
@@ -97,6 +97,6 @@ public class ClientSystem : ModSystem
         return true;
     }
 
-    private static CustomToolModeBehavior? GetBuildingItemBehavior(ItemSlot? slot) =>
-        slot?.Itemstack is ItemStack activeItem ? activeItem.Collectible.GetCollectibleBehavior<CustomToolModeBehavior>(true) : null;
+    private static BuildingModeBehavior? GetBuildingItemBehavior(ItemSlot? slot) =>
+        slot?.Itemstack is ItemStack activeItem ? activeItem.Collectible.GetCollectibleBehavior<BuildingModeBehavior>(true) : null;
 }

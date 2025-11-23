@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Vintagestory.API.Client;
+﻿using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
+using System.Collections.Generic;
 using Vintagestory.API.Common;
 
 namespace QualityOfBuilding.Source.Utils;
@@ -8,7 +8,7 @@ public static class ToolModeUtils
 {
     public const string BuildingModeAttributeName = "toolMode";
 
-    public static int GetBuildingMode(this ItemStack itemStack, IEnumerable<SkillItem> toolModes)
+    public static int GetBuildingMode(this ItemStack itemStack, IEnumerable<BuildingMode> toolModes)
     {
         string? selectedMode = itemStack.Attributes.GetString(BuildingModeAttributeName);
         if (selectedMode == null)
@@ -17,7 +17,7 @@ public static class ToolModeUtils
         }
 
         int index = 0;
-        foreach (SkillItem mode in toolModes)
+        foreach (BuildingMode mode in toolModes)
         {
             if (CompareWithoutAllocations(mode.Code, selectedMode))
             {
