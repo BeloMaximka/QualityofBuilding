@@ -22,7 +22,7 @@ public static class CheckInvalidRecipeProportionsCommand
             HashSet<string> blockWithInvalidIngredientProportions = [];
             foreach (
                 var outputCode in api
-                    .ModLoader.GetModSystem<QualityOfBuildingModSystem>()
+                    .ModLoader.GetModSystem<MainSystem>()
                     .BuildingRecipes.Select(buildingRecipe => buildingRecipe.Output.Code)
             )
             {

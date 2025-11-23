@@ -1,5 +1,4 @@
 ﻿using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
-using QualityOfBuilding.Source.Common;
 using QualityOfBuilding.Source.Network;
 using QualityOfBuilding.Source.Utils;
 using QualityOfBuilding.Source.Utils.Inventory;
@@ -73,7 +72,7 @@ public class BuildingModeDialog : GuiDialog
         HeldItem = heldItem;
         BuildingOptions = buildingOptions;
 
-        buildingModeChannel = capi.Network.GetChannel(SharedConstants.BuildingModeNetworkChannel);
+        buildingModeChannel = capi.Network.GetChannel(SetBuildingModePacket.Channel);
         ComposeDialog();
     }
 
@@ -131,7 +130,7 @@ public class BuildingModeDialog : GuiDialog
     private void OnSlotClick(int slotIndex)
     {
         string toolModeCode = BuildingOptions[slotIndex].Code;
-        buildingModeChannel?.SendPacket(new SetBuildingModeMessage() { ToolModeCode = toolModeCode });
+        buildingModeChannel?.SendPacket(new SetBuildingModePacket() { ToolModeCode = toolModeCode });
         HeldItem.SetBuildingMode(toolModeCode);
 
         TryClose();

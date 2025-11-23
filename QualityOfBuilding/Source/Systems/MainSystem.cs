@@ -12,7 +12,7 @@ using Vintagestory.API.Server;
 
 namespace QualityOfBuilding.Source.Systems;
 
-public class QualityOfBuildingModSystem : ModSystem
+public class MainSystem : ModSystem
 {
     private Harmony HarmonyInstance => new(Mod.Info.ModID);
 

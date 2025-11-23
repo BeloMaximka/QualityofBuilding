@@ -11,7 +11,7 @@ using Vintagestory.API.Util;
 
 namespace QualityOfBuilding.Source.Systems;
 
-public class QualityOfBuildingClientSystem : ModSystem
+public class ClientSystem : ModSystem
 {
     private ICoreClientAPI capi = null!;
 

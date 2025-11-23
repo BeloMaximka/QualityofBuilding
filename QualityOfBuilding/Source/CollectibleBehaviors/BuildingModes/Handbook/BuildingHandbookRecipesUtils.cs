@@ -12,7 +12,7 @@ public static class BuildingHandbookRecipesUtils
 {
     public static void InitBuildingRecipesForHandbook(this ICoreClientAPI api)
     {
-        List<SkillModeBuildingRecipe> recipes = api.ModLoader.GetModSystem<QualityOfBuildingModSystem>().BuildingRecipes;
+        List<SkillModeBuildingRecipe> recipes = api.ModLoader.GetModSystem<MainSystem>().BuildingRecipes;
         InitBuildByRecipesInfo(recipes);
         InitIngredientForInfo(recipes);
     }
