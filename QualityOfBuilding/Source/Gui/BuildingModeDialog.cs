@@ -189,45 +189,50 @@ public class BuildingModeDialog : GuiDialog
         context.LineWidth = 1;
         context.Clear();
 
+        double[] color = GuiStyle.DialogLightBgColor;
+        context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+
         GenerateGearTexture();
+
+        double halfGapSize = gap / 2.0;
+        double angleGapOuter = halfGapSize / outerRadius;
+        double angleGapInner = halfGapSize / innerRadius;
 
         for (int index = 0; index < BuildingOptions.Count; ++index)
         {
-            double a0 = startAngle + index * angleStep;
-            double a1 = a0 + angleStep;
+            double rawA0 = startAngle + index * angleStep;
+            double rawA1 = rawA0 + angleStep;
 
-            // create path for ring segment:
-            // 1) move to outer arc start
-            double x0 = centerX + Math.Cos(a0) * outerRadius;
-            double y0 = centerY + Math.Sin(a0) * outerRadius;
-            context.MoveTo(x0, y0);
+            double outerStart = rawA0 + angleGapOuter;
+            double outerEnd = rawA1 - angleGapOuter;
 
-            // 2) outer arc forward from a0 to a1
-            context.Arc(centerX, centerY, outerRadius, a0, a1);
+            double innerStart = rawA0 + angleGapInner;
+            double innerEnd = rawA1 - angleGapInner;
 
-            // 3) line to inner arc at a1
-            double x1In = centerX + Math.Cos(a1) * innerRadius;
-            double y1In = centerY + Math.Sin(a1) * innerRadius;
-            context.LineTo(x1In, y1In);
+            context.MoveTo(
+                centerX + Math.Cos(outerStart) * outerRadius,
+                centerY + Math.Sin(outerStart) * outerRadius
+            );
 
-            // 4) inner arc backwards from a1 to a0
-            context.ArcNegative(centerX, centerY, innerRadius, a1, a0);
+            context.Arc(centerX, centerY, outerRadius, outerStart, outerEnd);
+
+            context.LineTo(
+                centerX + Math.Cos(innerEnd) * innerRadius,
+                centerY + Math.Sin(innerEnd) * innerRadius
+            );
+
+            context.ArcNegative(centerX, centerY, innerRadius, innerEnd, innerStart);
 
             context.ClosePath();
             bool hovered = (index == selectedMode);
-            double[] color = hovered ? GuiStyle.DialogHighlightColor : GuiStyle.DialogLightBgColor;
+            color = hovered ? GuiStyle.DialogHighlightColor : GuiStyle.DialogLightBgColor;
             context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
             context.FillPreserve();
+            color = GuiStyle.DialogLightBgColor;
+            context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
 
             // stroke outline
-            context.SetSourceRGBA(0, 0, 0, 0.45);
             context.Stroke();
-
-            // separator line
-            context.Save();
-            context.LineTo(centerX + Math.Cos(a0) * outerRadius, centerY + Math.Sin(a0) * outerRadius);
-            context.Stroke();
-            context.Restore();
 
             double segmentRagius = (outerRadius - innerRadius) / 2;
             float itemCenterX = centerX + (float)(Math.Cos(angleOffset + index * angleStep) * (radius - segmentRagius));
