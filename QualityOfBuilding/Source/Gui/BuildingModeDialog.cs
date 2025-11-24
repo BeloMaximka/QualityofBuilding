@@ -59,7 +59,8 @@ public class BuildingModeDialog : GuiDialog
 {
     private int prevSelectedMode;
     private int selectedMode;
-    private readonly float radiusFactor = 0.75f;
+    private readonly float radiusFactor = 0.66f;
+    private readonly float gap = 8f;
     private readonly float maxItemSize;
     private readonly IClientNetworkChannel? buildingModeChannel;
 
@@ -188,6 +189,8 @@ public class BuildingModeDialog : GuiDialog
         context.LineWidth = 1;
         context.Clear();
 
+        GenerateGearTexture();
+
         for (int index = 0; index < BuildingOptions.Count; ++index)
         {
             double a0 = startAngle + index * angleStep;
@@ -244,8 +247,7 @@ public class BuildingModeDialog : GuiDialog
 
         // central circle
         context.Save();
-        context.SetSourceRGBA(0, 0, 0, 0.5);
-        context.Arc(centerX, centerY, innerRadius * 0.95, 0, Math.PI * 2);
+        context.Arc(centerX, centerY, innerRadius - gap, 0, Math.PI * 2);
         context.Fill();
         context.Restore();
 
@@ -263,6 +265,63 @@ public class BuildingModeDialog : GuiDialog
         wheelTexture?.Dispose();
         context.Dispose();
         surface.Dispose();
+    }
+
+    private void GenerateGearTexture()
+    {
+        context.Clear();
+        context.NewPath();
+
+        int toothCount = Math.Max(8, BuildingOptions.Count);
+
+        float centerX = capi.Render.FrameWidth * 0.5f;
+        float centerY = capi.Render.FrameHeight * 0.5f;
+
+        float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
+        float radius = maxHalf * radiusFactor;
+
+        double angleStep = 2.0 * Math.PI / toothCount;
+
+        double innerRadius = radius + maxItemSize / 2;
+
+        double toothWidth = innerRadius * (float)angleStep / 1.5;
+        double toothHeight = Math.Min(toothWidth / 2, maxItemSize);
+        double toothStartAngle = -Math.PI;
+
+        for (int i = 0; i < toothCount; i++)
+        {
+            double angle = toothStartAngle + i * 2 * Math.PI / toothCount;
+
+            double halfBaseWidth = toothWidth / 2;
+
+            // make the tip narrower
+            // TODO: calculate tip width so it perfectly matches the tooth gaps
+            double halfTipWidth = halfBaseWidth * 0.8;
+
+            double x0 = -halfBaseWidth;
+            double y0 = innerRadius;
+            double x1 = halfBaseWidth;
+            double y1 = innerRadius;
+
+            double x2 = halfTipWidth;
+            double y2 = innerRadius + toothHeight;
+            double x3 = -halfTipWidth;
+            double y3 = innerRadius + toothHeight;
+
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+
+            context.LineTo(centerX + x1 * cos - y1 * sin, centerY + x1 * sin + y1 * cos);
+            context.LineTo(centerX + x2 * cos - y2 * sin, centerY + x2 * sin + y2 * cos);
+            context.LineTo(centerX + x3 * cos - y3 * sin, centerY + x3 * sin + y3 * cos);
+            context.LineTo(centerX + x0 * cos - y0 * sin, centerY + x0 * sin + y0 * cos);
+        }
+        context.MoveTo(centerX, centerY);
+        context.FillRule = FillRule.EvenOdd;
+        context.Arc(centerX, centerY, innerRadius - maxItemSize / 2 + gap, 0, 2 * Math.PI);
+        double[] color = GuiStyle.DialogLightBgColor;
+        context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+        context.Fill();
     }
 
     private void ComposeDialog()
