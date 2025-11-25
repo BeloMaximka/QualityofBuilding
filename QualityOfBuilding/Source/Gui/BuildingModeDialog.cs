@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.Client.NoObf;
 
 namespace QualityOfBuilding.Source.Gui;
 
@@ -58,6 +59,8 @@ public static class BuildingModeDialogSingleton
 public class BuildingModeDialog : GuiDialog
 {
     private int prevSelectedMode;
+    private int prevItemsCount;
+
     private int selectedMode;
     private readonly float radiusFactor = 0.66f;
     private readonly float gap = 8f;
@@ -65,8 +68,12 @@ public class BuildingModeDialog : GuiDialog
     private readonly IClientNetworkChannel? buildingModeChannel;
 
     private LoadedTexture wheelTexture;
+    private LoadedTexture gearRingTexture;
     private readonly ImageSurface surface;
     private readonly Context context;
+
+    private float gearAngleCurrent = 0;
+    private float gearAngleTarget = 0;
 
     public ItemStack HeldItem { get; set; }
     public IReadOnlyList<BuildingMode> BuildingOptions { get; set; }
@@ -85,10 +92,15 @@ public class BuildingModeDialog : GuiDialog
         buildingModeChannel = capi.Network.GetChannel(SetBuildingModePacket.Channel);
 
         wheelTexture = new(capi);
+        gearRingTexture = new(capi);
+
+        //TODO: fix surface size when resizing image
+        // TODO: crop textures
         surface = new(Format.Argb32, capi.Render.FrameWidth, capi.Render.FrameHeight);
         context = new(surface);
 
         ComposeDialog();
+        GenerateGearTexture();
     }
 
     public override void OnGuiClosed()
@@ -107,6 +119,12 @@ public class BuildingModeDialog : GuiDialog
     {
         selectedMode = HeldItem.GetBuildingMode(BuildingOptions);
         prevSelectedMode = selectedMode;
+
+        if (prevItemsCount != BuildingOptions.Count)
+        {
+            prevItemsCount = BuildingOptions.Count;
+            GenerateGearTexture();
+        }
     }
 
     public override void OnMouseMove(MouseEvent args)
@@ -193,13 +211,6 @@ public class BuildingModeDialog : GuiDialog
         double[] color = GuiStyle.DialogLightBgColor;
 
         context.SetSourceRGBA(color[0], color[1], color[2], 1);
-
-        GenerateGearTexture();
-
-        context.SetSourceRGBA(0, 0, 0, 1);
-        context.Arc(centerX, centerY, radius + gap * 2 + 1, 0, Math.PI * 2);
-        context.Fill();
-
         context.SetSourceRGBA(color[0], color[1], color[2], 1);
         context.Arc(centerX, centerY, radius + gap, 0, Math.PI * 2);
         context.Fill();
@@ -271,6 +282,22 @@ public class BuildingModeDialog : GuiDialog
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref wheelTexture);
         capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0);
 
+        if (capi.World is ClientMain client)
+        {
+            float gearAngleStep = gearAngleTarget - gearAngleCurrent;
+            if (gearAngleStep < -180)
+            {
+                gearAngleStep += 360;
+            }
+            else if (gearAngleStep >= 180)
+            {
+                gearAngleStep -= 360;
+            }
+            gearAngleCurrent += gearAngleStep * deltaTime * 10;
+
+            client.Render2DTextureRotated(gearRingTexture, 0, 0, gearAngleCurrent);
+        }
+
         base.OnRenderGUI(deltaTime);
     }
 
@@ -278,7 +305,8 @@ public class BuildingModeDialog : GuiDialog
     {
         base.Dispose();
         GC.SuppressFinalize(this);
-        wheelTexture?.Dispose();
+        wheelTexture.Dispose();
+        gearRingTexture.Dispose();
         context.Dispose();
         surface.Dispose();
     }
@@ -306,7 +334,7 @@ public class BuildingModeDialog : GuiDialog
 
         for (int i = 0; i < toothCount; i++)
         {
-            double angle = toothStartAngle + i * 2 * Math.PI / toothCount;
+            double angle = toothStartAngle + i * angleStep;
 
             double halfBaseWidth = toothWidth / 2;
 
@@ -327,6 +355,14 @@ public class BuildingModeDialog : GuiDialog
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
 
+            if (i == 0)
+            {
+                context.LineTo(centerX + x1 * cos - y1 * sin, centerY + x1 * sin + y1 * cos);
+                context.LineTo(centerX + y2 * sin, centerY + sin + y2 * cos);
+                context.LineTo(centerX + x0 * cos - y0 * sin, centerY + x0 * sin + y0 * cos);
+                continue;
+            }
+
             context.LineTo(centerX + x1 * cos - y1 * sin, centerY + x1 * sin + y1 * cos);
             context.LineTo(centerX + x2 * cos - y2 * sin, centerY + x2 * sin + y2 * cos);
             context.LineTo(centerX + x3 * cos - y3 * sin, centerY + x3 * sin + y3 * cos);
@@ -336,8 +372,11 @@ public class BuildingModeDialog : GuiDialog
         context.FillRule = FillRule.EvenOdd;
         context.Arc(centerX, centerY, innerRadius - maxItemSize / 2 + gap, 0, 2 * Math.PI);
         double[] color = GuiStyle.DialogLightBgColor;
-        context.SetSourceRGBA(color[0], color[1], color[2], 1);
+        context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
         context.Fill();
+        surface.Flush();
+
+        capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref gearRingTexture);
     }
 
     private void ComposeDialog()
@@ -385,6 +424,7 @@ public class BuildingModeDialog : GuiDialog
             selectedMode = slotIndex;
             SingleComposer.GetDynamicText("name").SetNewText(BuildingOptions[slotIndex].Name);
             SingleComposer.GetDynamicText("ingredient").SetNewText(BuildingOptions[slotIndex].Ingredients.GetMaterialsString("\n"));
+            gearAngleTarget = 360f / BuildingOptions.Count * selectedMode;
         }
     }
 }
