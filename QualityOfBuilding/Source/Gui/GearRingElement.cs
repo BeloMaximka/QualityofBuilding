@@ -29,90 +29,85 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
 
     public void OnRender(float deltaTime)
     {
-        if (capi.World is ClientMain client)
+        if (capi.World is not ClientMain client)
         {
-            float gearAngleStep = gearAngleTarget - gearAngleCurrent;
-            if (gearAngleStep < -180)
-            {
-                gearAngleStep += 360;
-            }
-            else if (gearAngleStep >= 180)
-            {
-                gearAngleStep -= 360;
-            }
-            gearAngleCurrent += gearAngleStep * deltaTime * 10;
-
-            float xPos = (capi.Render.FrameWidth / 2.0f) - (gearRingTexture.Width / 2.0f);
-            float yPos = (capi.Render.FrameHeight / 2.0f) - (gearRingTexture.Height / 2.0f);
-            client.Render2DTextureRotated(gearRingTexture, xPos, yPos, gearAngleCurrent);
+            return;
         }
+
+        float step = gearAngleTarget - gearAngleCurrent;
+        // calculate a proper shorter path
+        // so if current angle is 10 and target is 350 it doesnt do a full spin
+        if (step < -180)
+        {
+            step += 360;
+        }
+        if (step >= 180)
+        {
+            step -= 360;
+        }
+
+        gearAngleCurrent += step * deltaTime * 10;
+
+        float x = (capi.Render.FrameWidth - gearRingTexture.Width) * 0.5f;
+        float y = (capi.Render.FrameHeight - gearRingTexture.Height) * 0.5f;
+        client.Render2DTextureRotated(gearRingTexture, x, y, gearAngleCurrent);
     }
 
     public void Compose()
     {
-        float maxItemSize = (float)GuiElementPassiveItemSlot.unscaledSlotSize + (float)GuiElementItemSlotGridBase.unscaledSlotPadding;
-
+        // calculate geometry
+        double maxItemSize = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
         double outerRadius = radius + maxItemSize / 2;
-        int toothCount = Math.Max(8, optionsCount);
-        double angleStep = 2.0 * Math.PI / toothCount;
-        double toothWidth = outerRadius * (float)angleStep / 1.5;
-        double toothHeight = Math.Min(toothWidth / 2, maxItemSize);
 
-        double maxRadius = outerRadius + toothHeight;
-        int texSize = (int)Math.Ceiling(maxRadius * 2) + 2;
+        int count = Math.Max(8, optionsCount);
+        double angleStep = 2.0 * Math.PI / count;
+
+        double toothHeight = Math.Min(outerRadius * angleStep / 3, maxItemSize);
+        double halfBase = outerRadius * angleStep / 3;
+        double halfTip = halfBase * 0.8;
+        double yTip = outerRadius + toothHeight;
+
+        // setup surface
+        int texSize = (int)Math.Ceiling((outerRadius + toothHeight) * 2) + 2;
+        double center = texSize * 0.5f;
 
         using ImageSurface surface = new(Format.Argb32, texSize, texSize);
-        using Context context = new(surface);
-        context.Clear();
-        context.NewPath();
+        using Context ctx = new(surface);
 
-        float centerX = texSize * 0.5f;
-        float centerY = texSize * 0.5f;
+        // helper: rotates a point (x, y) by (cos, sin) and draws the line
+        void LineToRot(double x, double y, double cos, double sin) => ctx.LineTo(center + x * cos - y * sin, center + x * sin + y * cos);
 
-        double toothStartAngle = -Math.PI;
-
-        for (int i = 0; i < toothCount; i++)
+        // draw Teeth
+        for (int i = 0; i < count; i++)
         {
-            double angle = toothStartAngle + i * angleStep;
-
-            double halfBaseWidth = toothWidth / 2;
-
-            // make the tip narrower
-            // TODO: calculate tip width so it perfectly matches the tooth gaps
-            double halfTipWidth = halfBaseWidth * 0.8;
-
-            double x0 = -halfBaseWidth;
-            double y0 = outerRadius;
-            double x1 = halfBaseWidth;
-            double y1 = outerRadius;
-
-            double x2 = halfTipWidth;
-            double y2 = outerRadius + toothHeight;
-            double x3 = -halfTipWidth;
-            double y3 = outerRadius + toothHeight;
-
+            double angle = -Math.PI + i * angleStep;
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
 
+            LineToRot(halfBase, outerRadius, cos, sin); // bottom right
+
             if (i == 0)
             {
-                context.LineTo(centerX + x1 * cos - y1 * sin, centerY + x1 * sin + y1 * cos);
-                context.LineTo(centerX + y2 * sin, centerY + sin + y2 * cos);
-                context.LineTo(centerX + x0 * cos - y0 * sin, centerY + x0 * sin + y0 * cos);
-                continue;
+                // draw a triangular tooh for the first one
+                ctx.LineTo(center + yTip * sin, center + sin + yTip * cos); // top center
+            }
+            else
+            {
+                LineToRot(halfTip, yTip, cos, sin); // top right
+                LineToRot(-halfTip, yTip, cos, sin); // top left
             }
 
-            context.LineTo(centerX + x1 * cos - y1 * sin, centerY + x1 * sin + y1 * cos);
-            context.LineTo(centerX + x2 * cos - y2 * sin, centerY + x2 * sin + y2 * cos);
-            context.LineTo(centerX + x3 * cos - y3 * sin, centerY + x3 * sin + y3 * cos);
-            context.LineTo(centerX + x0 * cos - y0 * sin, centerY + x0 * sin + y0 * cos);
+            LineToRot(-halfBase, outerRadius, cos, sin); // bottom left
         }
-        context.MoveTo(centerX, centerY);
-        context.FillRule = FillRule.EvenOdd;
-        context.Arc(centerX, centerY, radius, 0, 2 * Math.PI);
+
+        // draw a hole in the center
+        ctx.MoveTo(center, center);
+        ctx.FillRule = FillRule.EvenOdd;
+        ctx.Arc(center, center, radius, 0, 2 * Math.PI);
+
         double[] color = GuiStyle.DialogLightBgColor;
-        context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
-        context.Fill();
+        ctx.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+        ctx.Fill();
         surface.Flush();
 
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref gearRingTexture);
