@@ -188,11 +188,21 @@ public class BuildingModeDialog : GuiDialog
         context.Antialias = Antialias.Subpixel;
         context.LineWidth = 1;
         context.Clear();
+        context.PushGroup();
 
         double[] color = GuiStyle.DialogLightBgColor;
-        context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+
+        context.SetSourceRGBA(color[0], color[1], color[2], 1);
 
         GenerateGearTexture();
+
+        context.SetSourceRGBA(0, 0, 0, 1);
+        context.Arc(centerX, centerY, radius + gap * 2 + 1, 0, Math.PI * 2);
+        context.Fill();
+
+        context.SetSourceRGBA(color[0], color[1], color[2], 1);
+        context.Arc(centerX, centerY, radius + gap, 0, Math.PI * 2);
+        context.Fill();
 
         double halfGapSize = gap / 2.0;
         double angleGapOuter = halfGapSize / outerRadius;
@@ -200,40 +210,6 @@ public class BuildingModeDialog : GuiDialog
 
         for (int index = 0; index < BuildingOptions.Count; ++index)
         {
-            double rawA0 = startAngle + index * angleStep;
-            double rawA1 = rawA0 + angleStep;
-
-            double outerStart = rawA0 + angleGapOuter;
-            double outerEnd = rawA1 - angleGapOuter;
-
-            double innerStart = rawA0 + angleGapInner;
-            double innerEnd = rawA1 - angleGapInner;
-
-            context.MoveTo(
-                centerX + Math.Cos(outerStart) * outerRadius,
-                centerY + Math.Sin(outerStart) * outerRadius
-            );
-
-            context.Arc(centerX, centerY, outerRadius, outerStart, outerEnd);
-
-            context.LineTo(
-                centerX + Math.Cos(innerEnd) * innerRadius,
-                centerY + Math.Sin(innerEnd) * innerRadius
-            );
-
-            context.ArcNegative(centerX, centerY, innerRadius, innerEnd, innerStart);
-
-            context.ClosePath();
-            bool hovered = (index == selectedMode);
-            color = hovered ? GuiStyle.DialogHighlightColor : GuiStyle.DialogLightBgColor;
-            context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
-            context.FillPreserve();
-            color = GuiStyle.DialogLightBgColor;
-            context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
-
-            // stroke outline
-            context.Stroke();
-
             double segmentRagius = (outerRadius - innerRadius) / 2;
             float itemCenterX = centerX + (float)(Math.Cos(angleOffset + index * angleStep) * (radius - segmentRagius));
             float itemCenterY = centerY + (float)(Math.Sin(angleOffset + index * angleStep) * (radius - segmentRagius));
@@ -248,14 +224,49 @@ public class BuildingModeDialog : GuiDialog
                 true,
                 showStackSize: false
             );
+
+            double rawA0 = startAngle + index * angleStep;
+            double rawA1 = rawA0 + angleStep;
+
+            double outerStart = rawA0 + angleGapOuter;
+            double outerEnd = rawA1 - angleGapOuter;
+
+            double innerStart = rawA0 + angleGapInner;
+            double innerEnd = rawA1 - angleGapInner;
+
+            context.MoveTo(centerX + Math.Cos(outerStart) * outerRadius, centerY + Math.Sin(outerStart) * outerRadius);
+
+            context.Arc(centerX, centerY, outerRadius, outerStart, outerEnd);
+
+            context.LineTo(centerX + Math.Cos(innerEnd) * innerRadius, centerY + Math.Sin(innerEnd) * innerRadius);
+
+            context.ArcNegative(centerX, centerY, innerRadius, innerEnd, innerStart);
+
+            context.ClosePath();
+
+            bool hovered = (index == selectedMode);
+            color = hovered ? GuiStyle.DialogHighlightColor : [0, 0, 0, 1];
+            context.SetSourceRGBA(color[0], color[1], color[2], 1);
+            context.FillPreserve();
+            color = GuiStyle.DialogLightBgColor;
+            context.SetSourceRGBA(color[0], color[1], color[2], 1);
+
+            // stroke outline
+            context.Stroke();
         }
 
         // central circle
-        context.Save();
+        context.SetSourceRGBA(0, 0, 0, 1);
         context.Arc(centerX, centerY, innerRadius - gap, 0, Math.PI * 2);
         context.Fill();
-        context.Restore();
 
+        color = GuiStyle.DialogLightBgColor;
+        context.SetSourceRGBA(color[0], color[1], color[2], 1);
+        context.Arc(centerX, centerY, innerRadius - gap * 2, 0, Math.PI * 2);
+        context.Fill();
+
+        context.PopGroupToSource();
+        context.PaintWithAlpha(0.75);
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref wheelTexture);
         capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0);
@@ -283,7 +294,7 @@ public class BuildingModeDialog : GuiDialog
         float centerY = capi.Render.FrameHeight * 0.5f;
 
         float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
-        float radius = maxHalf * radiusFactor;
+        float radius = maxHalf * radiusFactor + gap;
 
         double angleStep = 2.0 * Math.PI / toothCount;
 
@@ -325,7 +336,7 @@ public class BuildingModeDialog : GuiDialog
         context.FillRule = FillRule.EvenOdd;
         context.Arc(centerX, centerY, innerRadius - maxItemSize / 2 + gap, 0, 2 * Math.PI);
         double[] color = GuiStyle.DialogLightBgColor;
-        context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+        context.SetSourceRGBA(color[0], color[1], color[2], 1);
         context.Fill();
     }
 
