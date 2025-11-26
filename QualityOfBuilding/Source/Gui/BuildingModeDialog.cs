@@ -65,8 +65,8 @@ public class BuildingModeDialog : GuiDialog
     private readonly float maxItemSize;
     private readonly IClientNetworkChannel? buildingModeChannel;
 
-    private GearRingElement gearRing;
     private LoadedTexture wheelTexture;
+    private readonly GearRingElement gearRing;
     private readonly ImageSurface surface;
     private readonly Context context;
 

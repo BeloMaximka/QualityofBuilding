@@ -2,6 +2,7 @@
 using QualityOfBuilding.Source.Utils;
 using System;
 using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
 
 namespace QualityOfBuilding.Source.Gui;
@@ -68,7 +69,7 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
         double yTip = outerRadius + toothHeight;
 
         // setup surface
-        int texSize = (int)Math.Ceiling((outerRadius + toothHeight) * 2) + 2;
+        int texSize = (int)Math.Ceiling((outerRadius + toothHeight) * 2) + 32;
         double center = texSize * 0.5f;
 
         using ImageSurface surface = new(Format.Argb32, texSize, texSize);
@@ -99,18 +100,63 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
 
             LineToRot(-halfBase, outerRadius, cos, sin); // bottom left
         }
+        ctx.ClosePath();
 
         // draw a hole in the center
-        ctx.MoveTo(center, center);
+        ctx.NewSubPath();
         ctx.FillRule = FillRule.EvenOdd;
         ctx.Arc(center, center, radius, 0, 2 * Math.PI);
 
-        double[] color = GuiStyle.DialogLightBgColor;
-        ctx.SetSourceRGBA(color[0], color[1], color[2], color[3]);
-        ctx.Fill();
-        surface.Flush();
+        // fill with texture
+        AssetLocation texturePath = new("qualityofbuilding", "gui/backgrounds/metal.png");
+        SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
+        ctx.SetSource(pattern);
+        ctx.FillPreserve();
 
+        FillShade(ctx, surface, (int)maxItemSize / 8);
+
+        surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref gearRingTexture);
+    }
+
+    // TODO: move to the shader
+    private void FillShade(Context ctx, ImageSurface surface, int radius)
+    {
+        using ImageSurface mask = new(Format.Argb32, surface.Width, surface.Height);
+        using Context mctx = new(mask);
+        using Path path = ctx.CopyPathFlat();
+        mctx.AppendPath(path);
+        mctx.SetSourceRGBA(1, 1, 1, 1);
+        mctx.LineWidth = radius * 2;
+        mctx.StrokePreserve();
+        mask.BlurFull(radius);
+        mctx.Operator = Operator.DestIn;
+        mctx.FillPreserve();
+        mctx.SetSourceRGBA(0, 0, 0, 1);
+        mctx.Operator = Operator.DestOver;
+        mctx.FillPreserve();
+
+        unsafe
+        {
+            byte* ptr = (byte*)mask.DataPtr;
+            int width = mask.Width;
+            int height = mask.Height;
+            int stride = mask.Stride;
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int idx = y * stride + x * 4;
+                    ptr[idx + 3] = ptr[idx + 0]; //alpha
+                    ptr[idx + 2] = 0; // red
+                    ptr[idx + 1] = 0; // green
+                    ptr[idx + 0] = 0; // blue
+                }
+            }
+        }
+        ctx.SetSourceSurface(mask, 0, 0);
+        ctx.FillPreserve();
     }
 
     public void Dispose()
@@ -126,7 +172,7 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
 
         if (disposing)
         {
-            gearRingTexture?.Dispose();
+            gearRingTexture.Dispose();
         }
 
         disposed = true;
