@@ -109,7 +109,7 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
 
         // fill with texture
         AssetLocation texturePath = new("qualityofbuilding", "gui/backgrounds/metal.png");
-        SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
+        using SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
         ctx.SetSource(pattern);
         ctx.FillPreserve();
 

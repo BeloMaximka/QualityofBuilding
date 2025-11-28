@@ -6,6 +6,33 @@ namespace QualityOfBuilding.Source.Utils;
 
 public static class RenderExtensions
 {
+    public static void Render2DLoadedTextureCentered(
+        this IRenderAPI render,
+        LoadedTexture textTexture,
+        float posX,
+        float posY,
+        float z = 50f
+    )
+    {
+        posX -= textTexture.Width * 0.5f;
+        posY -= textTexture.Height * 0.5f;
+        render.Render2DLoadedTexture(textTexture, posX, posY, z);
+    }
+
+    public static void Render2DTextureCenteredAndRotated(
+        this ClientMain clientMain,
+        LoadedTexture texture,
+        float x1,
+        float y1,
+        float angle,
+        Vec4f? color = null
+    )
+    {
+        x1 -= texture.Width * 0.5f;
+        y1 -= texture.Height * 0.5f;
+        clientMain.Render2DTextureRotated(texture, x1, y1, angle, color);
+    }
+
     public static void Render2DTextureRotated(
         this ClientMain clientMain,
         LoadedTexture texture,
@@ -16,7 +43,6 @@ public static class RenderExtensions
     )
     {
         // TODO: Fix pixel edge issues on rotation
-
         clientMain.guiShaderProg.RgbaIn = color ?? ColorUtil.WhiteArgbVec;
         clientMain.guiShaderProg.ExtraGlow = 0;
         clientMain.guiShaderProg.ApplyColor = 0;

@@ -68,6 +68,7 @@ public class BuildingModeDialog : GuiDialog
     private readonly IClientNetworkChannel? buildingModeChannel;
 
     private LoadedTexture wheelTexture;
+    private LoadedTexture centerCircleBgTexture;
     private LoadedTexture segmentBgTexture;
     private LoadedTexture selectedSegmentOverlayTexture;
     private readonly GearRingElement gearRing;
@@ -91,6 +92,7 @@ public class BuildingModeDialog : GuiDialog
         buildingModeChannel = capi.Network.GetChannel(SetBuildingModePacket.Channel);
 
         wheelTexture = new(capi);
+        centerCircleBgTexture = new(capi);
         segmentBgTexture = new(capi);
         selectedSegmentOverlayTexture = new(capi);
 
@@ -184,7 +186,7 @@ public class BuildingModeDialog : GuiDialog
 
     public override void OnRenderGUI(float deltaTime)
     {
-        if (BuildingOptions.Count == 0)
+        if (BuildingOptions.Count == 0 || capi.World is not ClientMain client)
         {
             return;
         }
@@ -203,21 +205,22 @@ public class BuildingModeDialog : GuiDialog
         double outerRadius = radius;
         double innerRadius = outerRadius - maxItemSize * 2.5;
 
+        capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0, 8);
+        gearRing.OnRender(deltaTime);
+        capi.Render.Render2DLoadedTextureCentered(centerCircleBgTexture, centerX, centerY, 9);
+
         for (int index = 0; index < BuildingOptions.Count; ++index)
         {
             double segmentRagius = (outerRadius - innerRadius) / 2;
             float itemCenterX = centerX + (float)(Math.Cos(angleOffset + index * angleStep) * (radius - segmentRagius));
             float itemCenterY = centerY + (float)(Math.Sin(angleOffset + index * angleStep) * (radius - segmentRagius));
 
-            if (capi.World is ClientMain client)
+            LoadedTexture texture = segmentBgTexture;
+            client.Render2DTextureRotated(texture, 0, 0, 360f / BuildingOptions.Count * index);
+            if (selectedMode == index)
             {
-                LoadedTexture texture = segmentBgTexture;
+                texture = selectedSegmentOverlayTexture;
                 client.Render2DTextureRotated(texture, 0, 0, 360f / BuildingOptions.Count * index);
-                if (selectedMode == index)
-                {
-                    texture = selectedSegmentOverlayTexture;
-                    client.Render2DTextureRotated(texture, 0, 0, 360f / BuildingOptions.Count * index);
-                }
             }
 
             capi.Render.RenderItemstackToGui(
@@ -232,8 +235,6 @@ public class BuildingModeDialog : GuiDialog
             );
         }
 
-        gearRing.OnRender(deltaTime);
-        capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0);
         base.OnRenderGUI(deltaTime);
     }
 
@@ -257,15 +258,25 @@ public class BuildingModeDialog : GuiDialog
 
         context.Arc(centerX, centerY, radius + gap, 0, Math.PI * 2);
         AssetLocation texturePath = new("qualityofbuilding", "gui/backgrounds/metal.png");
-        SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
+        using SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
         context.SetSource(pattern);
         context.Fill();
 
+        surface.Flush();
+        capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref wheelTexture);
+
+        // central circle
+        using ImageSurface centerSurface = new(Format.Argb32, (int)innerRadius * 2, (int)innerRadius * 2);
+        using Context centerContext = new(centerSurface);
+        centerContext.Arc(innerRadius, innerRadius, innerRadius - gap, 0, Math.PI * 2);
+        GearRingElement.FillShade(centerContext, centerSurface, gap);
+        centerSurface.Flush();
+        capi.Gui.LoadOrUpdateCairoTexture(centerSurface, false, ref centerCircleBgTexture);
+
+        // Segments
         double halfGapSize = gap / 2.0;
         double angleGapOuter = halfGapSize / outerRadius;
         double angleGapInner = halfGapSize / innerRadius;
-
-        // Segment
 
         double sRawA0 = startAngle;
         double sRawA1 = sRawA0 + angleStep;
@@ -293,51 +304,9 @@ public class BuildingModeDialog : GuiDialog
         capi.Gui.LoadOrUpdateCairoTexture(segmentSurface, false, ref selectedSegmentOverlayTexture);
 
         segmentContext.Clear();
-        segmentContext.SetSource(pattern);
-        segmentContext.FillPreserve();
         GearRingElement.FillShade(segmentContext, segmentSurface, gap);
         segmentSurface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(segmentSurface, false, ref segmentBgTexture);
-
-        // Endsegment
-
-        for (int index = 0; index < BuildingOptions.Count; ++index)
-        {
-            double rawA0 = startAngle + index * angleStep;
-            double rawA1 = rawA0 + angleStep;
-
-            double outerStart = rawA0 + angleGapOuter;
-            double outerEnd = rawA1 - angleGapOuter;
-
-            double innerStart = rawA0 + angleGapInner;
-            double innerEnd = rawA1 - angleGapInner;
-
-            context.MoveTo(centerX + Math.Cos(outerStart) * outerRadius, centerY + Math.Sin(outerStart) * outerRadius);
-            context.Arc(centerX, centerY, outerRadius, outerStart, outerEnd);
-            context.ArcNegative(centerX, centerY, innerRadius, innerEnd, innerStart);
-
-            context.FillRule = FillRule.EvenOdd;
-            context.FillPreserve();
-            context.FillRule = FillRule.Winding;
-
-            context.ClosePath();
-        }
-
-        // central circle
-        context.Arc(centerX, centerY, innerRadius - gap, 0, Math.PI * 2);
-        context.Operator = Operator.Clear;
-        context.Fill();
-        context.Operator = Operator.Over;
-
-        using ImageSurface centerSurface = new(Format.Argb32, (int)innerRadius, (int)innerRadius);
-        using Context centerContext = new(centerSurface);
-        context.Arc(centerX, centerY, innerRadius - gap, 0, Math.PI * 2);
-        centerContext.SetSource(pattern);
-        context.FillPreserve();
-        GearRingElement.FillShade(context, surface, gap);
-
-        surface.Flush();
-        capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref wheelTexture);
     }
 
     public override void Dispose()
