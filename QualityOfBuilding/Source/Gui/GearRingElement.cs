@@ -120,7 +120,7 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
     }
 
     // TODO: move to the shader
-    private void FillShade(Context ctx, ImageSurface surface, int radius)
+    public static void FillShade(Context ctx, ImageSurface surface, int radius)
     {
         using ImageSurface mask = new(Format.Argb32, surface.Width, surface.Height);
         using Context mctx = new(mask);

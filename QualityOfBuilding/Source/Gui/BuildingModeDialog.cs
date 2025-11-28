@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.Client.NoObf;
 
 namespace QualityOfBuilding.Source.Gui;
 
@@ -57,6 +58,7 @@ public static class BuildingModeDialogSingleton
 // TODO: Optimize
 public class BuildingModeDialog : GuiDialog
 {
+    private int prevOptionsCount;
     private int prevSelectedMode;
     private int selectedMode;
 
@@ -66,6 +68,8 @@ public class BuildingModeDialog : GuiDialog
     private readonly IClientNetworkChannel? buildingModeChannel;
 
     private LoadedTexture wheelTexture;
+    private LoadedTexture segmentBgTexture;
+    private LoadedTexture selectedSegmentOverlayTexture;
     private readonly GearRingElement gearRing;
     private readonly ImageSurface surface;
     private readonly Context context;
@@ -87,6 +91,8 @@ public class BuildingModeDialog : GuiDialog
         buildingModeChannel = capi.Network.GetChannel(SetBuildingModePacket.Channel);
 
         wheelTexture = new(capi);
+        segmentBgTexture = new(capi);
+        selectedSegmentOverlayTexture = new(capi);
 
         //TODO: fix surface size when resizing image
         // TODO: crop textures
@@ -94,7 +100,7 @@ public class BuildingModeDialog : GuiDialog
         context = new(surface);
 
         float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
-        gearRing = new(capi, buildingOptions.Count, maxHalf * radiusFactor + gap * 2);
+        gearRing = new(capi, buildingOptions.Count, maxHalf * radiusFactor + gap - 2);
         ComposeDialog();
     }
 
@@ -112,10 +118,15 @@ public class BuildingModeDialog : GuiDialog
 
     public override void OnGuiOpened()
     {
-        selectedMode = HeldItem.GetBuildingMode(BuildingOptions);
+        OnSlotOver(HeldItem.GetBuildingMode(BuildingOptions));
         prevSelectedMode = selectedMode;
 
         gearRing.SetOptionsCount(BuildingOptions.Count);
+        if (prevOptionsCount != BuildingOptions.Count)
+        {
+            prevOptionsCount = BuildingOptions.Count;
+            GenerateWheelTexture();
+        }
     }
 
     public override void OnMouseMove(MouseEvent args)
@@ -187,34 +198,27 @@ public class BuildingModeDialog : GuiDialog
         double startAngle = -Math.PI / 2.0;
         double angleOffset = startAngle;
         double angleStep = 2.0 * Math.PI / BuildingOptions.Count;
-        startAngle -= angleStep / 2;
-
         float size = Math.Min(maxItemSize, radius * (float)angleStep / 3);
 
         double outerRadius = radius;
         double innerRadius = outerRadius - maxItemSize * 2.5;
-
-        context.Antialias = Antialias.Subpixel;
-        context.LineWidth = 1;
-        context.Clear();
-        context.PushGroup();
-
-        double[] color = GuiStyle.DialogLightBgColor;
-
-        context.SetSourceRGBA(color[0], color[1], color[2], 1);
-        context.SetSourceRGBA(color[0], color[1], color[2], 1);
-        context.Arc(centerX, centerY, radius + gap, 0, Math.PI * 2);
-        context.Fill();
-
-        double halfGapSize = gap / 2.0;
-        double angleGapOuter = halfGapSize / outerRadius;
-        double angleGapInner = halfGapSize / innerRadius;
 
         for (int index = 0; index < BuildingOptions.Count; ++index)
         {
             double segmentRagius = (outerRadius - innerRadius) / 2;
             float itemCenterX = centerX + (float)(Math.Cos(angleOffset + index * angleStep) * (radius - segmentRagius));
             float itemCenterY = centerY + (float)(Math.Sin(angleOffset + index * angleStep) * (radius - segmentRagius));
+
+            if (capi.World is ClientMain client)
+            {
+                LoadedTexture texture = segmentBgTexture;
+                client.Render2DTextureRotated(texture, 0, 0, 360f / BuildingOptions.Count * index);
+                if (selectedMode == index)
+                {
+                    texture = selectedSegmentOverlayTexture;
+                    client.Render2DTextureRotated(texture, 0, 0, 360f / BuildingOptions.Count * index);
+                }
+            }
 
             capi.Render.RenderItemstackToGui(
                 BuildingOptions[index].RenderSlot,
@@ -226,7 +230,79 @@ public class BuildingModeDialog : GuiDialog
                 true,
                 showStackSize: false
             );
+        }
 
+        gearRing.OnRender(deltaTime);
+        capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0);
+        base.OnRenderGUI(deltaTime);
+    }
+
+    private void GenerateWheelTexture()
+    {
+        float centerX = capi.Render.FrameWidth * 0.5f;
+        float centerY = capi.Render.FrameHeight * 0.5f;
+
+        float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
+        float radius = maxHalf * radiusFactor;
+
+        double startAngle = -Math.PI / 2.0;
+        double angleStep = 2.0 * Math.PI / BuildingOptions.Count;
+        startAngle -= angleStep / 2;
+
+        double outerRadius = radius;
+        double innerRadius = outerRadius - maxItemSize * 2.5;
+
+        context.Antialias = Antialias.Subpixel;
+        context.Clear();
+
+        context.Arc(centerX, centerY, radius + gap, 0, Math.PI * 2);
+        AssetLocation texturePath = new("qualityofbuilding", "gui/backgrounds/metal.png");
+        SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
+        context.SetSource(pattern);
+        context.Fill();
+
+        double halfGapSize = gap / 2.0;
+        double angleGapOuter = halfGapSize / outerRadius;
+        double angleGapInner = halfGapSize / innerRadius;
+
+        // Segment
+
+        double sRawA0 = startAngle;
+        double sRawA1 = sRawA0 + angleStep;
+
+        double sOuterStart = sRawA0 + angleGapOuter;
+        double sOuterEnd = sRawA1 - angleGapOuter;
+
+        double sInnerStart = sRawA0 + angleGapInner;
+        double sInnerEnd = sRawA1 - angleGapInner;
+
+        double sX1 = centerX + Math.Cos(sOuterStart) * outerRadius;
+        double sY1 = centerY + Math.Sin(sOuterStart) * outerRadius;
+
+        using ImageSurface segmentSurface = new(Format.Argb32, capi.Render.FrameWidth, capi.Render.FrameHeight);
+        using Context segmentContext = new(segmentSurface);
+
+        segmentContext.MoveTo(sX1, sY1);
+        segmentContext.Arc(centerX, centerY, outerRadius, sOuterStart, sOuterEnd);
+        segmentContext.ArcNegative(centerX, centerY, innerRadius, sInnerEnd, sInnerStart);
+
+        double[] color = [0, 0, 0, 0.66];
+        segmentContext.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+        segmentContext.FillPreserve();
+        segmentSurface.Flush();
+        capi.Gui.LoadOrUpdateCairoTexture(segmentSurface, false, ref selectedSegmentOverlayTexture);
+
+        segmentContext.Clear();
+        segmentContext.SetSource(pattern);
+        segmentContext.FillPreserve();
+        GearRingElement.FillShade(segmentContext, segmentSurface, gap);
+        segmentSurface.Flush();
+        capi.Gui.LoadOrUpdateCairoTexture(segmentSurface, false, ref segmentBgTexture);
+
+        // Endsegment
+
+        for (int index = 0; index < BuildingOptions.Count; ++index)
+        {
             double rawA0 = startAngle + index * angleStep;
             double rawA1 = rawA0 + angleStep;
 
@@ -237,44 +313,31 @@ public class BuildingModeDialog : GuiDialog
             double innerEnd = rawA1 - angleGapInner;
 
             context.MoveTo(centerX + Math.Cos(outerStart) * outerRadius, centerY + Math.Sin(outerStart) * outerRadius);
-
             context.Arc(centerX, centerY, outerRadius, outerStart, outerEnd);
-
-            context.LineTo(centerX + Math.Cos(innerEnd) * innerRadius, centerY + Math.Sin(innerEnd) * innerRadius);
-
             context.ArcNegative(centerX, centerY, innerRadius, innerEnd, innerStart);
 
-            context.ClosePath();
-
-            bool hovered = (index == selectedMode);
-            color = hovered ? GuiStyle.DialogHighlightColor : [0, 0, 0, 1];
-            context.SetSourceRGBA(color[0], color[1], color[2], 1);
+            context.FillRule = FillRule.EvenOdd;
             context.FillPreserve();
-            color = GuiStyle.DialogLightBgColor;
-            context.SetSourceRGBA(color[0], color[1], color[2], 1);
+            context.FillRule = FillRule.Winding;
 
-            // stroke outline
-            context.Stroke();
+            context.ClosePath();
         }
 
         // central circle
-        context.SetSourceRGBA(0, 0, 0, 1);
         context.Arc(centerX, centerY, innerRadius - gap, 0, Math.PI * 2);
+        context.Operator = Operator.Clear;
         context.Fill();
+        context.Operator = Operator.Over;
 
-        color = GuiStyle.DialogLightBgColor;
-        context.SetSourceRGBA(color[0], color[1], color[2], 1);
-        context.Arc(centerX, centerY, innerRadius - gap * 2, 0, Math.PI * 2);
-        context.Fill();
+        using ImageSurface centerSurface = new(Format.Argb32, (int)innerRadius, (int)innerRadius);
+        using Context centerContext = new(centerSurface);
+        context.Arc(centerX, centerY, innerRadius - gap, 0, Math.PI * 2);
+        centerContext.SetSource(pattern);
+        context.FillPreserve();
+        GearRingElement.FillShade(context, surface, gap);
 
-        context.PopGroupToSource();
-        context.PaintWithAlpha(0.75);
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref wheelTexture);
-        capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0);
-
-        gearRing.OnRender(deltaTime);
-        base.OnRenderGUI(deltaTime);
     }
 
     public override void Dispose()
@@ -319,6 +382,7 @@ public class BuildingModeDialog : GuiDialog
             .Compose();
 
         gearRing.Compose();
+        GenerateWheelTexture();
     }
 
     private void OnSlotOver(int slotIndex)
