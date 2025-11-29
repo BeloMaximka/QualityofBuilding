@@ -17,6 +17,8 @@ public class GearRingElement(ICoreClientAPI capi, Pattern background, int option
     {
         if (optionsCount != value)
         {
+            gearAngleCurrent = 0;
+            gearAngleTarget = 0;
             optionsCount = value;
             Compose();
         }

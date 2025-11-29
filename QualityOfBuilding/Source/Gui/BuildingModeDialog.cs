@@ -114,15 +114,15 @@ public class BuildingModeDialog : GuiDialog
 
     public override void OnGuiOpened()
     {
-        OnSlotOver(HeldItem.GetBuildingMode(BuildingOptions));
-        prevSelectedMode = selectedMode;
-
         gearRing.SetOptionsCount(BuildingOptions.Count);
         if (prevOptionsCount != BuildingOptions.Count)
         {
             prevOptionsCount = BuildingOptions.Count;
             RebuildTextures();
         }
+
+        OnSlotOver(HeldItem.GetBuildingMode(BuildingOptions));
+        prevSelectedMode = selectedMode;
     }
 
     public override void OnMouseMove(MouseEvent args)
