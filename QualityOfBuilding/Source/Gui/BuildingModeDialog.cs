@@ -55,13 +55,21 @@ public static class BuildingModeDialogSingleton
     }
 }
 
-// TODO: Optimize
+public struct SegmentInfo
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+    public float Rotation { get; set; }
+}
+
 public class BuildingModeDialog : GuiDialog
 {
     private int prevOptionsCount;
     private int prevSelectedMode;
     private int selectedMode;
+    float itemSize;
 
+    private readonly List<SegmentInfo> segmentCoords;
     private readonly float maxItemSize;
     private readonly IClientNetworkChannel? buildingModeChannel;
 
@@ -81,6 +89,8 @@ public class BuildingModeDialog : GuiDialog
     public BuildingModeDialog(ICoreClientAPI capi, ItemStack heldItem, List<BuildingMode> buildingOptions)
         : base(capi)
     {
+        segmentCoords = [];
+
         maxItemSize = (float)GuiElementPassiveItemSlot.unscaledSlotSize + (float)GuiElementItemSlotGridBase.unscaledSlotPadding;
 
         HeldItem = heldItem;
@@ -178,6 +188,19 @@ public class BuildingModeDialog : GuiDialog
         args.SetHandled();
     }
 
+    public override void Dispose()
+    {
+        base.Dispose();
+        GC.SuppressFinalize(this);
+
+        backgroundPattern.Dispose();
+        wheelTexture.Dispose();
+        centerCircleBgTexture.Dispose();
+        segmentBgTexture.Dispose();
+        selectedSegmentOverlayTexture.Dispose();
+    }
+
+    #region Drawing
     public override void OnRenderGUI(float deltaTime)
     {
         if (BuildingOptions.Count == 0 || capi.World is not ClientMain client)
@@ -187,47 +210,31 @@ public class BuildingModeDialog : GuiDialog
 
         float centerX = capi.Render.FrameWidth * 0.5f;
         float centerY = capi.Render.FrameHeight * 0.5f;
+        int z = 11;
 
-        float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
-        float radius = maxHalf * RadialMenuStyle.RadiusFactor;
-
-        double startAngle = -Math.PI / 2.0;
-        double angleOffset = startAngle;
-        double angleStep = 2.0 * Math.PI / BuildingOptions.Count;
-        float size = Math.Min(maxItemSize, radius * (float)angleStep / 3);
-
-        double outerRadius = radius;
-        double innerRadius = outerRadius - maxItemSize * 2.5;
-
+        // render backgrounds
         gearRing.OnRender(deltaTime);
-        capi.Render.Render2DLoadedTextureCentered(wheelTexture, centerX, centerY, 11);
-        capi.Render.Render2DLoadedTextureCentered(centerCircleBgTexture, centerX, centerY, 12);
+        capi.Render.Render2DLoadedTextureCentered(wheelTexture, centerX, centerY, z++);
+        capi.Render.Render2DLoadedTextureCentered(centerCircleBgTexture, centerX, centerY, z++);
 
-        for (int index = 0; index < BuildingOptions.Count; ++index)
+        // render segments and items
+        for (int i = 0; i < BuildingOptions.Count; i++)
         {
-            double segmentRagius = (outerRadius - innerRadius) / 2;
-            float itemCenterX = centerX + (float)(Math.Cos(angleOffset + index * angleStep) * (radius - segmentRagius));
-            float itemCenterY = centerY + (float)(Math.Sin(angleOffset + index * angleStep) * (radius - segmentRagius));
-
-            LoadedTexture texture = segmentBgTexture;
-            client.Render2DTextureRotated(texture, 0, 0, 12, 360f / BuildingOptions.Count * index);
-            if (selectedMode == index)
-            {
-                texture = selectedSegmentOverlayTexture;
-                client.Render2DTextureRotated(texture, 0, 0, 13, 360f / BuildingOptions.Count * index);
-            }
-
+            client.Render2DTextureRotated(segmentBgTexture, 0, 0, z, segmentCoords[i].Rotation);
             capi.Render.RenderItemstackToGui(
-                BuildingOptions[index].RenderSlot,
-                itemCenterX,
-                itemCenterY,
-                100,
-                size,
+                BuildingOptions[i].RenderSlot,
+                segmentCoords[i].X,
+                segmentCoords[i].Y,
+                z + 3,
+                itemSize,
                 ColorUtil.WhiteArgb,
                 true,
-                showStackSize: false
+                false
             );
         }
+
+        // draw selection overlay
+        client.Render2DTextureRotated(selectedSegmentOverlayTexture, 0, 0, z + 2, segmentCoords[selectedMode].Rotation);
 
         base.OnRenderGUI(deltaTime);
     }
@@ -242,6 +249,7 @@ public class BuildingModeDialog : GuiDialog
         double innerRadius = outerRadius - maxItemSize * 2.5;
         BuildSmallCircle(innerRadius);
         BuildSegments(innerRadius, outerRadius);
+        CalculateSizesAndPositions();
     }
 
     private void BuildBigCircle(double radius)
@@ -318,17 +326,37 @@ public class BuildingModeDialog : GuiDialog
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref segmentBgTexture);
     }
 
-    public override void Dispose()
+    private void CalculateSizesAndPositions()
     {
-        base.Dispose();
-        GC.SuppressFinalize(this);
+        int count = BuildingOptions.Count;
+        float centerX = capi.Render.FrameWidth * 0.5f;
+        float centerY = capi.Render.FrameHeight * 0.5f;
 
-        backgroundPattern.Dispose();
-        wheelTexture.Dispose();
-        centerCircleBgTexture.Dispose();
-        segmentBgTexture.Dispose();
-        selectedSegmentOverlayTexture.Dispose();
+        float stepDeg = 360f / count;
+        double stepRad = 2.0 * Math.PI / count;
+
+        float minDim = Math.Min(capi.Render.FrameWidth, capi.Render.FrameHeight);
+        float outerRad = minDim * 0.5f * RadialMenuStyle.RadiusFactor;
+        float itemDist = outerRad - (maxItemSize * 1.25f);
+
+        double startAngle = -Math.PI / 2.0;
+        segmentCoords.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            double angle = startAngle + (i * stepRad);
+            segmentCoords.Add(
+                new()
+                {
+                    X = centerX + (float)(Math.Cos(angle) * itemDist),
+                    Y = centerY + (float)(Math.Sin(angle) * itemDist),
+                    Rotation = i * stepDeg,
+                }
+            );
+        }
+
+        itemSize = Math.Min(maxItemSize, outerRad * (float)stepRad / 3f);
     }
+    #endregion
 
     private void ComposeDialog()
     {
