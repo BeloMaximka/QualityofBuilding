@@ -27,6 +27,8 @@ public class ShovelPathModeHandler : ModeHandlerBase
     private readonly Block path;
     private readonly Block pathSlab;
 
+    private readonly BlockSelection tmpSel = new(new(Dimensions.NormalWorld), BlockFacing.NORTH, null);
+
     public ShovelPathModeHandler(ICoreAPI api, Block path, Block pathSlab, Block[] pathStairs)
     {
         string[] replacableBlocks = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
@@ -91,33 +93,22 @@ public class ShovelPathModeHandler : ModeHandlerBase
             return false;
         }
 
-        BlockPos pos = blockSel.Position;
-        Block block = byPlayer.CurrentBlockSelection.Block;
+        tmpSel.Position.Set(blockSel.Position);
+        tmpSel.Face = blockSel.Face;
+        tmpSel.Block = byPlayer.CurrentBlockSelection.Block;
+        AdjustPosition(tmpSel, byEntity.World.BlockAccessor);
 
-        // Select block underneath if looking at grass, plants and other small blocks
+        ShovelPathReplacementMode mode = GetReplacementMode(tmpSel.Block.Id, byEntity.Controls);
         if (
-            byEntity.World.BlockAccessor.IsValidPos(blockSel.Position.DownCopy())
-            && (block.IsReplacableBy(path) || block.BlockMaterial == EnumBlockMaterial.Plant)
+            mode == ShovelPathReplacementMode.None
+            || !slot.Itemstack.Item.MiningSpeed.TryGetValue(tmpSel.Block.BlockMaterial, out float miningSpeed)
         )
         {
-            pos = blockSel.Position.DownCopy();
-        }
-        block = byEntity.World.BlockAccessor.GetBlock(pos);
-
-        ShovelPathReplacementMode mode = GetReplacementMode(block.Id, byEntity.Controls);
-        if (mode == ShovelPathReplacementMode.None)
-        {
             return false;
         }
 
-        if (!slot.Itemstack.Item.MiningSpeed.TryGetValue(block.BlockMaterial, out float miningSpeed))
-        {
-            return false;
-        }
-
-        byEntity.World.BlockAccessor.DamageBlock(pos, blockSel.Face, miningSpeed * 1f / block.Resistance / 30);
-
-        return miningSpeed * secondsUsed < block.Resistance;
+        byEntity.World.BlockAccessor.DamageBlock(tmpSel.Position, blockSel.Face, miningSpeed * 1f / tmpSel.Block.Resistance / 30);
+        return miningSpeed * secondsUsed < tmpSel.Block.Resistance;
     }
 
     public override void HandleStop(
@@ -128,42 +119,27 @@ public class ShovelPathModeHandler : ModeHandlerBase
         EntitySelection entitySel
     )
     {
-        if (byEntity.Api.Side == EnumAppSide.Client)
-        {
-            return;
-        }
-
-        if (byEntity is not EntityPlayer { Player: IPlayer byPlayer } || byPlayer.CurrentBlockSelection.Block is null)
-        {
-            return;
-        }
-
-        BlockPos pos = blockSel.Position;
-        Block block = byPlayer.CurrentBlockSelection.Block;
-
-        // Select block underneath if looking at grass, plants and other small blocks
         if (
-            byEntity.World.BlockAccessor.IsValidPos(blockSel.Position.DownCopy())
-            && (block.IsReplacableBy(path) || block.BlockMaterial == EnumBlockMaterial.Plant)
+            byEntity.Api.Side == EnumAppSide.Client
+            || byEntity is not EntityPlayer { Player: IPlayer byPlayer }
+            || byPlayer.CurrentBlockSelection.Block is null
         )
         {
-            pos = blockSel.Position.DownCopy();
-        }
-        block = byEntity.World.BlockAccessor.GetBlock(pos);
-
-        ShovelPathReplacementMode mode = GetReplacementMode(block.Id, byEntity.Controls);
-        if (mode == ShovelPathReplacementMode.None)
-        {
             return;
         }
 
-        if (!slot.Itemstack.Item.MiningSpeed.TryGetValue(block.BlockMaterial, out float miningSpeed))
-        {
-            return;
-        }
+        tmpSel.Position.Set(blockSel.Position);
+        tmpSel.Face = blockSel.Face;
+        tmpSel.Block = byPlayer.CurrentBlockSelection.Block;
+        AdjustPosition(tmpSel, byEntity.World.BlockAccessor);
 
         float latencyBuffer = 0.2f;
-        if (miningSpeed * secondsUsed < block.Resistance - latencyBuffer)
+        ShovelPathReplacementMode mode = GetReplacementMode(tmpSel.Block.Id, byEntity.Controls);
+        if (
+            mode == ShovelPathReplacementMode.None
+            || !slot.Itemstack.Item.MiningSpeed.TryGetValue(tmpSel.Block.BlockMaterial, out float miningSpeed)
+            || miningSpeed * secondsUsed < tmpSel.Block.Resistance - latencyBuffer
+        )
         {
             return;
         }
@@ -175,7 +151,7 @@ public class ShovelPathModeHandler : ModeHandlerBase
                     int recipeIndex = -1;
                     if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
                     {
-                        ReplaceBlock(pos, byPlayer, path, recipeIndex == 0);
+                        ReplaceBlock(tmpSel.Position, byPlayer, path, recipeIndex == 0);
                         DamageShovel(byPlayer, byEntity, slot);
                     }
                 }
@@ -186,19 +162,33 @@ public class ShovelPathModeHandler : ModeHandlerBase
                     int recipeIndex = -1;
                     if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
                     {
-                        ReplaceBlock(pos, byPlayer, pathSlab, recipeIndex == 0);
+                        ReplaceBlock(tmpSel.Position, byPlayer, pathSlab, recipeIndex == 0);
                         DamageShovel(byPlayer, byEntity, slot);
                     }
                 }
                 break;
 
             case ShovelPathReplacementMode.BlockWithStairs:
-                ReplaceBlock(pos, byPlayer, byEntity.World.Blocks[stonePathStairIds.GetCorrectBlockOrientationVariant(byPlayer, blockSel)]);
+                ReplaceBlock(
+                    tmpSel.Position,
+                    byPlayer,
+                    byEntity.World.Blocks[stonePathStairIds.GetCorrectBlockOrientationVariant(byPlayer, blockSel)]
+                );
                 break;
 
             case ShovelPathReplacementMode.StairWithSlab:
-                ReplaceBlock(pos, byPlayer, pathSlab, false, true);
+                ReplaceBlock(tmpSel.Position, byPlayer, pathSlab, false, true);
                 break;
+        }
+    }
+
+    private void AdjustPosition(BlockSelection blockSel, IBlockAccessor accessor)
+    {
+        // Select block underneath if looking at grass, plants and other small blocks
+        if (blockSel.Block.IsReplacableBy(path) || blockSel.Block.BlockMaterial == EnumBlockMaterial.Plant)
+        {
+            blockSel.Position.Down();
+            blockSel.Block = accessor.GetBlock(blockSel.Position);
         }
     }
 
