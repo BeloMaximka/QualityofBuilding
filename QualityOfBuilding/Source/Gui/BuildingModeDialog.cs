@@ -129,32 +129,32 @@ public class BuildingModeDialog : GuiDialog
     {
         base.OnMouseMove(args);
 
-        if (BuildingOptions.Count == 0)
+        int count = BuildingOptions.Count;
+        if (count == 0)
         {
             return;
         }
 
-        // mouse vector from center
-        double dx = args.X - capi.Render.FrameWidth * 0.5f;
-        double dy = args.Y - capi.Render.FrameHeight * 0.5f;
+        double dx = args.X - capi.Render.FrameWidth * 0.5;
+        double dy = args.Y - capi.Render.FrameHeight * 0.5;
 
-        // skip if mouse near center
-        if (Math.Sqrt(dx * dx + dy * dy) < 32)
+        // 32px dead zone near center
+        // (32 * 32 = 1024) to avoid Math.Sqrt()
+        if (dx * dx + dy * dy < 1024)
         {
             return;
         }
 
-        double startAngle = -Math.PI / 2.0;
-        double angleStep = 2.0 * Math.PI / BuildingOptions.Count;
-        startAngle -= angleStep / 2.0;
-        // convert mouseAngle (atan2 -PI..PI) to a positive offset relative to startAngle in range [0, 2PI)
-        double rel = Math.Atan2(dy, dx) - startAngle;
-        // normalize to [0, 2PI)
-        rel = rel % (2.0 * Math.PI);
-        if (rel < 0)
-            rel += 2.0 * Math.PI;
+        // angle-to-index math
+        // (angle * count / 2PI) shifts the range from [-PI, PI] to [-count/2, count/2]
+        // adding (count * 0.25 + 0.5) rotates the starting point so Index 0 is at -PI/2 (top).
+        double angle = Math.Atan2(dy, dx);
+        double rawIndex = (angle * count / (2.0 * Math.PI)) + (count * 0.25) + 0.5;
 
-        OnSlotOver((int)(rel / angleStep));
+        // handle wrapping (e.g. index -1 becomes count-1)
+        int index = ((int)Math.Floor(rawIndex) % count + count) % count;
+
+        OnSlotOver(index);
     }
 
     public override void OnMouseDown(MouseEvent args)
