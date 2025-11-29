@@ -2,12 +2,11 @@
 using QualityOfBuilding.Source.Utils;
 using System;
 using Vintagestory.API.Client;
-using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
 
 namespace QualityOfBuilding.Source.Gui;
 
-public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius) : IDisposable
+public class GearRingElement(ICoreClientAPI capi, Pattern background, int optionsCount, float radius) : IDisposable
 {
     private bool disposed;
     private LoadedTexture gearRingTexture = new(capi);
@@ -108,25 +107,15 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
         ctx.Arc(center, center, radius, 0, 2 * Math.PI);
 
         // fill with texture
-        AssetLocation texturePath = new("qualityofbuilding", "gui/backgrounds/metal.png");
-        using SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
-        ctx.SetSource(pattern);
+        ctx.SetSource(background);
         ctx.FillPreserve();
 
-        FillShade(ctx, surface, 4);
+        ctx.LineWidth = RadialMenuStyle.Gap / 2.0;
+        ctx.SetSourceRGBA(RadialMenuStyle.BorderColor);
+        ctx.StrokePreserve();
 
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref gearRingTexture);
-    }
-
-    // TODO: move to the shader
-    public static void FillShade(Context ctx, ImageSurface surface, int radius)
-    {
-        ctx.Save();
-        ctx.LineWidth = radius;
-        ctx.SetSourceRGBA(0.12, 0.1, 0.08, 1);
-        ctx.StrokePreserve();
-        ctx.Restore();
     }
 
     public void Dispose()
