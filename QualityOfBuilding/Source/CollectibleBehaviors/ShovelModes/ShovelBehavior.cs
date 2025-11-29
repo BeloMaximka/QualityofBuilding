@@ -49,6 +49,35 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
         modes[selectedMode].Handler.HandleStart(slot, byEntity, blockSel, entitySel);
     }
 
+    public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
+    {
+        if (!CanHandleMode(slot, byEntity, blockSel))
+        {
+            return base.OnHeldInteractStep(secondsUsed, slot, byEntity, blockSel, entitySel, ref handling);
+        }
+
+        handling = EnumHandling.PreventDefault;
+
+        int selectedMode = slot.Itemstack.GetBuildingMode(modes);
+        return modes[selectedMode].Handler.HandleStep(secondsUsed, slot, byEntity, blockSel, entitySel);
+    }
+
+    public override void OnHeldInteractStop(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
+    {
+
+
+        if (!CanHandleMode(slot, byEntity, blockSel))
+        {
+            base.OnHeldInteractStop(secondsUsed, slot, byEntity, blockSel, entitySel, ref handling);
+            return;
+        }
+
+        handling = EnumHandling.PreventDefault;
+
+        int selectedMode = slot.Itemstack.GetBuildingMode(modes);
+        modes[selectedMode].Handler.HandleStop(secondsUsed, slot, byEntity, blockSel, entitySel);
+    }
+
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot, ref EnumHandling handling)
     {
         if (ClientAPI is null)
@@ -74,7 +103,7 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
             {
                 Code = new AssetLocation("default"),
                 Name = Lang.Get("default-behavior"),
-                Handler = new DummyHanlder(),
+                Handler = new ModeHandlerBase(),
                 RenderSlot = new DummySlot(new(collectibleObject)),
             }
         );

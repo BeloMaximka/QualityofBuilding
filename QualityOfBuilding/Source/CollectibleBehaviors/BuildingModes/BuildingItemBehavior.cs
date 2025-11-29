@@ -37,7 +37,7 @@ public class BuildingItemBehavior : BuildingModeBehavior
                 Code = collectibleObject.Code,
                 Name = itemStack.GetName(),
                 RenderSlot = new DummySlot(itemStack),
-                Handler = new DummyHanlder(),
+                Handler = new ModeHandlerBase(),
             }
         );
 

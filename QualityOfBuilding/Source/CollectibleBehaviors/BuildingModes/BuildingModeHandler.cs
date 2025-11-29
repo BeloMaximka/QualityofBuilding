@@ -7,13 +7,13 @@ using Vintagestory.API.Server;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
 
-public class BuildingModeHandler(ICoreAPI api) : IModeHandler
+public class BuildingModeHandler(ICoreAPI api) : ModeHandlerBase
 {
     public required IReadOnlyCollection<ItemIngredient> Ingredients { get; init; }
 
     public required ItemStack? Output { get; init; }
 
-    public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
+    public override void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
     {
         IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
         if (byPlayer == null || Output is null)

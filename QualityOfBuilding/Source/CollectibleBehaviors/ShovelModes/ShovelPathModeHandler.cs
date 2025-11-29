@@ -4,11 +4,21 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors.ShovelModes;
 
-public class ShovelPathModeHandler : IModeHandler
+public enum ShovelPathReplacementMode
+{
+    None,
+    SoilWthBlock,
+    SoilSlab,
+    BlockWithStairs,
+    StairWithSlab,
+}
+
+public class ShovelPathModeHandler : ModeHandlerBase
 {
     private readonly int[] replacableSlabIds;
     private readonly int[] replacableBlockIds;
@@ -68,75 +78,163 @@ public class ShovelPathModeHandler : IModeHandler
         ];
     }
 
-    public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
+    public override bool HandleStep(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel
+    )
     {
-        IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
-        if (byPlayer == null)
+        if (byEntity is not EntityPlayer { Player: IPlayer byPlayer } || byPlayer.CurrentBlockSelection.Block is null)
+        {
+            return false;
+        }
+
+        BlockPos pos = blockSel.Position;
+        Block block = byPlayer.CurrentBlockSelection.Block;
+
+        // Select block underneath if looking at grass, plants and other small blocks
+        if (
+            byEntity.World.BlockAccessor.IsValidPos(blockSel.Position.DownCopy())
+            && (block.IsReplacableBy(path) || block.BlockMaterial == EnumBlockMaterial.Plant)
+        )
+        {
+            pos = blockSel.Position.DownCopy();
+        }
+        block = byEntity.World.BlockAccessor.GetBlock(pos);
+
+        ShovelPathReplacementMode mode = GetReplacementMode(block.Id, byEntity.Controls);
+        if (mode == ShovelPathReplacementMode.None)
+        {
+            return false;
+        }
+
+        if (!slot.Itemstack.Item.MiningSpeed.TryGetValue(block.BlockMaterial, out float miningSpeed))
+        {
+            return false;
+        }
+
+        byEntity.World.BlockAccessor.DamageBlock(pos, blockSel.Face, miningSpeed * 1f / block.Resistance / 30);
+
+        return miningSpeed * secondsUsed < block.Resistance;
+    }
+
+    public override void HandleStop(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel
+    )
+    {
+        if (byEntity.Api.Side == EnumAppSide.Client)
         {
             return;
         }
 
+        if (byEntity is not EntityPlayer { Player: IPlayer byPlayer } || byPlayer.CurrentBlockSelection.Block is null)
+        {
+            return;
+        }
+
+        BlockPos pos = blockSel.Position;
+        Block block = byPlayer.CurrentBlockSelection.Block;
+
         // Select block underneath if looking at grass, plants and other small blocks
-        Block selectedBlock = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
         if (
             byEntity.World.BlockAccessor.IsValidPos(blockSel.Position.DownCopy())
-            && (selectedBlock.IsReplacableBy(path) || selectedBlock.BlockMaterial == EnumBlockMaterial.Plant)
+            && (block.IsReplacableBy(path) || block.BlockMaterial == EnumBlockMaterial.Plant)
         )
         {
-            blockSel.Position.Down();
+            pos = blockSel.Position.DownCopy();
+        }
+        block = byEntity.World.BlockAccessor.GetBlock(pos);
+
+        ShovelPathReplacementMode mode = GetReplacementMode(block.Id, byEntity.Controls);
+        if (mode == ShovelPathReplacementMode.None)
+        {
+            return;
         }
 
-        Block block = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
-        if (replacableBlockIds.Contains(block.Id))
+        if (!slot.Itemstack.Item.MiningSpeed.TryGetValue(block.BlockMaterial, out float miningSpeed))
         {
-            int recipeIndex = -1;
-            if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
-            {
-                ReplaceBlock(blockSel, byPlayer, path, recipeIndex == 0);
-                DamageShovel(byPlayer, byEntity, slot);
-            }
+            return;
         }
-        else if (replacableSlabIds.Contains(block.Id))
+
+        float latencyBuffer = 0.2f;
+        if (miningSpeed * secondsUsed < block.Resistance - latencyBuffer)
         {
-            int recipeIndex = -1;
-            if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
-            {
-                ReplaceBlock(blockSel, byPlayer, pathSlab, recipeIndex == 0);
-                DamageShovel(byPlayer, byEntity, slot);
-            }
+            return;
         }
-        else if (byEntity.Controls.ShiftKey && block.Id == path.Id)
+
+        switch (mode)
         {
-            ReplaceBlock(
-                blockSel,
-                byPlayer,
-                byEntity.World.Blocks[stonePathStairIds.GetCorrectBlockOrientationVariant(byPlayer, blockSel)]
-            );
-            DamageShovel(byPlayer, byEntity, slot);
-        }
-        else if (byEntity.Controls.ShiftKey && stonePathStairIds.Contains(block.Id))
-        {
-            ReplaceStairsWithSlab(blockSel, byPlayer);
-            DamageShovel(byPlayer, byEntity, slot);
+            case ShovelPathReplacementMode.SoilWthBlock:
+                {
+                    int recipeIndex = -1;
+                    if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
+                    {
+                        ReplaceBlock(pos, byPlayer, path, recipeIndex == 0);
+                        DamageShovel(byPlayer, byEntity, slot);
+                    }
+                }
+                break;
+
+            case ShovelPathReplacementMode.SoilSlab:
+                {
+                    int recipeIndex = -1;
+                    if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
+                    {
+                        ReplaceBlock(pos, byPlayer, pathSlab, recipeIndex == 0);
+                        DamageShovel(byPlayer, byEntity, slot);
+                    }
+                }
+                break;
+
+            case ShovelPathReplacementMode.BlockWithStairs:
+                ReplaceBlock(pos, byPlayer, byEntity.World.Blocks[stonePathStairIds.GetCorrectBlockOrientationVariant(byPlayer, blockSel)]);
+                break;
+
+            case ShovelPathReplacementMode.StairWithSlab:
+                ReplaceBlock(pos, byPlayer, pathSlab, false, true);
+                break;
         }
     }
 
-    private static void ReplaceBlock(BlockSelection blockSel, IPlayer byPlayer, Block output, bool shouldDrop = false)
+    private ShovelPathReplacementMode GetReplacementMode(int blockId, EntityControls controls)
     {
-        byPlayer.Entity.World.PlaySoundAt(output.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
+        if (replacableBlockIds.Contains(blockId))
+        {
+            return ShovelPathReplacementMode.SoilWthBlock;
+        }
+        else if (replacableSlabIds.Contains(blockId))
+        {
+            return ShovelPathReplacementMode.SoilSlab;
+        }
+        else if (controls.ShiftKey && blockId == path.Id)
+        {
+            return ShovelPathReplacementMode.BlockWithStairs;
+        }
+        else if (controls.ShiftKey && stonePathStairIds.Contains(blockId))
+        {
+            return ShovelPathReplacementMode.StairWithSlab;
+        }
 
-        byPlayer.Entity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
-        byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, blockSel.Position);
+        return ShovelPathReplacementMode.None;
     }
 
-    private void ReplaceStairsWithSlab(BlockSelection blockSel, IPlayer byPlayer)
+    private static void ReplaceBlock(BlockPos pos, IPlayer byPlayer, Block output, bool shouldDrop = false, bool dropFix = false)
     {
-        byPlayer.Entity.World.PlaySoundAt(pathSlab.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
+        byPlayer.Entity.World.PlaySoundAt(output.Sounds.Place, pos.X, pos.Y, pos.Z);
 
-        // Workaround because I couldn't remove drop from stairs
-        byPlayer.Entity.World.BlockAccessor.SetBlock(pathSlab.Id, blockSel.Position);
-        byPlayer.Entity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
-        byPlayer.Entity.World.BlockAccessor.SetBlock(pathSlab.Id, blockSel.Position);
+        if (dropFix)
+        {
+            // Workaround because I couldn't remove drop from stairs
+            byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, pos);
+        }
+        byPlayer.Entity.World.BlockAccessor.BreakBlock(pos, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
+        byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, pos);
     }
 
     private int GetStoneCount(ICoreAPI api)

@@ -4,14 +4,25 @@ using Vintagestory.API.Common;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors.ShovelModes;
 
-public class ReplaceModeHandler(int[] replacableBlockIds, int outputBlockId) : IModeHandler
+public class ReplaceModeHandler(int[] replacableBlockIds, int outputBlockId) : ModeHandlerBase
 {
-    public void HandleStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
+    public override bool HandleStep(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel
+    )
     {
+        if (secondsUsed < 1f)
+        {
+            return true;
+        }
+
         IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
         if (byPlayer == null)
         {
-            return;
+            return false;
         }
 
         Block block = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
@@ -26,5 +37,7 @@ public class ReplaceModeHandler(int[] replacableBlockIds, int outputBlockId) : I
                 slot.Itemstack.Item?.DamageItem(byEntity.World, byEntity, slot);
             }
         }
+
+        return false;
     }
 }

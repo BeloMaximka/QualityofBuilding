@@ -8,7 +8,7 @@ public class BuildingMode
 {
     public required AssetLocation Code { get; set; }
     public required string Name { get; set; }
-    public required IModeHandler Handler { get; set; }
+    public required ModeHandlerBase Handler { get; set; }
     public ItemStack? Output { get; set; }
     public ItemSlot? RenderSlot { get; set; }
     public IReadOnlyCollection<ItemIngredient> Ingredients { get; set; } = [];
