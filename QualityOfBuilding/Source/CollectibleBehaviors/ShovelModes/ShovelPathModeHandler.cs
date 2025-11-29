@@ -88,8 +88,8 @@ public class ShovelPathModeHandler : ShovelModeHandlerBase
     {
         if (
             byEntity.Api.Side == EnumAppSide.Client
+            || blockSel is null
             || byEntity is not EntityPlayer { Player: IPlayer byPlayer }
-            || byPlayer.CurrentBlockSelection.Block is null
         )
         {
             return;

@@ -16,7 +16,7 @@ public class ShovelModeHandlerBase(Block output) : ModeHandlerBase
         EntitySelection entitySel
     )
     {
-        if (byEntity is not EntityPlayer { Player: IPlayer byPlayer } || byPlayer.CurrentBlockSelection.Block is null)
+        if (blockSel is null || byEntity is not EntityPlayer { Player: IPlayer byPlayer })
         {
             return false;
         }
@@ -46,17 +46,27 @@ public class ShovelModeHandlerBase(Block output) : ModeHandlerBase
         return true;
     }
 
-    internal static void ReplaceBlock(BlockPos pos, IPlayer byPlayer, Block output, bool shouldDrop = false, bool dropFix = false)
+    internal void ReplaceBlock(BlockPos pos, IPlayer byPlayer, Block output, bool shouldDrop = false, bool dropFix = false)
     {
-        byPlayer.Entity.World.PlaySoundAt(output.Sounds.Place, pos.X, pos.Y, pos.Z);
-
         if (dropFix)
         {
             // Workaround because I couldn't remove drop from stairs
             byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, pos);
         }
-        byPlayer.Entity.World.BlockAccessor.BreakBlock(pos, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
+        byPlayer.Entity.World.BlockAccessor.BreakBlock(pos, null, dropQuantityMultiplier: shouldDrop ? 1 : 0);
         byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, pos);
+        ReplaceBlockAboveIfReplacable(byPlayer, pos);
+    }
+
+    internal void ReplaceBlockAboveIfReplacable(IPlayer player, BlockPos pos)
+    {
+        pos.Up();
+        Block block = player.Entity.World.BlockAccessor.GetBlock(pos);
+        if (block.Id != 0 && block.IsReplacableBy(output) || block.BlockMaterial == EnumBlockMaterial.Plant)
+        {
+            player.Entity.World.BlockAccessor.BreakBlock(pos, null);
+        }
+        pos.Down();
     }
 
     internal static void DamageShovel(IPlayer player, ItemSlot slot)
