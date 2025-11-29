@@ -69,8 +69,6 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
 
     private void AddInitDefaultAndPathModes(ICoreAPI api)
     {
-        Block? stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
-        ItemStack? stonePathItem = stonePath is not null ? new(stonePath) : null;
         modes.Add(
             new BuildingMode()
             {
@@ -80,29 +78,50 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
                 RenderSlot = new DummySlot(new(collectibleObject)),
             }
         );
-        if (stonePath is not null)
+
+        Block? stonePath = api.World.GetBlock(new AssetLocation(stonePathCode));
+        Block? stonePathSlab = api.World.GetBlock(new AssetLocation("game:stonepathslab-free"));
+        Block[] stonePathStairs =
+        [
+            api.World.GetBlock(new AssetLocation("stonepathstairs-up-north-free")),
+            api.World.GetBlock(new AssetLocation("stonepathstairs-up-south-free")),
+            api.World.GetBlock(new AssetLocation("stonepathstairs-up-west-free")),
+            api.World.GetBlock(new AssetLocation("stonepathstairs-up-east-free")),
+        ];
+        if (
+            stonePath is null
+            || stonePathSlab is null
+            || stonePathStairs[0] is null
+            || stonePathStairs[1] is null
+            || stonePathStairs[2] is null
+            || stonePathStairs[3] is null
+        )
         {
-            modes.Add(
-                new BuildingMode()
-                {
-                    Code = new AssetLocation(StonePathToolModeCode),
-                    Name = Lang.Get("make-roads"),
-                    Handler = new ShovelPathModeHandler(api, stonePath),
-                    Output = stonePathItem,
-                    RenderSlot = new DummySlot(stonePathItem),
-                    Ingredients =
-                    [
-                        new()
-                        {
-                            Type = EnumItemClass.Item,
-                            Code = "stone-*",
-                            TranslatedName = Lang.Get("a-or-b", Lang.Get("any-stone"), stonePathItem?.GetName().ToLower()),
-                            Quantity = 4,
-                        },
-                    ],
-                }
-            );
+            api.Logger.Warning("Some of stone path blocks was not found, skipping stone path building mode registration.");
+            return;
         }
+        ItemStack stonePathItem = new(stonePath);
+
+        modes.Add(
+            new BuildingMode()
+            {
+                Code = new AssetLocation(StonePathToolModeCode),
+                Name = Lang.Get("make-roads"),
+                Handler = new ShovelPathModeHandler(api, stonePath, stonePathSlab, stonePathStairs),
+                Output = stonePathItem,
+                RenderSlot = new DummySlot(stonePathItem),
+                Ingredients =
+                [
+                    new()
+                    {
+                        Type = EnumItemClass.Item,
+                        Code = "stone-*",
+                        TranslatedName = Lang.Get("a-or-b", Lang.Get("any-stone"), stonePathItem?.GetName().ToLower()),
+                        Quantity = 4,
+                    },
+                ],
+            }
+        );
     }
 
     private void AddSoilReplaceModes(ICoreAPI api)

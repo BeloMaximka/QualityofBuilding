@@ -12,12 +12,12 @@ public class ShovelPathModeHandler : IModeHandler
 {
     private readonly int[] replacableSlabIds;
     private readonly int[] replacableBlockIds;
-    private readonly int stonePathSlabId;
     private readonly NsweBlockIds stonePathStairIds;
     private readonly ItemIngredient[][] recipes;
-    private readonly Block stonePath;
+    private readonly Block path;
+    private readonly Block pathSlab;
 
-    public ShovelPathModeHandler(ICoreAPI api, Block stonePath)
+    public ShovelPathModeHandler(ICoreAPI api, Block path, Block pathSlab, Block[] pathStairs)
     {
         string[] replacableBlocks = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
         List<int> blockIdsFound = [];
@@ -42,14 +42,9 @@ public class ShovelPathModeHandler : IModeHandler
         }
         replacableSlabIds = [.. slabIdsFound];
 
-        this.stonePath = stonePath;
-        stonePathSlabId = api.World.GetBlock(new AssetLocation("game:stonepathslab-free"))?.BlockId ?? -1;
-        stonePathStairIds = new(
-            api.World.GetBlock(new AssetLocation("stonepathstairs-up-north-free"))?.BlockId ?? -1,
-            api.World.GetBlock(new AssetLocation("stonepathstairs-up-south-free"))?.BlockId ?? -1,
-            api.World.GetBlock(new AssetLocation("stonepathstairs-up-west-free"))?.BlockId ?? -1,
-            api.World.GetBlock(new AssetLocation("stonepathstairs-up-east-free"))?.BlockId ?? -1
-        );
+        this.path = path;
+        this.pathSlab = pathSlab;
+        stonePathStairIds = new(pathStairs[0].Id, pathStairs[1].Id, pathStairs[2].Id, pathStairs[3].Id);
 
         recipes =
         [
@@ -57,7 +52,7 @@ public class ShovelPathModeHandler : IModeHandler
                 new()
                 {
                     Type = EnumItemClass.Block,
-                    Code = stonePath.Code,
+                    Code = path.Code,
                     Quantity = 1,
                 },
             ],
@@ -85,7 +80,7 @@ public class ShovelPathModeHandler : IModeHandler
         Block selectedBlock = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
         if (
             byEntity.World.BlockAccessor.IsValidPos(blockSel.Position.DownCopy())
-            && (selectedBlock.IsReplacableBy(stonePath) || selectedBlock.BlockMaterial == EnumBlockMaterial.Plant)
+            && (selectedBlock.IsReplacableBy(path) || selectedBlock.BlockMaterial == EnumBlockMaterial.Plant)
         )
         {
             blockSel.Position.Down();
@@ -97,7 +92,7 @@ public class ShovelPathModeHandler : IModeHandler
             int recipeIndex = -1;
             if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
             {
-                ReplaceSoilWithPath(blockSel, byEntity, byPlayer, recipeIndex == 0, stonePath.Id);
+                ReplaceBlock(blockSel, byPlayer, path, recipeIndex == 0);
                 DamageShovel(byPlayer, byEntity, slot);
             }
         }
@@ -106,75 +101,47 @@ public class ShovelPathModeHandler : IModeHandler
             int recipeIndex = -1;
             if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
             {
-                ReplaceSoilWithPath(blockSel, byEntity, byPlayer, recipeIndex == 0, stonePathSlabId);
+                ReplaceBlock(blockSel, byPlayer, pathSlab, recipeIndex == 0);
                 DamageShovel(byPlayer, byEntity, slot);
             }
         }
-        else if (byEntity.Controls.ShiftKey && block.Id == stonePath.Id)
+        else if (byEntity.Controls.ShiftKey && block.Id == path.Id)
         {
-            ReplacePathWithStairs(byEntity.Api, blockSel, byPlayer);
+            ReplaceBlock(
+                blockSel,
+                byPlayer,
+                byEntity.World.Blocks[stonePathStairIds.GetCorrectBlockOrientationVariant(byPlayer, blockSel)]
+            );
             DamageShovel(byPlayer, byEntity, slot);
         }
         else if (byEntity.Controls.ShiftKey && stonePathStairIds.Contains(block.Id))
         {
-            ReplaceStairsWithSlab(byEntity.Api, blockSel, byPlayer);
+            ReplaceStairsWithSlab(blockSel, byPlayer);
             DamageShovel(byPlayer, byEntity, slot);
         }
     }
 
-    private static void ReplaceSoilWithPath(
-        BlockSelection blockSel,
-        EntityAgent byEntity,
-        IPlayer byPlayer,
-        bool shouldDrop,
-        int stonePathId
-    )
+    private static void ReplaceBlock(BlockSelection blockSel, IPlayer byPlayer, Block output, bool shouldDrop = false)
     {
-        byEntity.World.PlaySoundAt(
-            AssetLocation.Create("sounds/block/dirt"),
-            blockSel.Position.X,
-            blockSel.Position.Y,
-            blockSel.Position.Z,
-            byPlayer
-        );
+        byPlayer.Entity.World.PlaySoundAt(output.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
 
-        byEntity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
-        byEntity.World.BlockAccessor.SetBlock(stonePathId, blockSel.Position);
+        byPlayer.Entity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
+        byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, blockSel.Position);
     }
 
-    private void ReplacePathWithStairs(ICoreAPI api, BlockSelection blockSel, IPlayer byPlayer)
+    private void ReplaceStairsWithSlab(BlockSelection blockSel, IPlayer byPlayer)
     {
-        api.World.PlaySoundAt(
-            AssetLocation.Create("sounds/block/gravel"),
-            blockSel.Position.X,
-            blockSel.Position.Y,
-            blockSel.Position.Z,
-            byPlayer
-        );
-
-        api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
-        api.World.BlockAccessor.SetBlock(stonePathStairIds.GetCorrectBlockOrientationVariant(byPlayer, blockSel), blockSel.Position);
-    }
-
-    private void ReplaceStairsWithSlab(ICoreAPI api, BlockSelection blockSel, IPlayer byPlayer)
-    {
-        api.World.PlaySoundAt(
-            AssetLocation.Create("sounds/block/gravel"),
-            blockSel.Position.X,
-            blockSel.Position.Y,
-            blockSel.Position.Z,
-            byPlayer
-        );
+        byPlayer.Entity.World.PlaySoundAt(pathSlab.Sounds.Place, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
 
         // Workaround because I couldn't remove drop from stairs
-        api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
-        api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
-        api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
+        byPlayer.Entity.World.BlockAccessor.SetBlock(pathSlab.Id, blockSel.Position);
+        byPlayer.Entity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
+        byPlayer.Entity.World.BlockAccessor.SetBlock(pathSlab.Id, blockSel.Position);
     }
 
     private int GetStoneCount(ICoreAPI api)
     {
-        GridRecipe? recipe = api.World.GridRecipes.FirstOrDefault(recipe => recipe.Output.Code == stonePath.Code);
+        GridRecipe? recipe = api.World.GridRecipes.FirstOrDefault(recipe => recipe.Output.Code == path.Code);
         if (recipe is null)
         {
             return 4;
