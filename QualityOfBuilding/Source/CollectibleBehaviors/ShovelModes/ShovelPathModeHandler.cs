@@ -1,6 +1,7 @@
 ﻿using QualityOfBuilding.Source.Utils.Inventory;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Util;
@@ -65,7 +66,7 @@ public class ShovelPathModeHandler : IModeHandler
                 {
                     Type = EnumItemClass.Item,
                     Code = "stone-*",
-                    Quantity = 4,
+                    Quantity = GetStoneCount(api),
                     TranslatedName = Lang.Get("any-stone"),
                 },
             ],
@@ -169,6 +170,19 @@ public class ShovelPathModeHandler : IModeHandler
         api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
         api.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
         api.World.BlockAccessor.SetBlock(stonePathSlabId, blockSel.Position);
+    }
+
+    private int GetStoneCount(ICoreAPI api)
+    {
+        GridRecipe? recipe = api.World.GridRecipes.FirstOrDefault(recipe => recipe.Output.Code == stonePath.Code);
+        if (recipe is null)
+        {
+            return 4;
+        }
+
+        return recipe
+            .resolvedIngredients.Where(ingredient => ingredient.Code.Path.StartsWith("stone"))
+            .Sum(ingredient => ingredient.Quantity);
     }
 
     private static void DamageShovel(IPlayer player, EntityAgent byEntity, ItemSlot slot)
