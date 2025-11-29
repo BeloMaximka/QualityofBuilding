@@ -57,64 +57,55 @@ public class GearRingElement(ICoreClientAPI capi, Pattern background, int option
 
     public void Compose()
     {
-        // calculate geometry
         double maxItemSize = GuiElementPassiveItemSlot.unscaledSlotSize + GuiElementItemSlotGridBase.unscaledSlotPadding;
-        double outerRadius = radius + maxItemSize / 2;
+        double outerRadius = radius + maxItemSize / 2.0;
 
         int count = Math.Max(8, optionsCount);
         double angleStep = 2.0 * Math.PI / count;
 
-        double toothHeight = Math.Min(outerRadius * angleStep / 3, maxItemSize);
-        double halfBase = outerRadius * angleStep / 3;
+        double toothH = Math.Min(outerRadius * angleStep / 3.0, maxItemSize);
+        double halfBase = outerRadius * angleStep / 3.0;
         double halfTip = halfBase * 0.8;
-        double yTip = outerRadius + toothHeight;
+        double yTip = outerRadius + toothH;
 
-        // setup surface
-        int texSize = (int)Math.Ceiling((outerRadius + toothHeight) * 2) + 32;
-        double center = texSize * 0.5f;
-
+        int texSize = (int)Math.Ceiling(yTip * 2) + 32;
         using ImageSurface surface = new(Format.Argb32, texSize, texSize);
         using Context ctx = new(surface);
 
-        // helper: rotates a point (x, y) by (cos, sin) and draws the line
-        void LineToRot(double x, double y, double cos, double sin) => ctx.LineTo(center + x * cos - y * sin, center + x * sin + y * cos);
+        double center = texSize / 2.0;
+        ctx.Translate(center, center);
+        ctx.Rotate(-Math.PI); // start at top
 
-        // draw Teeth
+        // teeth
         for (int i = 0; i < count; i++)
         {
-            double angle = -Math.PI + i * angleStep;
-            double cos = Math.Cos(angle);
-            double sin = Math.Sin(angle);
-
-            LineToRot(halfBase, outerRadius, cos, sin); // bottom right
+            ctx.LineTo(halfBase, outerRadius); // bottom right
 
             if (i == 0)
             {
-                // draw a triangular tooh for the first one
-                ctx.LineTo(center + yTip * sin, center + sin + yTip * cos); // top center
+                ctx.LineTo(0, yTip); // triangle tip for the first tooth
             }
             else
             {
-                LineToRot(halfTip, yTip, cos, sin); // top right
-                LineToRot(-halfTip, yTip, cos, sin); // top left
+                ctx.LineTo(halfTip, yTip); // top right
+                ctx.LineTo(-halfTip, yTip); // top left
             }
 
-            LineToRot(-halfBase, outerRadius, cos, sin); // bottom left
+            ctx.LineTo(-halfBase, outerRadius); // bottom left
+
+            // rotate context for the next tooth
+            ctx.Rotate(angleStep);
         }
+
         ctx.ClosePath();
 
-        // draw a hole in the center
-        ctx.NewSubPath();
-        ctx.FillRule = FillRule.EvenOdd;
-        ctx.Arc(center, center, radius, 0, 2 * Math.PI);
-
-        // fill with texture
+        // paint
         ctx.SetSource(background);
         ctx.FillPreserve();
 
         ctx.LineWidth = RadialMenuStyle.Gap / 2.0;
         ctx.SetSourceRGBA(RadialMenuStyle.BorderColor);
-        ctx.StrokePreserve();
+        ctx.Stroke();
 
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref gearRingTexture);
