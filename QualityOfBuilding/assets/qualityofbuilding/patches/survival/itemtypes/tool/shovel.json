@@ -1,0 +1,9 @@
+[
+  {
+    "op": "replace",
+    "path": "/heldTpUseAnimation",
+    "value": "shoveldig",
+    "file": "game:itemtypes/tool/shovel.json",
+    "side": "Server"
+  }
+]

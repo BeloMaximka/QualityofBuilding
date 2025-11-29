@@ -29,7 +29,7 @@ public class ShovelPathModeHandler : ShovelModeHandlerBase
     public ShovelPathModeHandler(ICoreAPI api, Block path, Block pathSlab, Block[] pathStairs)
         : base(path)
     {
-        string[] replacableBlocks = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
+        string[] replacableBlocks = ["soil-*", "forestfloor-*", "sand-*", "gravel-*", "drypackeddirt", "packeddirt", "rammed-light-*"];
         List<int> blockIdsFound = [];
         foreach (string replaceableBlock in replacableBlocks)
         {
@@ -86,11 +86,7 @@ public class ShovelPathModeHandler : ShovelModeHandlerBase
         EntitySelection entitySel
     )
     {
-        if (
-            byEntity.Api.Side == EnumAppSide.Client
-            || blockSel is null
-            || byEntity is not EntityPlayer { Player: IPlayer byPlayer }
-        )
+        if (byEntity.Api.Side == EnumAppSide.Client || blockSel is null || byEntity is not EntityPlayer { Player: IPlayer byPlayer })
         {
             return;
         }
