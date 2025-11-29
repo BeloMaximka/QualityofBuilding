@@ -54,20 +54,20 @@ public class GearRingElement : IDisposable
             return;
         }
 
-        float step = gearAngleTarget - gearAngleCurrent;
-        // calculate a proper shorter path
-        // so if current angle is 10 and target is 350 it doesnt do a full spin
+        // calculate the shortest distance
+        float step = (gearAngleTarget - gearAngleCurrent) % 360;
+
+        // normalize to range [-180, 180]
         if (step < -180)
         {
             step += 360;
         }
-        if (step >= 180)
+        if (step > 180)
         {
             step -= 360;
         }
 
         gearAngleCurrent += step * deltaTime * 10;
-
         float x = (capi.Render.FrameWidth - gearRingTexture.Width) * 0.5f;
         float y = (capi.Render.FrameHeight - gearRingTexture.Height) * 0.5f;
         client.Render2DTextureRotated(gearRingTexture, x, y, 10, gearAngleCurrent);
