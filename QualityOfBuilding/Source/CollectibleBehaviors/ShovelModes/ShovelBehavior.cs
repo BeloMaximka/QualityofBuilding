@@ -198,7 +198,7 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
                 Name = Lang.Get("replace-soil-with", outputStack.GetName().ToLower()),
                 RenderSlot = new DummySlot(outputStack),
                 Output = new(outputBlock),
-                Handler = new ReplaceModeHandler(replacableBlockIdsArray, outputBlock.Id),
+                Handler = new ReplaceModeHandler(replacableBlockIdsArray, outputBlock),
             };
 
             modes.Add(replaceMode);

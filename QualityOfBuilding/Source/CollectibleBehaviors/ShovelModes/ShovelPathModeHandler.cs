@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors.ShovelModes;
@@ -18,7 +17,7 @@ public enum ShovelPathReplacementMode
     StairWithSlab,
 }
 
-public class ShovelPathModeHandler : ModeHandlerBase
+public class ShovelPathModeHandler : ShovelModeHandlerBase
 {
     private readonly int[] replacableSlabIds;
     private readonly int[] replacableBlockIds;
@@ -27,9 +26,8 @@ public class ShovelPathModeHandler : ModeHandlerBase
     private readonly Block path;
     private readonly Block pathSlab;
 
-    private readonly BlockSelection tmpSel = new(new(Dimensions.NormalWorld), BlockFacing.NORTH, null);
-
     public ShovelPathModeHandler(ICoreAPI api, Block path, Block pathSlab, Block[] pathStairs)
+        : base(path)
     {
         string[] replacableBlocks = ["soil-*", "forestfloor-*", "sand-*", "gravel-*"];
         List<int> blockIdsFound = [];
@@ -80,37 +78,6 @@ public class ShovelPathModeHandler : ModeHandlerBase
         ];
     }
 
-    public override bool HandleStep(
-        float secondsUsed,
-        ItemSlot slot,
-        EntityAgent byEntity,
-        BlockSelection blockSel,
-        EntitySelection entitySel
-    )
-    {
-        if (byEntity is not EntityPlayer { Player: IPlayer byPlayer } || byPlayer.CurrentBlockSelection.Block is null)
-        {
-            return false;
-        }
-
-        tmpSel.Position.Set(blockSel.Position);
-        tmpSel.Face = blockSel.Face;
-        tmpSel.Block = byPlayer.CurrentBlockSelection.Block;
-        AdjustPosition(tmpSel, byEntity.World.BlockAccessor);
-
-        ShovelPathReplacementMode mode = GetReplacementMode(tmpSel.Block.Id, byEntity.Controls);
-        if (
-            mode == ShovelPathReplacementMode.None
-            || !slot.Itemstack.Item.MiningSpeed.TryGetValue(tmpSel.Block.BlockMaterial, out float miningSpeed)
-        )
-        {
-            return false;
-        }
-
-        byEntity.World.BlockAccessor.DamageBlock(tmpSel.Position, blockSel.Face, miningSpeed * 1f / tmpSel.Block.Resistance / 30);
-        return miningSpeed * secondsUsed < tmpSel.Block.Resistance;
-    }
-
     public override void HandleStop(
         float secondsUsed,
         ItemSlot slot,
@@ -127,19 +94,10 @@ public class ShovelPathModeHandler : ModeHandlerBase
         {
             return;
         }
+        UpdateSelection(byPlayer, blockSel, tmpSel);
 
-        tmpSel.Position.Set(blockSel.Position);
-        tmpSel.Face = blockSel.Face;
-        tmpSel.Block = byPlayer.CurrentBlockSelection.Block;
-        AdjustPosition(tmpSel, byEntity.World.BlockAccessor);
-
-        float latencyBuffer = 0.2f;
         ShovelPathReplacementMode mode = GetReplacementMode(tmpSel.Block.Id, byEntity.Controls);
-        if (
-            mode == ShovelPathReplacementMode.None
-            || !slot.Itemstack.Item.MiningSpeed.TryGetValue(tmpSel.Block.BlockMaterial, out float miningSpeed)
-            || miningSpeed * secondsUsed < tmpSel.Block.Resistance - latencyBuffer
-        )
+        if (mode == ShovelPathReplacementMode.None || HasNotMinedEnough(tmpSel.Block, secondsUsed, slot))
         {
             return;
         }
@@ -152,7 +110,7 @@ public class ShovelPathModeHandler : ModeHandlerBase
                     if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
                     {
                         ReplaceBlock(tmpSel.Position, byPlayer, path, recipeIndex == 0);
-                        DamageShovel(byPlayer, byEntity, slot);
+                        DamageShovel(byPlayer, slot);
                     }
                 }
                 break;
@@ -163,7 +121,7 @@ public class ShovelPathModeHandler : ModeHandlerBase
                     if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative || byPlayer.TryTakeItems(recipes, out recipeIndex))
                     {
                         ReplaceBlock(tmpSel.Position, byPlayer, pathSlab, recipeIndex == 0);
-                        DamageShovel(byPlayer, byEntity, slot);
+                        DamageShovel(byPlayer, slot);
                     }
                 }
                 break;
@@ -182,14 +140,9 @@ public class ShovelPathModeHandler : ModeHandlerBase
         }
     }
 
-    private void AdjustPosition(BlockSelection blockSel, IBlockAccessor accessor)
+    internal override bool CanHandle(Block block, EntityAgent entity)
     {
-        // Select block underneath if looking at grass, plants and other small blocks
-        if (blockSel.Block.IsReplacableBy(path) || blockSel.Block.BlockMaterial == EnumBlockMaterial.Plant)
-        {
-            blockSel.Position.Down();
-            blockSel.Block = accessor.GetBlock(blockSel.Position);
-        }
+        return GetReplacementMode(block.Id, entity.Controls) != ShovelPathReplacementMode.None;
     }
 
     private ShovelPathReplacementMode GetReplacementMode(int blockId, EntityControls controls)
@@ -214,19 +167,6 @@ public class ShovelPathModeHandler : ModeHandlerBase
         return ShovelPathReplacementMode.None;
     }
 
-    private static void ReplaceBlock(BlockPos pos, IPlayer byPlayer, Block output, bool shouldDrop = false, bool dropFix = false)
-    {
-        byPlayer.Entity.World.PlaySoundAt(output.Sounds.Place, pos.X, pos.Y, pos.Z);
-
-        if (dropFix)
-        {
-            // Workaround because I couldn't remove drop from stairs
-            byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, pos);
-        }
-        byPlayer.Entity.World.BlockAccessor.BreakBlock(pos, byPlayer, dropQuantityMultiplier: shouldDrop ? 1 : 0);
-        byPlayer.Entity.World.BlockAccessor.SetBlock(output.Id, pos);
-    }
-
     private int GetStoneCount(ICoreAPI api)
     {
         GridRecipe? recipe = api.World.GridRecipes.FirstOrDefault(recipe => recipe.Output.Code == path.Code);
@@ -238,13 +178,5 @@ public class ShovelPathModeHandler : ModeHandlerBase
         return recipe
             .resolvedIngredients.Where(ingredient => ingredient.Code.Path.StartsWith("stone"))
             .Sum(ingredient => ingredient.Quantity);
-    }
-
-    private static void DamageShovel(IPlayer player, EntityAgent byEntity, ItemSlot slot)
-    {
-        if (player.WorldData.CurrentGameMode != EnumGameMode.Creative)
-        {
-            slot.Itemstack.Item?.DamageItem(byEntity.World, byEntity, slot);
-        }
     }
 }

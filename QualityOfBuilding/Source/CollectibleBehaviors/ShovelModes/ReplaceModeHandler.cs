@@ -4,9 +4,11 @@ using Vintagestory.API.Common;
 
 namespace QualityOfBuilding.Source.CollectibleBehaviors.ShovelModes;
 
-public class ReplaceModeHandler(int[] replacableBlockIds, int outputBlockId) : ModeHandlerBase
+public class ReplaceModeHandler(int[] replacableBlockIds, Block output) : ShovelModeHandlerBase(output)
 {
-    public override bool HandleStep(
+    private readonly Block output = output;
+
+    public override void HandleStop(
         float secondsUsed,
         ItemSlot slot,
         EntityAgent byEntity,
@@ -14,30 +16,28 @@ public class ReplaceModeHandler(int[] replacableBlockIds, int outputBlockId) : M
         EntitySelection entitySel
     )
     {
-        if (secondsUsed < 1f)
+        if (
+            byEntity.Api.Side == EnumAppSide.Client
+            || byEntity is not EntityPlayer { Player: IPlayer byPlayer }
+            || byPlayer.CurrentBlockSelection.Block is null
+        )
         {
-            return true;
+            return;
         }
 
-        IPlayer? byPlayer = (byEntity as EntityPlayer)?.Player;
-        if (byPlayer == null)
+        UpdateSelection(byPlayer, blockSel, tmpSel);
+
+        if (!CanHandle(tmpSel.Block, byEntity) || HasNotMinedEnough(tmpSel.Block, secondsUsed, slot))
         {
-            return false;
+            return;
         }
 
-        Block block = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
-        if (block.Id != outputBlockId && replacableBlockIds.Contains(block.Id))
-        {
-            byEntity.World.PlaySoundAt(block.Sounds.Break, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, byPlayer);
-            byEntity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer, dropQuantityMultiplier: 0);
-            byEntity.World.BlockAccessor.SetBlock(outputBlockId, blockSel.Position);
+        ReplaceBlock(tmpSel.Position, byPlayer, output);
+        DamageShovel(byPlayer, slot);
+    }
 
-            if (byPlayer.WorldData.CurrentGameMode != EnumGameMode.Creative)
-            {
-                slot.Itemstack.Item?.DamageItem(byEntity.World, byEntity, slot);
-            }
-        }
-
-        return false;
+    internal override bool CanHandle(Block block, EntityAgent entity)
+    {
+        return block.Id != output.Id && replacableBlockIds.Contains(block.Id);
     }
 }
