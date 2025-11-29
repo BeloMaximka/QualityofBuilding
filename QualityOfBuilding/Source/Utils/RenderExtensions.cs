@@ -22,22 +22,24 @@ public static class RenderExtensions
     public static void Render2DTextureCenteredAndRotated(
         this ClientMain clientMain,
         LoadedTexture texture,
-        float x1,
-        float y1,
+        double x,
+        double y,
+        double z,
         float angle,
         Vec4f? color = null
     )
     {
-        x1 -= texture.Width * 0.5f;
-        y1 -= texture.Height * 0.5f;
-        clientMain.Render2DTextureRotated(texture, x1, y1, angle, color);
+        x -= texture.Width * 0.5;
+        z -= texture.Height * 0.5;
+        clientMain.Render2DTextureRotated(texture, x, y, z, angle, color);
     }
 
     public static void Render2DTextureRotated(
         this ClientMain clientMain,
         LoadedTexture texture,
-        float x1,
-        float y1,
+        double x,
+        double y,
+        double z,
         float angle,
         Vec4f? color = null
     )
@@ -51,7 +53,7 @@ public static class RenderExtensions
         clientMain.guiShaderProg.OverlayOpacity = 0.0f;
         clientMain.guiShaderProg.NormalShaded = 0;
         clientMain.GlPushMatrix();
-        clientMain.GlTranslate((double)x1, (double)y1, 10.0);
+        clientMain.GlTranslate(x, y, z);
         double cx = texture.Width / 2f;
         double cy = texture.Height / 2f;
         clientMain.GlTranslate(cx, cy, 0.0);

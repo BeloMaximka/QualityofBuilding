@@ -102,7 +102,7 @@ public class BuildingModeDialog : GuiDialog
         context = new(surface);
 
         float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
-        gearRing = new(capi, buildingOptions.Count, maxHalf * radiusFactor + gap - 2);
+        gearRing = new(capi, buildingOptions.Count, maxHalf * radiusFactor);
         ComposeDialog();
     }
 
@@ -205,9 +205,9 @@ public class BuildingModeDialog : GuiDialog
         double outerRadius = radius;
         double innerRadius = outerRadius - maxItemSize * 2.5;
 
-        capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0, 8);
         gearRing.OnRender(deltaTime);
-        capi.Render.Render2DLoadedTextureCentered(centerCircleBgTexture, centerX, centerY, 9);
+        capi.Render.Render2DLoadedTexture(wheelTexture, 0, 0, 11);
+        capi.Render.Render2DLoadedTextureCentered(centerCircleBgTexture, centerX, centerY, 12);
 
         for (int index = 0; index < BuildingOptions.Count; ++index)
         {
@@ -216,11 +216,11 @@ public class BuildingModeDialog : GuiDialog
             float itemCenterY = centerY + (float)(Math.Sin(angleOffset + index * angleStep) * (radius - segmentRagius));
 
             LoadedTexture texture = segmentBgTexture;
-            client.Render2DTextureRotated(texture, 0, 0, 360f / BuildingOptions.Count * index);
+            client.Render2DTextureRotated(texture, 0, 0, 12, 360f / BuildingOptions.Count * index);
             if (selectedMode == index)
             {
                 texture = selectedSegmentOverlayTexture;
-                client.Render2DTextureRotated(texture, 0, 0, 360f / BuildingOptions.Count * index);
+                client.Render2DTextureRotated(texture, 0, 0, 13, 360f / BuildingOptions.Count * index);
             }
 
             capi.Render.RenderItemstackToGui(
@@ -260,16 +260,23 @@ public class BuildingModeDialog : GuiDialog
         AssetLocation texturePath = new("qualityofbuilding", "gui/backgrounds/metal.png");
         using SurfacePattern pattern = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
         context.SetSource(pattern);
-        context.Fill();
+        context.Save();
+        context.LineWidth = 12;
+        context.SetSourceRGBA(0.12, 0.1, 0.08, 1);
+        context.StrokePreserve();
+        context.Restore();
+        context.FillPreserve();
 
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref wheelTexture);
+        double[] color = [0, 0, 0, 0.5];
 
         // central circle
         using ImageSurface centerSurface = new(Format.Argb32, (int)innerRadius * 2, (int)innerRadius * 2);
         using Context centerContext = new(centerSurface);
         centerContext.Arc(innerRadius, innerRadius, innerRadius - gap, 0, Math.PI * 2);
-        GearRingElement.FillShade(centerContext, centerSurface, gap);
+        centerContext.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+        centerContext.FillPreserve();
         centerSurface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(centerSurface, false, ref centerCircleBgTexture);
 
@@ -296,15 +303,15 @@ public class BuildingModeDialog : GuiDialog
         segmentContext.MoveTo(sX1, sY1);
         segmentContext.Arc(centerX, centerY, outerRadius, sOuterStart, sOuterEnd);
         segmentContext.ArcNegative(centerX, centerY, innerRadius, sInnerEnd, sInnerStart);
-
-        double[] color = [0, 0, 0, 0.66];
-        segmentContext.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+        segmentContext.ClosePath();
+        segmentContext.SetSourceRGBA(1, 1, 1, 0.5);
         segmentContext.FillPreserve();
         segmentSurface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(segmentSurface, false, ref selectedSegmentOverlayTexture);
 
         segmentContext.Clear();
-        GearRingElement.FillShade(segmentContext, segmentSurface, gap);
+        segmentContext.SetSourceRGBA(color[0], color[1], color[2], color[3]);
+        segmentContext.FillPreserve();
         segmentSurface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(segmentSurface, false, ref segmentBgTexture);
     }

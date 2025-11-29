@@ -51,7 +51,7 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
 
         float x = (capi.Render.FrameWidth - gearRingTexture.Width) * 0.5f;
         float y = (capi.Render.FrameHeight - gearRingTexture.Height) * 0.5f;
-        client.Render2DTextureRotated(gearRingTexture, x, y, gearAngleCurrent);
+        client.Render2DTextureRotated(gearRingTexture, x, y, 10, gearAngleCurrent);
     }
 
     public void Compose()
@@ -113,7 +113,7 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
         ctx.SetSource(pattern);
         ctx.FillPreserve();
 
-        FillShade(ctx, surface, (int)maxItemSize / 8);
+        FillShade(ctx, surface, 4);
 
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref gearRingTexture);
@@ -122,41 +122,11 @@ public class GearRingElement(ICoreClientAPI capi, int optionsCount, float radius
     // TODO: move to the shader
     public static void FillShade(Context ctx, ImageSurface surface, int radius)
     {
-        using ImageSurface mask = new(Format.Argb32, surface.Width, surface.Height);
-        using Context mctx = new(mask);
-        using Path path = ctx.CopyPathFlat();
-        mctx.AppendPath(path);
-        mctx.SetSourceRGBA(1, 1, 1, 1);
-        mctx.LineWidth = radius * 2;
-        mctx.StrokePreserve();
-        mask.BlurFull(radius);
-        mctx.Operator = Operator.DestIn;
-        mctx.FillPreserve();
-        mctx.SetSourceRGBA(0, 0, 0, 1);
-        mctx.Operator = Operator.DestOver;
-        mctx.FillPreserve();
-
-        unsafe
-        {
-            byte* ptr = (byte*)mask.DataPtr;
-            int width = mask.Width;
-            int height = mask.Height;
-            int stride = mask.Stride;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    int idx = y * stride + x * 4;
-                    ptr[idx + 3] = ptr[idx + 0]; //alpha
-                    ptr[idx + 2] = 0; // red
-                    ptr[idx + 1] = 0; // green
-                    ptr[idx + 0] = 0; // blue
-                }
-            }
-        }
-        ctx.SetSourceSurface(mask, 0, 0);
-        ctx.FillPreserve();
+        ctx.Save();
+        ctx.LineWidth = radius;
+        ctx.SetSourceRGBA(0.12, 0.1, 0.08, 1);
+        ctx.StrokePreserve();
+        ctx.Restore();
     }
 
     public void Dispose()
