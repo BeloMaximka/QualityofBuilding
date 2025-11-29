@@ -14,13 +14,26 @@ public class ServerSettings
     public int StonesRequiredForPath { get; set; } = 4;
 
     public string[] ReplacableBlocksForPath { get; set; } =
-    ["soil-*", "forestfloor-*", "sand-*", "gravel-*", "drypackeddirt", "packeddirt", "rammed-light-*"];
+    [
+        "soil-*",
+        "forestfloor-*",
+        "sand-*",
+        "gravel-*",
+        "drypackeddirt",
+        "packeddirt",
+        "rammed-light-*",
+        "trailmodupdated:soil-*",
+        "trailmodupdated:trail-*",
+    ];
 
     public string[] ReplacableSlabsForPath { get; set; } =
-    ["terrainslabs:soil-*", "terrainslabs:forestfloor-*", "terrainslabs:sand-*", "terrainslabs:gravel-*"];
+    ["terrainslabs:soil-*", "terrainslabs:trail-*", "terrainslabs:forestfloor-*", "terrainslabs:sand-*", "terrainslabs:gravel-*"];
 
     public string[] ShovelReplacableSoilBlocks { get; set; } =
     [
+        "trailmodupdated:soil-*",
+        "trailmodupdated:trail-*",
+        "terrainslabs:trail-*",
         "terrainslabs:soil-*",
         "terrainslabs:forestfloor-*",
         "game:soil-*",
