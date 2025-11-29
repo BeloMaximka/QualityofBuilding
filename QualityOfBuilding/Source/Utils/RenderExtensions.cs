@@ -30,7 +30,7 @@ public static class RenderExtensions
     )
     {
         x -= texture.Width * 0.5;
-        z -= texture.Height * 0.5;
+        y -= texture.Height * 0.5;
         clientMain.Render2DTextureRotated(texture, x, y, z, angle, color);
     }
 

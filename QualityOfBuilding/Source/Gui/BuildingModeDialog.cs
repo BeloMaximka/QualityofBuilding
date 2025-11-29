@@ -220,7 +220,13 @@ public class BuildingModeDialog : GuiDialog
         // render segments and items
         for (int i = 0; i < BuildingOptions.Count; i++)
         {
-            client.Render2DTextureRotated(segmentBgTexture, 0, 0, z, segmentCoords[i].Rotation);
+            client.Render2DTextureCenteredAndRotated(
+                segmentBgTexture,
+                segmentCoords[i].X,
+                segmentCoords[i].Y,
+                z,
+                segmentCoords[i].Rotation
+            );
             capi.Render.RenderItemstackToGui(
                 BuildingOptions[i].RenderSlot,
                 segmentCoords[i].X,
@@ -234,7 +240,13 @@ public class BuildingModeDialog : GuiDialog
         }
 
         // draw selection overlay
-        client.Render2DTextureRotated(selectedSegmentOverlayTexture, 0, 0, z + 2, segmentCoords[selectedMode].Rotation);
+        client.Render2DTextureCenteredAndRotated(
+            selectedSegmentOverlayTexture,
+            segmentCoords[selectedMode].X,
+            segmentCoords[selectedMode].Y,
+            z + 2,
+            segmentCoords[selectedMode].Rotation
+        );
 
         base.OnRenderGUI(deltaTime);
     }
@@ -285,29 +297,35 @@ public class BuildingModeDialog : GuiDialog
 
     private void BuildSegments(double innerRadius, double outerRadius)
     {
-        int width = capi.Render.FrameWidth;
-        int height = capi.Render.FrameHeight;
-        double centerX = width * 0.5;
-        double centerY = height * 0.5;
+        int count = BuildingOptions.Count;
         double halfGap = RadialMenuStyle.Gap / 2.0;
 
+        // dimensions
+        double step = 2.0 * Math.PI / count;
+        double halfStep = step / 2.0;
+        double chordWidth = 2.0 * outerRadius * Math.Sin(halfStep);
+        double thickness = outerRadius - innerRadius;
+        int texSize = (int)Math.Ceiling(Math.Max(chordWidth, thickness)) + 4;
+        double center = texSize / 2.0;
+
         // angles
-        double step = 2.0 * Math.PI / BuildingOptions.Count;
-        double baseStart = -Math.PI / 2.0 - step / 2.0;
+        double baseStart = -Math.PI / 2.0 - halfStep;
         double baseEnd = baseStart + step;
+        double gapOut = halfGap / outerRadius;
+        double gapIn = halfGap / innerRadius;
 
-        double outStart = baseStart + halfGap / outerRadius;
-        double outEnd = baseEnd - halfGap / outerRadius;
-        double inStart = baseStart + halfGap / innerRadius;
-        double inEnd = baseEnd - halfGap / innerRadius;
-
-        using ImageSurface surface = new(Format.Argb32, width, height);
+        using ImageSurface surface = new(Format.Argb32, texSize, texSize);
         using Context ctx = new(surface);
 
+        // translate to the center
+        ctx.Translate(center, center);
+        double midRadius = (innerRadius + outerRadius) / 2.0;
+        ctx.Translate(0, midRadius);
+
         // path
-        ctx.MoveTo(centerX + Math.Cos(outStart) * outerRadius, centerY + Math.Sin(outStart) * outerRadius);
-        ctx.Arc(centerX, centerY, outerRadius, outStart, outEnd);
-        ctx.ArcNegative(centerX, centerY, innerRadius, inEnd, inStart);
+        ctx.MoveTo(Math.Cos(baseStart + gapOut) * outerRadius, Math.Sin(baseStart + gapOut) * outerRadius);
+        ctx.Arc(0, 0, outerRadius, baseStart + gapOut, baseEnd - gapOut);
+        ctx.ArcNegative(0, 0, innerRadius, baseEnd - gapIn, baseStart + gapIn);
         ctx.ClosePath();
 
         // draw selected overlay
@@ -318,8 +336,7 @@ public class BuildingModeDialog : GuiDialog
 
         // draw background
         ctx.Clear();
-        double[] c = RadialMenuStyle.OverlayColor;
-        ctx.SetSourceRGBA(c[0], c[1], c[2], c[3]);
+        ctx.SetSourceRGBA(RadialMenuStyle.OverlayColor);
         ctx.Fill();
 
         surface.Flush();
