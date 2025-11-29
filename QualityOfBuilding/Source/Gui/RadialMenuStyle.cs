@@ -4,6 +4,7 @@ public static class RadialMenuStyle
 {
     public static readonly double[] BorderColor = [0.12, 0.1, 0.08, 1];
     public static readonly double[] OverlayColor = [0, 0, 0, 0.5];
+    public static readonly double[] CursorBorderColor = [0.06, 0.41, 0.31, 1];
     public static readonly float RadiusFactor = 0.66f;
     public static readonly int Gap = 8;
 }

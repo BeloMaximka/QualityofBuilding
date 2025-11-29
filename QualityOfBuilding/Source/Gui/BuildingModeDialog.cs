@@ -193,6 +193,7 @@ public class BuildingModeDialog : GuiDialog
         base.Dispose();
         GC.SuppressFinalize(this);
 
+        gearRing.Dispose();
         backgroundPattern.Dispose();
         wheelTexture.Dispose();
         centerCircleBgTexture.Dispose();

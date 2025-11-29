@@ -44,7 +44,6 @@ public static class RenderExtensions
         Vec4f? color = null
     )
     {
-        // TODO: Fix pixel edge issues on rotation
         clientMain.guiShaderProg.RgbaIn = color ?? ColorUtil.WhiteArgbVec;
         clientMain.guiShaderProg.ExtraGlow = 0;
         clientMain.guiShaderProg.ApplyColor = 0;

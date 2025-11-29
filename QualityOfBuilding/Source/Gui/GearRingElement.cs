@@ -2,16 +2,34 @@
 using QualityOfBuilding.Source.Utils;
 using System;
 using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
 
 namespace QualityOfBuilding.Source.Gui;
 
-public class GearRingElement(ICoreClientAPI capi, Pattern background, int optionsCount, float radius) : IDisposable
+public class GearRingElement : IDisposable
 {
     private bool disposed;
-    private LoadedTexture gearRingTexture = new(capi);
+    private LoadedTexture gearRingTexture;
     private float gearAngleCurrent = 0;
     private float gearAngleTarget = 0;
+    private int optionsCount;
+    private readonly ICoreClientAPI capi;
+    private readonly Pattern background;
+    private readonly Pattern cursor;
+    private readonly float radius;
+
+    public GearRingElement(ICoreClientAPI capi, Pattern background, int optionsCount, float radius)
+    {
+        this.capi = capi;
+        this.background = background;
+        this.optionsCount = optionsCount;
+        this.radius = radius;
+        gearRingTexture = new(capi);
+
+        AssetLocation texturePath = new("qualityofbuilding", "gui/backgrounds/temporal.png");
+        cursor = GuiElement.getPattern(capi, texturePath, doCache: false, mulAlpha: 255, scale: 0.125f);
+    }
 
     public void SetOptionsCount(int value)
     {
@@ -107,6 +125,18 @@ public class GearRingElement(ICoreClientAPI capi, Pattern background, int option
         ctx.SetSourceRGBA(RadialMenuStyle.BorderColor);
         ctx.Stroke();
 
+        // selection arrow
+        ctx.MoveTo(halfBase - RadialMenuStyle.Gap * 1.5, outerRadius);
+        ctx.LineTo(0, yTip - RadialMenuStyle.Gap * 1.5);
+        ctx.LineTo(-halfBase + RadialMenuStyle.Gap * 1.5, outerRadius);
+        ctx.ClosePath();
+        ctx.SetSource(cursor);
+        ctx.FillPreserve();
+        ctx.SetSourceRGBA(RadialMenuStyle.CursorBorderColor);
+        ctx.LineWidth = RadialMenuStyle.Gap / 4.0;
+        ctx.LineJoin = LineJoin.Bevel;
+        ctx.Stroke();
+
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref gearRingTexture);
     }
@@ -124,6 +154,7 @@ public class GearRingElement(ICoreClientAPI capi, Pattern background, int option
 
         if (disposing)
         {
+            cursor.Dispose();
             gearRingTexture.Dispose();
         }
 
