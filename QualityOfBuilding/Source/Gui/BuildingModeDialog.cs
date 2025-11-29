@@ -247,7 +247,7 @@ public class BuildingModeDialog : GuiDialog
                 BuildingOptions[i].RenderSlot,
                 segmentCoords[i].X,
                 segmentCoords[i].Y,
-                z + 3,
+                z + 100,
                 itemSize,
                 ColorUtil.WhiteArgb,
                 true,
