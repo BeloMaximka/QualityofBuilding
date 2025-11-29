@@ -9,15 +9,16 @@ namespace QualityOfBuilding.Source.Gui;
 
 public class GearRingElement : IDisposable
 {
+    private readonly ICoreClientAPI capi;
+    private readonly Pattern background;
+    private readonly Pattern cursor;
+
     private bool disposed;
     private LoadedTexture gearRingTexture;
     private float gearAngleCurrent = 0;
     private float gearAngleTarget = 0;
     private int optionsCount;
-    private readonly ICoreClientAPI capi;
-    private readonly Pattern background;
-    private readonly Pattern cursor;
-    private readonly float radius;
+    private double radius;
 
     public GearRingElement(ICoreClientAPI capi, Pattern background, int optionsCount, float radius)
     {
@@ -45,6 +46,12 @@ public class GearRingElement : IDisposable
     public void SetSelectedOption(int value)
     {
         gearAngleTarget = 360f / optionsCount * value;
+    }
+
+    public void SetRadius(double value)
+    {
+        radius = value;
+        Compose();
     }
 
     public void OnRender(float deltaTime)

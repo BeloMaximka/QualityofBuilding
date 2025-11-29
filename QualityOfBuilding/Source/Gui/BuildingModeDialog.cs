@@ -67,7 +67,9 @@ public class BuildingModeDialog : GuiDialog
     private int prevOptionsCount;
     private int prevSelectedMode;
     private int selectedMode;
-    float itemSize;
+    private float itemSize;
+    private int screenX;
+    private int screenY;
 
     private readonly List<SegmentInfo> segmentCoords;
     private readonly float maxItemSize;
@@ -105,8 +107,13 @@ public class BuildingModeDialog : GuiDialog
         segmentBgTexture = new(capi);
         selectedSegmentOverlayTexture = new(capi);
 
-        float maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
-        gearRing = new(capi, backgroundPattern, buildingOptions.Count, maxHalf * RadialMenuStyle.RadiusFactor);
+        screenX = capi.Render.FrameWidth;
+        screenY = capi.Render.FrameHeight;
+
+        float minHalf = Math.Min(screenX, screenY) * 0.5f;
+        gearRing = new(capi, backgroundPattern, buildingOptions.Count, minHalf * RadialMenuStyle.RadiusFactor);
+        // TODO: draw ingredients instead of text
+
         ComposeDialog();
     }
 
@@ -128,7 +135,7 @@ public class BuildingModeDialog : GuiDialog
         if (prevOptionsCount != BuildingOptions.Count)
         {
             prevOptionsCount = BuildingOptions.Count;
-            RebuildTextures();
+            RebuildInternalElements();
         }
 
         OnSlotOver(HeldItem.GetBuildingMode(BuildingOptions));
@@ -145,8 +152,8 @@ public class BuildingModeDialog : GuiDialog
             return;
         }
 
-        double dx = args.X - capi.Render.FrameWidth * 0.5;
-        double dy = args.Y - capi.Render.FrameHeight * 0.5;
+        double dx = args.X - screenX * 0.5;
+        double dy = args.Y - screenY * 0.5;
 
         // 32px dead zone near center
         // (32 * 32 = 1024) to avoid Math.Sqrt()
@@ -209,8 +216,16 @@ public class BuildingModeDialog : GuiDialog
             return;
         }
 
-        float centerX = capi.Render.FrameWidth * 0.5f;
-        float centerY = capi.Render.FrameHeight * 0.5f;
+        if (screenX != capi.Render.FrameWidth || screenY != capi.Render.FrameHeight)
+        {
+            screenX = capi.Render.FrameWidth;
+            screenY = capi.Render.FrameHeight;
+
+            RebuildInternalElements();
+        }
+
+        float centerX = screenX * 0.5f;
+        float centerY = screenY * 0.5f;
         int z = 11;
 
         // render backgrounds
@@ -252,10 +267,10 @@ public class BuildingModeDialog : GuiDialog
         base.OnRenderGUI(deltaTime);
     }
 
-    private void RebuildTextures()
+    private void RebuildInternalElements()
     {
-        double maxHalf = Math.Min(capi.Render.FrameHeight, capi.Render.FrameWidth) * 0.5f;
-        double radius = maxHalf * RadialMenuStyle.RadiusFactor;
+        double minHalf = Math.Min(screenX, screenY) * 0.5f;
+        double radius = minHalf * RadialMenuStyle.RadiusFactor;
         BuildBigCircle(radius);
 
         double outerRadius = radius;
@@ -263,6 +278,8 @@ public class BuildingModeDialog : GuiDialog
         BuildSmallCircle(innerRadius);
         BuildSegments(innerRadius, outerRadius);
         CalculateSizesAndPositions();
+
+        gearRing.SetRadius(minHalf * RadialMenuStyle.RadiusFactor);
     }
 
     private void BuildBigCircle(double radius)
@@ -273,7 +290,8 @@ public class BuildingModeDialog : GuiDialog
 
         context.Arc(radius, radius, radius - RadialMenuStyle.Gap, 0, Math.PI * 2);
         context.LineWidth = RadialMenuStyle.Gap * 1.5;
-        context.SetSourceRGBA(RadialMenuStyle.BorderColor);
+        double[] c = RadialMenuStyle.BorderColor;
+        context.SetSourceRGBA(c[0], c[1], c[2], 0.6);
         context.StrokePreserve();
         context.SetSource(backgroundPattern);
         context.FillPreserve();
@@ -347,13 +365,13 @@ public class BuildingModeDialog : GuiDialog
     private void CalculateSizesAndPositions()
     {
         int count = BuildingOptions.Count;
-        float centerX = capi.Render.FrameWidth * 0.5f;
-        float centerY = capi.Render.FrameHeight * 0.5f;
+        float centerX = screenX * 0.5f;
+        float centerY = screenY * 0.5f;
 
         float stepDeg = 360f / count;
         double stepRad = 2.0 * Math.PI / count;
 
-        float minDim = Math.Min(capi.Render.FrameWidth, capi.Render.FrameHeight);
+        float minDim = Math.Min(screenX, screenY);
         float outerRad = minDim * 0.5f * RadialMenuStyle.RadiusFactor;
         float itemDist = outerRad - (maxItemSize * 1.25f);
 
@@ -409,7 +427,7 @@ public class BuildingModeDialog : GuiDialog
             .Compose();
 
         gearRing.Compose();
-        RebuildTextures();
+        RebuildInternalElements();
     }
 
     private void OnSlotOver(int slotIndex)
