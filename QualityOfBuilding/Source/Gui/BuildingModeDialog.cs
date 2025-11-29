@@ -277,44 +277,42 @@ public class BuildingModeDialog : GuiDialog
 
     private void BuildSegments(double innerRadius, double outerRadius)
     {
-        double centerX = capi.Render.FrameWidth * 0.5f;
-        double centerY = capi.Render.FrameHeight * 0.5f;
-        double halfGapSize = RadialMenuStyle.Gap / 2.0;
-        double angleGapOuter = halfGapSize / outerRadius;
-        double angleGapInner = halfGapSize / innerRadius;
+        int width = capi.Render.FrameWidth;
+        int height = capi.Render.FrameHeight;
+        double centerX = width * 0.5;
+        double centerY = height * 0.5;
+        double halfGap = RadialMenuStyle.Gap / 2.0;
 
-        double angleStep = 2.0 * Math.PI / BuildingOptions.Count;
-        double startAngle = -Math.PI / 2.0 - angleStep / 2.0;
-        double sRawA1 = startAngle + angleStep;
+        // angles
+        double step = 2.0 * Math.PI / BuildingOptions.Count;
+        double baseStart = -Math.PI / 2.0 - step / 2.0;
+        double baseEnd = baseStart + step;
 
-        double outerStart = startAngle + angleGapOuter;
-        double outerEnd = sRawA1 - angleGapOuter;
+        double outStart = baseStart + halfGap / outerRadius;
+        double outEnd = baseEnd - halfGap / outerRadius;
+        double inStart = baseStart + halfGap / innerRadius;
+        double inEnd = baseEnd - halfGap / innerRadius;
 
-        double sInnerStart = startAngle + angleGapInner;
-        double sInnerEnd = sRawA1 - angleGapInner;
+        using ImageSurface surface = new(Format.Argb32, width, height);
+        using Context ctx = new(surface);
 
-        double x1 = centerX + Math.Cos(outerStart) * outerRadius;
-        double y1 = centerY + Math.Sin(outerStart) * outerRadius;
+        // path
+        ctx.MoveTo(centerX + Math.Cos(outStart) * outerRadius, centerY + Math.Sin(outStart) * outerRadius);
+        ctx.Arc(centerX, centerY, outerRadius, outStart, outEnd);
+        ctx.ArcNegative(centerX, centerY, innerRadius, inEnd, inStart);
+        ctx.ClosePath();
 
-        using ImageSurface surface = new(Format.Argb32, capi.Render.FrameWidth, capi.Render.FrameHeight);
-        using Context context = new(surface);
-
-        // Selected overlay
-        context.MoveTo(x1, y1);
-        context.Arc(centerX, centerY, outerRadius, outerStart, outerEnd);
-        context.ArcNegative(centerX, centerY, innerRadius, sInnerEnd, sInnerStart);
-        context.ClosePath();
-        context.SetSourceRGBA(1, 1, 1, 0.5);
-        context.FillPreserve();
-
+        // draw selected overlay
+        ctx.SetSourceRGBA(1, 1, 1, 0.5);
+        ctx.FillPreserve();
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref selectedSegmentOverlayTexture);
 
-        // Background
-        context.Clear();
-        double[] color = RadialMenuStyle.OverlayColor;
-        context.SetSourceRGBA(color[0], color[1], color[2], color[3]);
-        context.FillPreserve();
+        // draw background
+        ctx.Clear();
+        double[] c = RadialMenuStyle.OverlayColor;
+        ctx.SetSourceRGBA(c[0], c[1], c[2], c[3]);
+        ctx.Fill();
 
         surface.Flush();
         capi.Gui.LoadOrUpdateCairoTexture(surface, false, ref segmentBgTexture);
