@@ -1,6 +1,7 @@
 ﻿using QualityOfBuilding.Source.CollectibleBehaviors.BuildingModes;
 using QualityOfBuilding.Source.Common;
 using QualityOfBuilding.Source.Gui;
+using QualityOfBuilding.Source.Systems;
 using QualityOfBuilding.Source.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,7 +50,14 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
         modes[selectedMode].Handler.HandleStart(slot, byEntity, blockSel, entitySel);
     }
 
-    public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
+    public override bool OnHeldInteractStep(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel,
+        ref EnumHandling handling
+    )
     {
         if (!CanHandleMode(slot, byEntity, blockSel))
         {
@@ -62,10 +70,15 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
         return modes[selectedMode].Handler.HandleStep(secondsUsed, slot, byEntity, blockSel, entitySel);
     }
 
-    public override void OnHeldInteractStop(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
+    public override void OnHeldInteractStop(
+        float secondsUsed,
+        ItemSlot slot,
+        EntityAgent byEntity,
+        BlockSelection blockSel,
+        EntitySelection entitySel,
+        ref EnumHandling handling
+    )
     {
-
-
         if (!CanHandleMode(slot, byEntity, blockSel))
         {
             base.OnHeldInteractStop(secondsUsed, slot, byEntity, blockSel, entitySel, ref handling);
@@ -155,36 +168,17 @@ public class ShovelBehavior(CollectibleObject collectibleObject) : BuildingModeB
 
     private void AddSoilReplaceModes(ICoreAPI api)
     {
-        // Maybe move hardcoded values into config
-        string[] replacableBlocksCodes =
-        [
-            "terrainslabs:soil-*",
-            "terrainslabs:forestfloor-*",
-            "game:soil-*",
-            "game:forestfloor-*",
-            "drypackeddirt",
-            "packeddirt",
-            "rammed-light-*",
-        ];
+        ServerSettings config = api.ModLoader.GetModSystem<ConfigSystem>().ServerSettings;
+
         List<int> replacableBlockIds = new(28);
-        foreach (var code in replacableBlocksCodes)
+        foreach (var code in config.ShovelReplacableSoilBlocks)
         {
             Block[] blocks = api.World.SearchBlocks(code);
             replacableBlockIds.AddRange(blocks.Select(block => block.Id));
         }
 
-        string[] outputBlockCodes =
-        [
-            "drypackeddirt",
-            "packeddirt",
-            "rammed-light-plain",
-            "rammed-light-thickheavy",
-            "rammed-light-thicklight",
-            "rammed-light-thinheavy",
-            "rammed-light-thinlight",
-        ];
         int[] replacableBlockIdsArray = [.. replacableBlockIds];
-        foreach (var code in outputBlockCodes)
+        foreach (var code in config.ShovelBlocksToReplaceSoil)
         {
             Block? outputBlock = api.World.GetBlock(code);
             if (outputBlock is null)

@@ -1,4 +1,5 @@
-﻿using QualityOfBuilding.Source.Utils.Inventory;
+﻿using QualityOfBuilding.Source.Systems;
+using QualityOfBuilding.Source.Utils.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,9 +30,10 @@ public class ShovelPathModeHandler : ShovelModeHandlerBase
     public ShovelPathModeHandler(ICoreAPI api, Block path, Block pathSlab, Block[] pathStairs)
         : base(path)
     {
-        string[] replacableBlocks = ["soil-*", "forestfloor-*", "sand-*", "gravel-*", "drypackeddirt", "packeddirt", "rammed-light-*"];
+        ServerSettings config = api.ModLoader.GetModSystem<ConfigSystem>().ServerSettings;
+
         List<int> blockIdsFound = [];
-        foreach (string replaceableBlock in replacableBlocks)
+        foreach (string replaceableBlock in config.ReplacableBlocksForPath)
         {
             foreach (Block searchBlock in api.World.SearchBlocks(new AssetLocation(replaceableBlock)))
             {
@@ -40,10 +42,9 @@ public class ShovelPathModeHandler : ShovelModeHandlerBase
         }
         replacableBlockIds = [.. blockIdsFound];
 
-        string[] replacableSlabs = ["terrainslabs:soil-*", "terrainslabs:forestfloor-*", "terrainslabs:sand-*", "terrainslabs:gravel-*"];
         List<int> slabIdsFound = [];
 
-        foreach (string replaceableSlab in replacableSlabs)
+        foreach (string replaceableSlab in config.ReplacableSlabsForPath)
         {
             foreach (Block slab in api.World.SearchBlocks(new AssetLocation(replaceableSlab)))
             {
@@ -71,7 +72,7 @@ public class ShovelPathModeHandler : ShovelModeHandlerBase
                 {
                     Type = EnumItemClass.Item,
                     Code = "stone-*",
-                    Quantity = GetStoneCount(api),
+                    Quantity = config.StonesRequiredForPath,
                     TranslatedName = Lang.Get("any-stone"),
                 },
             ],
@@ -161,18 +162,5 @@ public class ShovelPathModeHandler : ShovelModeHandlerBase
         }
 
         return ShovelPathReplacementMode.None;
-    }
-
-    private int GetStoneCount(ICoreAPI api)
-    {
-        GridRecipe? recipe = api.World.GridRecipes.FirstOrDefault(recipe => recipe.Output.Code == path.Code);
-        if (recipe is null)
-        {
-            return 4;
-        }
-
-        return recipe
-            .resolvedIngredients.Where(ingredient => ingredient.Code.Path.StartsWith("stone"))
-            .Sum(ingredient => ingredient.Quantity);
     }
 }
